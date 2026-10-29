@@ -1,0 +1,41 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const base = process.env.PREVIEW_URL ?? 'http://127.0.0.1:4173';
+const output = 'test-results/blade'; await fs.mkdir(output, { recursive: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] });
+const checks = [], errors = [], requests = [];
+const check = (name, value) => { assert.ok(value, name); checks.push(name); console.log('PASS', name); };
+try {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  page.on('pageerror', e => errors.push(e.message)); page.on('request', request => requests.push(request.url()));
+  // The HTML document is the only permitted HTTP resource.
+  await page.route('**/*', route => route.request().isNavigationRequest() ? route.continue() : route.abort());
+  await page.goto(`${base}/blade-evolution.html`, { waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' });
+  check('production single-file bundle loads every image as an embedded data URL', await page.locator('img').evaluateAll(images => images.every(i => i.complete && i.naturalWidth > 0 && i.src.startsWith('data:'))));
+  check('normal production mode does not expose the QA controller', await page.evaluate(() => window.__BLADE__ === undefined && window.advanceTime === undefined));
+  await page.context().setOffline(true);
+  await page.getByRole('button', { name: '设置', exact: true }).click();
+  check('all six ground previews are generated locally while offline', await page.locator('.ground-preview img').evaluateAll(images => images.length === 6 && images.every(i => i.complete && i.naturalWidth > 0 && i.src.startsWith('data:'))));
+  await page.getByRole('button', { name: '星夜幻境', exact: true }).click(); await page.getByRole('button', { name: '完成', exact: true }).click();
+  await page.getByRole('button', { name: '开始试炼', exact: true }).click();
+  await page.locator('.blade-option[data-value="6"]').click(); await page.getByRole('button', { name: '持刀出发', exact: true }).click();
+  const before = await page.evaluate(() => JSON.parse(window.render_game_to_text()));
+  await page.keyboard.down('d'); await page.waitForTimeout(450); await page.keyboard.up('d'); await page.keyboard.press(' '); await page.waitForTimeout(300);
+  const after = await page.evaluate(() => JSON.parse(window.render_game_to_text()));
+  check('movement and dash work after all network access is disabled', after.position.x > before.position.x + 150 && after.dashCooldown > 3);
+  await page.keyboard.press('Escape'); await page.getByRole('button', { name: '保存并返回首页', exact: true }).click();
+  check('offline play saves a valid resumable local run', await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());
+  await page.getByRole('button', { name: '刀型图鉴', exact: true }).click();
+  check('the complete codex renders without remote assets', await page.locator('.codex-card img').evaluateAll(images => images.length === 12 && images.every(i => i.complete && i.naturalWidth > 0)));
+  await page.getByRole('button', { name: '返回', exact: true }).click();
+  await page.context().setOffline(false); await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' });
+  await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.waitForTimeout(200);
+  check('the offline artifact restores its blade and saved position after reload', await page.evaluate(() => { const s = JSON.parse(window.render_game_to_text()); return s.position.x > 100 && s.blade === '雪饮狂刀'; }));
+  check('the offline artifact restores the chosen battlefield theme', await page.evaluate(() => document.body.dataset.battleTheme === 'night'));
+  check('the offline artifact makes no HTTP asset or font requests', requests.every(url => url.endsWith('/blade-evolution.html')));
+  check('the offline artifact has no runtime errors', errors.length === 0);
+  await page.screenshot({ path: `${output}/15-offline-game.png` });
+  await fs.writeFile(`${output}/offline-results.json`, JSON.stringify({ passed: checks.length, checks, requests, errors }, null, 2));
+  console.log(`${checks.length} offline bundle checks passed.`);
+} finally { await browser.close(); }

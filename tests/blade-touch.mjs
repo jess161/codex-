@@ -1,0 +1,91 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const base = process.env.GAME_URL ?? 'http://127.0.0.1:5173/';
+const url = `${base}${base.includes('?') ? '&' : '?'}qa=1`;
+const output = 'test-results/blade/touch'; await fs.mkdir(output, { recursive: true });
+const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'] });
+const checks = [], errors = [];
+const check = (name, ok) => { assert.ok(ok, name); checks.push(name); console.log('PASS', name); };
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(url, { waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' });
+  await page.getByRole('button', { name: '开始试炼', exact: true }).tap();
+  await page.getByRole('button', { name: '持刀出发', exact: true }).tap();
+  // Isolate input behavior from damage while testing interruption and multi-touch.
+  await page.evaluate(() => { window.__BLADE__.run.state.enemies = []; window.__BLADE__.run.state.invincible = 1000; });
+  const cdp = await page.context().newCDPSession(page);
+  const point = (x, y, id = 1) => ({ x, y, id });
+  const send = (type, points = []) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
+  const advance = ms => page.evaluate(ms => window.advanceTime(ms), ms);
+  const position = () => page.evaluate(() => ({ ...window.__BLADE__.run.state.player }));
+  const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < .01;
+  const center = async locator => { const r = await locator.boundingBox(); return point(r.x + r.width / 2, r.y + r.height / 2, 2); };
+  check('no fixed joystick occupies the screen before touching', await page.locator('#touch-joystick').isHidden());
+  for (const [name, x, y] of [['upper-left', 60, 170], ['upper-right', 320, 200], ['center', 195, 425], ['lower-left', 35, 780], ['lower-right', 355, 585], ['top edge', 5, 6], ['right edge', 385, 410]]) {
+    const before = await position(), dx = x > 300 ? -40 : 40;
+    await send('touchStart', [point(x, y)]); await advance(80);
+    assert.ok(near(before, await position()), 'touching without dragging should not walk or dash');
+    const r = await page.locator('#touch-joystick').boundingBox();
+    assert.ok(r && Math.abs(r.x + r.width / 2 - x) < 1 && Math.abs(r.y + r.height / 2 - y) < 1, 'the joystick appears under the actual finger');
+    await send('touchMove', [point(x + dx, y)]); await advance(180);
+    assert.ok(((await position()).x - before.x) * Math.sign(dx) > 25, 'drag direction controls movement');
+    if (name === 'upper-right') await page.screenshot({ path: `${output}/01-floating-upper-right.png` });
+    await send('touchEnd'); const released = await position(); await advance(150);
+    check(`${name}: dragging works and lifting stops movement`, near(released, await position()) && await page.locator('#touch-joystick').isHidden());
+  }
+  await send('touchStart', [point(190, 320)]); await send('touchMove', [point(145, 320)]); await advance(100);
+  await send('touchCancel'); const cancelled = await position(); await advance(180);
+  check('browser touch cancellation stops movement and hides the indicator', near(cancelled, await position()) && await page.locator('#touch-joystick').isHidden());
+  const first = point(125, 330), other = point(280, 550, 2);
+  await send('touchStart', [point(80, 330)]); await send('touchMove', [first]); await advance(120);
+  const beforeOther = await position(); await send('touchStart', [first, other]); await send('touchMove', [first, point(240, 500, 2)]); await advance(160);
+  const withOther = await position();
+  check('a second finger on the battlefield cannot hijack movement', withOther.x > beforeOther.x + 25 && Math.abs(withOther.y - beforeOther.y) < .01);
+  // CDP touchEnd lists the released fingers, not the fingers that remain down.
+  await send('touchEnd', [point(240, 500, 2)]); await send('touchMove', [point(80, 375)]); const beforeTurn = await position(); await advance(160);
+  check('lifting the secondary finger leaves the original gesture in control', (await position()).y > beforeTurn.y + 25 && await page.locator('#touch-joystick').isVisible()); await send('touchEnd');
+  const primary = point(210, 500);
+  await send('touchStart', [point(250, 500)]); await send('touchMove', [primary]); await advance(100);
+  const dash = await center(page.locator('#dash-button'));
+  await send('touchStart', [primary, dash]); await advance(220);
+  check('a second finger can dash while the first keeps moving', await page.evaluate(() => window.__BLADE__.run.state.dashCooldown > 4.5) && await page.locator('#touch-joystick').isVisible());
+  await send('touchEnd', [dash]); const afterDash = await position(); await advance(180);
+  check('releasing the dash finger does not stop the movement finger', (await position()).x < afterDash.x - 25); await send('touchEnd');
+  const held = point(130, 280);
+  await send('touchStart', [point(90, 280)]); await send('touchMove', [held]); await advance(100);
+  const pause = await center(page.getByRole('button', { name: '暂停', exact: true }));
+  await send('touchStart', [held, pause]); await send('touchEnd', [pause]); await page.getByRole('button', { name: '继续试炼', exact: true }).waitFor();
+  check('pausing with a second finger clears the held movement gesture', await page.locator('#touch-joystick').isHidden());
+  const resume = await center(page.getByRole('button', { name: '继续试炼', exact: true }));
+  await send('touchStart', [held, resume]); await send('touchEnd', [resume]);
+  const resumed = await position(); await send('touchMove', [point(150, 280)]); await advance(180);
+  check('resuming requires a fresh gesture and cannot leave the player walking', near(resumed, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
+  const beforeButton = await position(), soundBefore = await page.evaluate(() => window.__BLADE__.storage.data.settings.sound);
+  await page.locator('#battle-sound').tap(); await advance(100);
+  check('HUD buttons activate once without starting movement', near(beforeButton, await position()) && await page.locator('#touch-joystick').isHidden() && await page.evaluate(() => window.__BLADE__.storage.data.settings.sound) !== soundBefore);
+  await send('touchStart', [point(100, 400)]); await send('touchMove', [point(140, 400)]); await advance(100);
+  await page.setViewportSize({ width: 844, height: 390 }); await page.waitForTimeout(100); const rotated = await position(); await advance(150);
+  check('orientation changes cancel the old gesture safely', near(rotated, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
+  const landscape = await position(); await send('touchStart', [point(680, 200)]); await send('touchMove', [point(640, 200)]); await advance(160);
+  check('anywhere dragging also works in landscape', (await position()).x < landscape.x - 25); await page.screenshot({ path: `${output}/02-floating-landscape.png` }); await send('touchEnd');
+  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(100);
+  const evolvingFinger = point(245, 450);
+  await send('touchStart', [point(285, 450)]); await send('touchMove', [evolvingFinger]); await advance(100);
+  // Fixture skips XP waiting; the pause, selection, pointer capture and resume paths are real.
+  await page.evaluate(() => { const r = window.__BLADE__.run; r.state.time = Math.max(r.state.time, r.state.formStartedAt + 75); r.grantXp(Math.max(0, 19 - r.state.totalXp)); }); await advance(700);
+  check('an evolution clears the floating gesture before forge selection', await page.locator('.forge-card').count() === 3 && await page.locator('#touch-joystick').isHidden());
+  const choice = await center(page.locator('.forge-card').nth(1));
+  await send('touchStart', [evolvingFinger, choice]); await send('touchEnd', [choice]);
+  const forged = await position(); await send('touchMove', [point(265, 460)]); await advance(180);
+  check('a held finger cannot continue walking after choosing a forge card', near(forged, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
+  await page.getByRole('button', { name: '暂停', exact: true }).tap();
+  await page.getByRole('button', { name: '保存并返回首页', exact: true }).tap(); await page.waitForTimeout(100);
+  check('a completed touch cannot click through into the next menu', await page.evaluate(() => window.__BLADE__.panel === 'title' && window.__BLADE__.run === undefined) && await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());
+  await page.getByRole('button', { name: '继续试炼', exact: true }).tap();
+  check('a fresh touch can still continue the saved run immediately', await page.evaluate(() => window.__BLADE__.panel === 'none' && window.__BLADE__.run.state.mode === 'playing') && await page.locator('#touch-joystick').isHidden());
+  check('there are no pointer-capture or runtime errors', errors.length === 0);
+  await fs.writeFile(`${output}/results.json`, JSON.stringify({ passed: checks.length, checks, errors }, null, 2));
+} catch (error) { console.error(error); process.exitCode = 1; for (const page of browser.contexts().flatMap(context => context.pages())) { try { await page.screenshot({ path: `${output}/failure.png` }); } catch {} } }
+finally { await browser.close(); }

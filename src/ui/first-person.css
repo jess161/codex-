@@ -1,0 +1,82 @@
+/* The horizon and the player's hands take priority in the first-person view. */
+.world-vignette{background:radial-gradient(ellipse at 50% 45%,transparent 45%,#17342b40),linear-gradient(180deg,#18372d32,transparent 18%,transparent 75%,#142d2b66)}
+.grain{opacity:.018}
+.map-cluster{display:none}
+.game-header{top:25px}
+.game-brand>svg{width:27px;height:27px}
+.brand-title{font-size:20px;letter-spacing:5px}
+.brand-subtitle{font-size:7px;letter-spacing:3px}
+.objective{top:113px;width:235px;background:linear-gradient(90deg,#173c318c,#173c3108);padding:0 12px 10px}
+.objective h2{font-size:18px;margin:1px 0 9px}
+.objective p{display:none}
+.objective-progress{font-size:9px;margin-top:9px}
+.objective-heading .eyebrow{font-size:8px}
+.survival-status{width:218px;padding:7px 12px 10px;background:linear-gradient(90deg,#18372a8c,#18372a05);bottom:29px}
+.status-heading{display:none}
+.stat-row{gap:9px;margin-top:8px}
+.stat-icon svg{width:14px;height:14px}
+.stat-label{font-size:9px}
+.stat-track{height:2px}
+.stat-number{font-size:10px}
+.level-row{margin-top:12px;padding-top:9px}
+.quickbar{bottom:22px}
+.quick-item{height:58px;width:54px;background:#1e423599;backdrop-filter:none}
+.quick-illustration svg{width:27px;height:27px}
+.quick-label{font-size:7px}
+.quick-slots{gap:6px}
+.control-hint{font-size:8px;color:#d6dbc4b3;text-shadow:0 1px 4px #16382b;margin-top:11px}
+.build-control{bottom:27px}
+.build-button{padding:12px 15px;font-size:11px;background:#24433299;backdrop-filter:none}
+.crosshair{--progress:0%;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:21px;height:21px;display:flex;align-items:center;justify-content:center;border-radius:50%;z-index:1;filter:drop-shadow(0 1px 2px #123e36b3)}
+.crosshair:before,.crosshair:after{content:"";position:absolute;background:#f4eedbc9;border-radius:1px}
+.crosshair:before{width:10px;height:1px}
+.crosshair:after{height:10px;width:1px}
+.crosshair.has-target:before,.crosshair.has-target:after{background:#f1d79d}
+.crosshair>span{position:absolute;inset:-5px;border-radius:50%;opacity:0;border:1px solid #e8dcac55}
+.crosshair.has-target>span{opacity:1}
+.crosshair.gathering>span{border:0;background:conic-gradient(#f2d49a var(--progress),#f2d49a26 0);mask:radial-gradient(circle,transparent 60%,#000 65%);-webkit-mask:radial-gradient(circle,transparent 60%,#000 65%);opacity:1}
+.look-hint{position:absolute;bottom:123px;left:50%;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 5px #183a2a;z-index:1}
+.look-hint>button{font-size:9px;color:#e3d9b6bf;letter-spacing:1px;background:#1f3b2b85;border:1px solid #cecea333;padding:8px 13px;border-radius:3px}
+.interaction{top:calc(50% + 35px);gap:6px;z-index:2;text-shadow:0 2px 6px #16372c}
+.interaction-name{font-size:10px;letter-spacing:2px}
+.interaction>button{padding:6px 13px 6px 7px;border-color:#cdbb8c44;background:#173d30ba;box-shadow:none;backdrop-filter:none}
+.interaction>button>kbd{width:21px;height:21px;font-size:10px}
+.interaction strong{font-size:11px}
+.interaction-hint{font-size:8px;opacity:.85}
+.placement{bottom:139px;padding:13px 18px;background:#244332e8;border-color:#c6ce9866}
+.placement strong{font-size:15px}
+.placement span{font-size:9px}
+.loot-feedback{position:absolute;left:50%;top:calc(50% - 85px);transform:translateX(-50%);display:flex;flex-direction:column;gap:6px;text-align:center;font-size:12px;letter-spacing:1px;color:#f4e0aa;text-shadow:0 2px 5px #153e32;white-space:nowrap}
+.loot-feedback>div{animation:loot-rise 2.4s ease forwards}
+.graphics-status{position:absolute;inset:0;background:#15382df5;display:flex;align-items:center;justify-content:center;z-index:100;pointer-events:auto;font-family:var(--serif);letter-spacing:2px;font-size:15px}
+.loading{pointer-events:auto}
+.graphics-error{padding:35px;text-align:center;letter-spacing:2px}
+.graphics-error>p{font-size:12px;letter-spacing:1px;line-height:2;max-width:400px;color:#c8cbb3}
+.graphics-error>button{margin-top:15px;font-size:12px}
+.hurt .world-vignette{background:radial-gradient(ellipse at center,transparent 30%,#b1533d8f);animation:hurt-flash .45s ease both}
+.hud.is-touch .mobile-controls{display:block}
+.is-touch .joystick{position:absolute;left:21px;bottom:24px;width:87px;height:87px;border:1px solid #ced2a747;border-radius:50%;background:#173b2e4d;display:flex;align-items:center;justify-content:center;touch-action:none}
+.is-touch .joystick:before,.is-touch .joystick:after{content:"";position:absolute;background:#cfd5a626}
+.is-touch .joystick:before{height:1px;width:64px}
+.is-touch .joystick:after{width:1px;height:64px}
+.is-touch #joystick-knob{width:34px;height:34px;border-radius:50%;background:#ddd4ad38;border:1px solid #dbd8ad55}
+.is-touch .mobile-interact{position:absolute;right:21px;bottom:25px;width:49px;height:49px;border-radius:50%;background:#cfb67a33;border:1px solid #dbc59290;display:flex;align-items:center;justify-content:center;color:#e9d8a6}
+.is-touch .mobile-interact>span{position:absolute;top:-19px;left:0;right:0;font-size:8px;letter-spacing:2px;text-align:center;color:#dddfbe99}
+.is-touch .look-hint{display:none}
+@keyframes loot-rise{0%{opacity:0;transform:translateY(12px)}15%,65%{opacity:1}100%{opacity:0;transform:translateY(-22px)}}
+@keyframes hurt-flash{0%{opacity:1}100%{opacity:0}}
+@media(max-width:700px){
+  .game-header{top:20px}.header-tools>.map-shortcut{display:flex}.header-tools>button[data-action="journal"]{display:none}
+  .game-brand>svg{width:24px}.brand-title{font-size:19px}.brand-subtitle{font-size:6px}
+  .clock{left:50%;min-width:120px}.clock-main{font-size:9px;gap:7px}.clock-weather{font-size:6px}.day-track{width:90px}
+  .objective{top:94px;left:16px;width:177px;padding-bottom:9px}.objective h2{font-size:16px;margin-bottom:7px}.objective-progress{font-size:8px;margin-top:7px}.objective-heading .eyebrow{font-size:7px}
+  .survival-status{left:16px;bottom:148px;width:143px;padding:5px 8px 9px}.stat-row{margin-top:7px;gap:7px}.stat-icon svg{width:12px;height:12px}.stat-label{font-size:8px}.stat-number{font-size:8px}.level-row{margin-top:10px;padding-top:8px}
+  .quickbar{right:15px;left:auto;bottom:111px}.quick-item{width:34px;height:47px}.quick-slots{gap:4px}.quick-illustration svg{width:22px;height:22px}.quick-label{font-size:6px}.bag-slot{width:28px}.quick-separator{margin:0 1px;height:22px}
+  .build-control{right:85px;bottom:28px}.build-button{font-size:9px;padding:12px 11px}.build-button>svg{width:17px}
+  .interaction{top:calc(50% + 32px)}.interaction-name{font-size:8px}.interaction strong{font-size:10px}.interaction-hint{font-size:7px}
+  .crosshair{width:17px;height:17px}.crosshair:before{width:8px}.crosshair:after{height:8px}
+  .discovery{top:195px;min-width:200px}.discovery h2{font-size:23px}.achievement-root{top:182px}
+  .placement{bottom:184px;padding:12px}.placement strong{font-size:12px}.placement span{font-size:8px}
+  .loot-feedback{font-size:10px;top:calc(50% - 55px)}.toast-stack{bottom:319px}
+}
+@media(prefers-reduced-motion:reduce){.crosshair,.loot-feedback>div{animation:none!important}}

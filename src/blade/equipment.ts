@@ -1,0 +1,43 @@
+import { TIERS, freshPerks, tierForLevel, type PerkId } from './config';
+
+export interface SwingTiming { age: number; windup: number; strike: number; recovery: number }
+export type SwingPhase = 'windup' | 'strike' | 'recovery';
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
+
+export function equipmentStats(level: number, perks: Record<PerkId, number> = freshPerks(), blade = 0) {
+  const t = TIERS[blade], p = perks, mastery = tierForLevel(level);
+  const range = Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range));
+  const lengthScale = (range - 10) / (t.range - 10);
+  const widthScale = (1 + .09 * mastery) * (1 + .35 * p.broad + .28 * p.giant);
+  const baseMass = (t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
+  const mass = baseMass * (lengthScale * widthScale) ** .78 * .86 ** p.hollow;
+  const load = Math.max(0, mass - 1), handling = .82 ** p.grip;
+  const burden = clamp(load / 2.8, 0, 1) * handling;
+  const windup = .04 + Math.min(.16, load * .045) * handling;
+  const strike = .10 + Math.min(.08, load * .022);
+  const recovery = .10 + Math.min(.18, load * .05) * handling;
+  return {
+    damage: Math.round((14 + 2 * (level - 1)) * t.multiplier * (1 + .20 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant)),
+    interval: Math.max(windup + strike + recovery + .015, Math.max(.26, t.interval * .92 ** p.quick) * (1 + Math.min(.5, load * .13) * handling)),
+    range,
+    arc: Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
+    magnet: 84 * (1 + .35 * p.magnet), knockback: 18 * (1 + .35 * p.force + .15 * p.broad + .22 * p.giant),
+    lengthScale, widthScale, mass, burden, windup, strike, recovery,
+    moveSpeed: 210 * (1 + .07 * p.stride) * (1 - Math.min(.28, load * .065)),
+    acceleration: 2800 * (1 + .2 * p.stride) / (1 + .6 * Math.min(12, load)),
+    waveEvery: mastery === 0 ? 0 : Math.max(3, 7 - mastery), waveRange: 150 + mastery * 45, pierce: 1 + mastery * 2,
+  };
+}
+export type EquipmentStats = ReturnType<typeof equipmentStats>;
+
+export function swingPhase(swing: SwingTiming): { phase: SwingPhase; progress: number } {
+  if (swing.age < swing.windup) return { phase: 'windup', progress: clamp(swing.age / swing.windup, 0, 1) };
+  if (swing.age < swing.windup + swing.strike) return { phase: 'strike', progress: clamp((swing.age - swing.windup) / swing.strike, 0, 1) };
+  return { phase: 'recovery', progress: clamp((swing.age - swing.windup - swing.strike) / swing.recovery, 0, 1) };
+}
+export function swingMoveFactor(stats: EquipmentStats, swing: SwingTiming | null) {
+  if (!swing) return 1;
+  const { phase } = swingPhase(swing);
+  return 1 - stats.burden * (phase === 'strike' ? .55 : phase === 'windup' ? .34 : .25);
+}
+export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '稳重' : mass < 3.2 ? '沉重' : '巨刃';

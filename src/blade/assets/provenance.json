@@ -1,0 +1,24 @@
+{
+  "source": "output/art/blade-evolution-v0.1",
+  "bladeFrame": [
+    640,
+    256
+  ],
+  "bladePivot": [
+    56,
+    128
+  ],
+  "bladeTipDistance": 510,
+  "sprites": [
+    "hero",
+    "blob",
+    "swift",
+    "armor",
+    "shooter",
+    "elite",
+    "boss",
+    "xp",
+    "heal"
+  ],
+  "note": "Static source art animated in-engine; all original images are preserved."
+}

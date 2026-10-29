@@ -1,0 +1,33 @@
+{
+  "name": "blade-evolution",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc --noEmit && vite build && node scripts/standalone.mjs",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run",
+    "test:atelier": "node tests/blade-atelier.mjs",
+    "test:routes": "node tests/blade-routes.mjs",
+    "test:browser": "node tests/blade-playtest.mjs",
+    "test:castaway": "node tests/playtest.mjs",
+    "test:offline": "node tests/blade-offline.mjs",
+    "test:themes": "node tests/blade-themes.mjs",
+    "test:touch": "node tests/blade-touch.mjs",
+    "test:growth": "node tests/blade-growth.mjs",
+    "test:weight": "node tests/blade-weight.mjs",
+    "test:passives": "node tests/blade-passives.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/three": "0.180.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.12",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0",
+    "three": "0.180.0"
+  }
+}
