@@ -10,10 +10,10 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   let forgeChoices = 0; const formTimes: number[] = [];
   for (let tick = 0; tick < 45000; tick++) {
     const s = r.state;
-    if (s.mode === 'forge') {
-      const preference = ['magnet', 'sharp', 'quick', 'long', 'hollow', 'vital', 'grip', 'stride', 'range', 'giant', 'broad', 'force', 'heal'];
+    if (s.mode === 'relic') {
+      const preference = ['magnet', 'star', 'stone', 'ruler', 'anvil', 'feather', 'hourglass', 'heart', 'thunder', 'crystal', 'ember', 'bell'];
       const choice = s.choices.map((perk, index) => ({ index, rank: preference.indexOf(perk) })).sort((a, b) => a.rank - b.rank)[0];
-      if (s.forgeAwakening) formTimes.push(s.time + s.bossTime); r.choosePerk(choice.index); forgeChoices++; continue;
+      if (s.forgeAwakening) formTimes.push(s.time + s.bossTime); r.chooseRelic(choice.index); forgeChoices++; continue;
     }
     if (s.mode === 'won' || s.mode === 'dead') break;
     const distance = (p: { x: number; y: number }) => Math.hypot(p.x - s.player.x, p.y - s.player.y);

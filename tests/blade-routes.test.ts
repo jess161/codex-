@@ -36,16 +36,16 @@ describe('parallel blade routes and exaggerated forging', () => {
     step(r, .1); expect(r.state.level).toBe(6); expect(r.state.pending).toEqual([6]); expect(r.state.forgeAwakening).toBe(true);
     expect(r.tier).toBe(9); expect(r.state.totalXp).toBe(500); expect(r.state.xp).toBe(500 - xpNext(5));
   });
-  it('supports directed forging beyond the old caps and refuses exhausted or invalid upgrades', () => {
-    const r = isolated(6); let spent = 0;
-    for (let level = 2; level <= 13; level++) {
-      r.state.level = level; r.state.pending = [level]; r.state.mode = 'forge'; r.state.choices = ['sharp', 'grip', 'long'];
-      expect(r.forgePerk('long')).toBe(true); spent++;
+  it('replaces directed forging with only the offered passive items and enforces item caps', () => {
+    const r = isolated(6);
+    for (let level = 2; level <= 5; level++) {
+      r.state.level = level; r.state.pending = [level]; r.state.mode = 'relic'; r.state.choices = ['stone', 'feather', 'ruler'];
+      expect(r.chooseRelic('anvil')).toBe(false); expect(r.chooseRelic('ruler')).toBe(true);
     }
-    expect(r.state.perks.long).toBe(12); expect(spent).toBe(12);
-    r.state.mode = 'forge'; r.state.pending = [13]; r.state.choices = ['sharp', 'grip', 'broad'];
-    expect(r.forgePerk('long')).toBe(false); expect(r.forgePerk('toString' as PerkId)).toBe(false);
-    expect(r.forgePerk('broad')).toBe(true); expect(r.state.perks.broad).toBe(1);
+    expect(r.state.relics.ruler).toBe(4); expect(r.state.perks.long).toBe(0);
+    r.state.level = 6; r.state.pending = [6]; r.state.mode = 'relic'; r.state.choices = ['stone', 'feather', 'anvil'];
+    expect(r.chooseRelic('ruler')).toBe(false); expect(r.chooseRelic('toString' as never)).toBe(false);
+    expect(r.chooseRelic('anvil')).toBe(true); expect(r.state.relics.anvil).toBe(1);
   });
   it('retains positive, usable handling at all new caps with accurate physical dimensions', () => {
     const perks = Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>;
@@ -107,7 +107,7 @@ describe('parallel blade routes and exaggerated forging', () => {
   });
   it('round-trips high forge stacks, blade identity, statuses and the pending choice without rerolling', () => {
     const r = isolated(10, 28); Object.assign(r.state.perks, { long: 9, broad: 8, giant: 7, hollow: 9, grip: 6 });
-    r.state.mode = 'forge'; r.state.pending = [28]; r.state.choices = ['giant', 'hollow', 'sharp']; r.state.forgeAwakening = true;
+    r.state.mode = 'relic'; r.state.pending = [28]; r.state.choices = ['anvil', 'feather', 'stone']; r.state.forgeAwakening = true;
     const e = target(r); e.burnTime = 4; e.burnDamage = 17;
     const saved = r.snapshot(); expect(validSnapshot(saved)).toBe(true); expect(restoreSnapshot(saved)).toEqual(saved);
     expect(validSnapshot({ ...saved, blade: 12 })).toBe(false); expect(validSnapshot({ ...saved, passive: { ...saved.passive, tier: 9 } })).toBe(false);

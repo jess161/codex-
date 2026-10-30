@@ -1,0 +1,35 @@
+{
+  "checked_at": "2026-10-30T23:26:59.302211+00:00",
+  "result": "Latest uncommitted source was not found in any accessible source; old executor recovery is still required",
+  "old_environment_id": "ccarenv_b64_Y2NhcmVudl84NTZkNzdiYzhkY2M4MTkxODE3MTMwNWQ2NzY5ZjdiOQ",
+  "old_instance_id": "ccarenv_856d77bc8dcc81918171305d6769f7b9",
+  "current_environment_id": "ccarenv_b64_Y2NhcmVudl8wODViY2U4NzIxNzA4MTkxOGZlM2Q3NWU4Y2FiMGZlOA",
+  "old_workspace": "/workspace/codex-",
+  "old_local_branch": "optimize/blade-evolution-v2.1",
+  "checked": {
+    "remote_refs": "HEAD and share/blade-evolution-v2.1 only; one earlier source commit",
+    "git_history": "No additional commits, refs or unreachable objects; repository is not shallow",
+    "local_files": "No old drag, persistent-loot or narrow-drag source/report files in the searched accessible workspace, temporary, runtime, mount and home directories",
+    "archives": "Only the new passive-item source archive and its playable offline ZIP; neither contains the old target files",
+    "environment_draft": "Setup/start instructions contain no old source backup reference",
+    "runtime_tools": "Bound to current executor; no tool accepts a previous executor ID for filesystem access or recovery",
+    "network_diagnostic_metadata": "No retained records; this does not establish that platform workspace backups are absent"
+  },
+  "source_to_request": {
+    "include": "Entire old /workspace/codex- tree, including modified tracked files, untracked code, art, assets, docs and preferably .git",
+    "identifying_files": [
+      "src/blade/blade-drag.ts",
+      "src/blade/blade-back.ts",
+      "docs/blade-narrow-drag-verification.json",
+      "docs/blade-persistent-loot-verification.json"
+    ],
+    "identifying_behavior": [
+      "Quarter-width ground dragging and contact sparks",
+      "Clear candy blade/orb artwork",
+      "Independent ground XP drops without merging",
+      "Poison, explosive and cloaked monsters"
+    ]
+  },
+  "preservation": "No current game source was overwritten, reset, reimplemented or published during the search",
+  "platform_request": "Please recover the old instance workspace snapshot or export the complete /workspace/codex- directory including uncommitted and untracked files; restoring only the GitHub commit will not contain these changes."
+}

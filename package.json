@@ -17,7 +17,8 @@
     "test:touch": "node tests/blade-touch.mjs",
     "test:growth": "node tests/blade-growth.mjs",
     "test:weight": "node tests/blade-weight.mjs",
-    "test:passives": "node tests/blade-passives.mjs"
+    "test:passives": "node tests/blade-passives.mjs",
+    "test:relics": "node tests/blade-relics.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

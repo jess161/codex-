@@ -162,7 +162,7 @@ describe('story-inspired blade passives', () => {
   });
   it('forge and boss-intro pauses freeze passive timers and enemy statuses', () => {
     const r = run(6), e = target(r); e.freeze = .7; e.burnTime = 2; e.burnDamage = 3;
-    r.state.mode = 'forge'; r.state.pending = [2]; r.state.choices = ['long', 'grip', 'sharp']; const saved = r.snapshot(); step(r, 10);
+    r.state.mode = 'relic'; r.state.pending = [2]; r.state.choices = ['ruler', 'feather', 'stone']; const saved = r.snapshot(); step(r, 10);
     expect(r.snapshot()).toEqual(saved);
     r.state.mode = 'boss-intro'; r.state.transition = 1; step(r, .4); expect(e.freeze).toBe(.7); expect(e.burnTime).toBe(2);
   });
@@ -185,7 +185,7 @@ describe('story-inspired blade passives', () => {
     const oldEnemy = target(r); const bare = { ...oldEnemy } as Record<string, unknown>;
     for (const key of Object.keys(freshEnemyEffects())) delete bare[key];
     legacy.enemies = [bare]; const before = JSON.stringify(legacy), restored = restoreSnapshot(legacy)!;
-    expect(restored.version).toBe(5); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
+    expect(restored.version).toBe(6); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
     expect(restored.passive).toEqual(freshPassive(2)); expect(restored.enemies[0].burnTime).toBe(0);
     expect(new BladeRun(0, restored).stats).toEqual(r.stats); expect(JSON.stringify(legacy)).toBe(before);
   });

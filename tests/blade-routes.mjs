@@ -37,19 +37,18 @@ try {
       if (status.level === 30 && !status.pending) break;
       if (status.holding) await page.evaluate(() => { const r = window.__BLADE__.run; r.state.time = r.state.formStartedAt + 75; });
       await advance(page, 1000);
-      if (await page.locator('.forge-card').count()) {
+      if (await page.locator('.relic-card').count()) {
         const state = await page.evaluate(() => { const r = window.__BLADE__.run; return { blade: r.tier, stage: r.mastery, awake: r.state.forgeAwakening, clock: r.state.time, rng: r.state.rng }; });
-        assert.equal(state.blade, 6); forgeNames.push(await page.locator('.forge-heading h2').textContent());
+        assert.equal(state.blade, 6); forgeNames.push(await page.locator('.relic-blade-note').textContent());
         if (state.awake) { stages.push(state.stage); if (state.stage === 3) await shot(page, '03-snow-resonance'); }
         if (forgeCount === 0) {
           const saved = await page.evaluate(() => { const a = window.__BLADE__; a.save(); return a.run.snapshot(); });
           await advance(page, 10000);
-          check('forge freezes the world and does not consume stored XP or reroll choices', await page.evaluate(snapshot => JSON.stringify(window.__BLADE__.run.snapshot()) === JSON.stringify(snapshot), saved));
+          check('item selection freezes the world and does not consume stored XP or reroll choices', await page.evaluate(snapshot => JSON.stringify(window.__BLADE__.run.snapshot()) === JSON.stringify(snapshot), saved));
           await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' }); await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.evaluate(() => { window.__BLADE__.scene.onFrame = undefined; });
-          check('reload restores the chosen blade, banked XP and exact forge choices', await page.evaluate(snapshot => JSON.stringify(window.__BLADE__.run.snapshot()) === JSON.stringify(snapshot), saved));
+          check('reload restores the chosen blade, banked XP and exact item choices', await page.evaluate(snapshot => JSON.stringify(window.__BLADE__.run.snapshot()) === JSON.stringify(snapshot), saved));
         }
-        await page.locator('[data-action="forge-tab"][data-value="shape"]').click();
-        await page.locator('.forge-card').first().click(); forgeCount++;
+        await page.locator('.relic-card').first().click(); forgeCount++;
       }
     }
     check('the same named blade survives all 29 upgrades and four mastery transitions', forgeCount === 29 && stages.join(',') === '1,2,3,4' && forgeNames.every(n => n.includes('雪饮狂刀')) && await page.evaluate(() => window.__BLADE__.run.state.level === 30 && window.__BLADE__.run.tier === 6));
@@ -93,12 +92,11 @@ try {
     await page.evaluate(() => { const a = window.__BLADE__, r = a.run, s = r.state; s.attackTimer = 0; s.swing = null; const e = r.spawnEnemy('armor', s.player.x + 80, s.player.y); e.hp = e.maxHp = 10000; e.speed = 0; }); await advance(page, 100); await page.waitForTimeout(100);
     check('the heavy attack still displays a visible effort expression', await page.evaluate(() => window.__BLADE__.scene.effortLevel > .3));
     await shot(page, '07-heavy-effort');
-    await page.evaluate(() => { const a = window.__BLADE__, s = a.run.state; s.mode = 'forge'; s.level = 29; s.pending = [29]; s.choices = ['long', 'grip', 'sharp']; a.ui.render(true); });
-    await page.locator('[data-action="forge-tab"][data-value="handling"]').click();
-    const dimensions = await page.evaluate(() => { const r = window.__BLADE__.run; return { stats: r.stats, rng: r.state.rng, perks: { ...r.state.perks } }; });
-    check('directed handling offers the raised reduction, grip and footwork caps', await page.locator('.forge-card').count() === 3 && (await page.locator('[data-action="forge"][data-value="hollow"]').textContent()).includes('/ 10 层'));
-    await page.locator('[data-action="forge"][data-value="hollow"]').click();
-    check('choosing reduction changes real mass while retaining exaggerated reach, width and damage', await page.evaluate(before => { const r = window.__BLADE__.run, after = r.stats; return r.state.perks.hollow === before.perks.hollow + 1 && Math.abs(after.mass / before.stats.mass - .86) < .00001 && after.range === before.stats.range && after.widthScale === before.stats.widthScale && after.damage === before.stats.damage && r.state.rng === before.rng; }, dimensions));
+    await page.evaluate(() => { const a = window.__BLADE__, s = a.run.state; s.mode = 'relic'; s.level = 29; s.pending = [29]; s.choices = ['feather', 'bell', 'hourglass']; a.ui.render(true); });
+    const dimensions = await page.evaluate(() => { const r = window.__BLADE__.run; return { stats: r.stats, rng: r.state.rng, perks: { ...r.state.perks }, items: { ...r.state.relics } }; });
+    check('handling comes from three offered passive items without a forge catalogue', await page.locator('.relic-card').count() === 3 && await page.locator('.forge-tabs').count() === 0);
+    await page.locator('[data-action="relic"][data-value="feather"]').click();
+    check('choosing a feather changes mass while retaining reach, width and damage', await page.evaluate(before => { const r = window.__BLADE__.run, after = r.stats; return r.state.relics.feather === before.items.feather + 1 && Math.abs(after.mass / before.stats.mass - .86) < .00001 && after.range === before.stats.range && after.widthScale === before.stats.widthScale && after.damage === before.stats.damage && r.state.rng === before.rng; }, dimensions));
     await page.evaluate(() => { const a = window.__BLADE__; a.run.state.enemies = []; a.save(); });
     const saved = await page.evaluate(() => window.__BLADE__.run.snapshot());
     await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' }); await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.evaluate(() => { window.__BLADE__.scene.onFrame = undefined; });
@@ -123,10 +121,9 @@ try {
   await shot(mobile, '08-mobile-selection'); await mobile.getByRole('button', { name: '持刀出发', exact: true }).tap();
   check('phone taps equip the selected fire blade exactly once', await mobile.evaluate(() => window.__BLADE__.run?.tier === 10 && window.__BLADE__.panel === 'none'));
   await mobile.evaluate(() => { const a = window.__BLADE__; a.scene.onFrame = undefined; a.run.state.enemies = []; a.run.state.spawnBudget = -10000; a.run.grantXp(19); }); await advance(mobile, 300);
-  await mobile.locator('[data-action="forge-tab"][data-value="shape"]').tap();
-  check('phone shaping exposes length, width and giant options with their new caps', await mobile.locator('.forge-card').count() === 3 && (await mobile.locator('.forge-cards').textContent()).includes('/ 12 层') && (await mobile.locator('.forge-cards').textContent()).includes('/ 10 层') && (await mobile.locator('.forge-cards').textContent()).includes('/ 8 层'));
-  await shot(mobile, '09-mobile-shaping'); await mobile.locator('[data-action="forge"][data-value="giant"]').tap();
-  check('a phone forge tap applies one upgrade and resumes normal play', await mobile.evaluate(() => window.__BLADE__.run.state.perks.giant === 1 && window.__BLADE__.run.state.mode === 'playing'));
+  check('phone upgrades expose exactly three distinct passive items', await mobile.locator('.relic-card').count() === 3 && await mobile.locator('.relic-card').evaluateAll(cards => new Set(cards.map(c => c.dataset.value)).size === 3));
+  await shot(mobile, '09-mobile-passive-items'); const mobileChoice = await mobile.locator('.relic-card').first().getAttribute('data-value'); await mobile.locator('.relic-card').first().tap();
+  check('a phone item tap applies one upgrade and resumes normal play', await mobile.evaluate(id => window.__BLADE__.run.state.relics[id] === 1 && window.__BLADE__.run.state.mode === 'playing', mobileChoice));
   await mobile.evaluate(() => { const a = window.__BLADE__, r = a.run; r.state.level = 28; r.state.time = 540; r.state.invincible = 1000; Object.assign(r.state.perks, { long: 7, broad: 6, giant: 6, hollow: 4, grip: 3 }); for (let i = 0; i < 170; i++) { const angle = i * 2.399963, d = 100 + i % 14 * 28; r.spawnEnemy('blob', Math.cos(angle) * d, Math.sin(angle) * d); } a.ui.render(true); }); await advance(mobile, 450); await shot(mobile, '10-mobile-awakened-horde');
   await mobile.getByRole('button', { name: '暂停', exact: true }).tap(); await mobile.getByRole('button', { name: '重新开始', exact: true }).tap();
   await mobile.locator('.blade-option[data-value="7"]').tap(); await mobile.setViewportSize({ width: 320, height: 568 });

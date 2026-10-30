@@ -1,0 +1,202 @@
+{
+  "source": "art/blade-relics/source/passive-items.png",
+  "source_sha256": "c4146138cd1c2909c57a25b1964f2f580ec12117296495358fca6d49f5281d88",
+  "generator": "OpenAI image_gen; user-requested passive-item family, original sheet retained",
+  "direction": "Rounded candy forms, navy outlines, bright simple shading and white highlights",
+  "preparation": "Alpha-verified transparent separators; tight crops, aspect preserved, padded 384px lossless WebP",
+  "runtime_rgba_bytes": 7077888,
+  "items": [
+    {
+      "id": "stone",
+      "file": "src/blade/assets/relics/stone.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 49066,
+      "sha256": "6d58fd578445b8db0a61152834635fec4f25ad1edc2e7e17f11ea2931bad8b93",
+      "source_cell": [
+        0,
+        0,
+        417,
+        390
+      ]
+    },
+    {
+      "id": "feather",
+      "file": "src/blade/assets/relics/feather.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 56606,
+      "sha256": "c9645119a8294598a33301d8144365505e676260793036f22d1a71e43d9b5e01",
+      "source_cell": [
+        417,
+        0,
+        750,
+        390
+      ]
+    },
+    {
+      "id": "ember",
+      "file": "src/blade/assets/relics/ember.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 71980,
+      "sha256": "40fd3aeb6bdf41aa7e6cc9ee07f9e65adabf389b6c30b257c90fee801ea4ba13",
+      "source_cell": [
+        750,
+        0,
+        1073,
+        390
+      ]
+    },
+    {
+      "id": "heart",
+      "file": "src/blade/assets/relics/heart.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 69846,
+      "sha256": "2ce49ee778fa6cac04898d0b49f651fdd37811ab2c74f743f14662ffdac6496a",
+      "source_cell": [
+        1073,
+        0,
+        1448,
+        390
+      ]
+    },
+    {
+      "id": "ruler",
+      "file": "src/blade/assets/relics/ruler.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 47636,
+      "sha256": "e39d7e273460b07e6a3c12a4bf7acc18bf621da425f958793aee134191f1a51c",
+      "source_cell": [
+        0,
+        390,
+        417,
+        707
+      ]
+    },
+    {
+      "id": "bell",
+      "file": "src/blade/assets/relics/bell.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 57158,
+      "sha256": "35c1444093b2699d9408619d6fa9a06719785ab3276281986a4c46a8521b4d51",
+      "source_cell": [
+        417,
+        390,
+        750,
+        707
+      ]
+    },
+    {
+      "id": "crystal",
+      "file": "src/blade/assets/relics/crystal.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 51516,
+      "sha256": "0f6fd6f091a803910d0932df52c4973a73cd18dca214c629ef60742773e6cd9f",
+      "source_cell": [
+        750,
+        390,
+        1073,
+        707
+      ]
+    },
+    {
+      "id": "magnet",
+      "file": "src/blade/assets/relics/magnet.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 62200,
+      "sha256": "5f26391e36dd5fca5167c3d9a427ae9d7aac417f7d15362d059b6dcc64e672ea",
+      "source_cell": [
+        1073,
+        390,
+        1448,
+        707
+      ]
+    },
+    {
+      "id": "anvil",
+      "file": "src/blade/assets/relics/anvil.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 63732,
+      "sha256": "ee40ca43d20de575fd7e025096a0f653d7565704b2d927f42d90b7fda3aac489",
+      "source_cell": [
+        0,
+        707,
+        417,
+        1086
+      ]
+    },
+    {
+      "id": "hourglass",
+      "file": "src/blade/assets/relics/hourglass.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 62372,
+      "sha256": "585f89ad51ee44f4a20b61f33647449667e80b5fb467d4305053d29cddffe25f",
+      "source_cell": [
+        417,
+        707,
+        750,
+        1086
+      ]
+    },
+    {
+      "id": "thunder",
+      "file": "src/blade/assets/relics/thunder.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 68676,
+      "sha256": "0ad9fd7f8e29d108439452dad92a4fdc0eb53ad91ace1c78e8f8d5f35747695f",
+      "source_cell": [
+        750,
+        707,
+        1073,
+        1086
+      ]
+    },
+    {
+      "id": "star",
+      "file": "src/blade/assets/relics/star.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 53818,
+      "sha256": "d929785e35fb5e201156ae6b2635dfd4b3f602990bde8fd9c8bbfeb1b316fc84",
+      "source_cell": [
+        1073,
+        707,
+        1448,
+        1086
+      ]
+    }
+  ]
+}

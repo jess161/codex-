@@ -82,11 +82,11 @@ try {
   await mobile.getByRole('button', { name: '开始试炼', exact: true }).tap();
   await mobile.locator('.blade-option[data-value="11"]').tap(); await mobile.getByRole('button', { name: '持刀出发', exact: true }).tap();
   await mobile.evaluate(() => { const a = window.__BLADE__, r = a.run; a.scene.onFrame = undefined; r.state.time = 75; r.state.level = 27; r.grantXp(163); }); await advance(mobile, 700);
-  check('phone evolution explains the passive and its story before forging', (await mobile.locator('.blade-passive').textContent()).includes('月牙天冲') && (await mobile.locator('.blade-passive').textContent()).includes('黑崎一护'));
-  await shot(mobile, '09-mobile-evolution'); await mobile.locator('.forge-card').first().tap();
+  check('phone mastery preserves the blade passive while offering three collectible items', (await mobile.locator('.relic-blade-note').textContent()).includes('月牙天冲') && (await mobile.locator('.relic-choice-heading>p').textContent()).includes('觉醒已解锁') && await mobile.locator('.relic-card').count() === 3);
+  await shot(mobile, '09-mobile-evolution'); await mobile.locator('.relic-card').first().tap();
   check('the phone HUD passive button stays within the playfield edge', await mobile.locator('#current-passive').evaluate(el => { const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.top > 80 && r.bottom < 185; }));
   await mobile.getByRole('button', { name: '查看当前刀的被动技能', exact: true }).tap(); await mobile.setViewportSize({ width: 320, height: 568 });
-  check('long passive descriptions remain scrollable on a narrow phone', await mobile.locator('.codex-panel').evaluate(el => el.scrollWidth <= el.clientWidth && el.getBoundingClientRect().right <= innerWidth) && await mobile.locator('.codex-passive').count() === 12);
+  check('long passive descriptions remain scrollable on a narrow phone', await mobile.locator('.codex-panel').evaluate(el => el.scrollWidth <= el.clientWidth && el.getBoundingClientRect().right <= innerWidth) && await mobile.locator('.codex-passive').count() === 12 && (await mobile.locator('[data-tier="11"] .codex-passive').textContent()).includes('黑崎一护'));
   await mobile.locator('[data-tier="9"]').scrollIntoViewIfNeeded(); await shot(mobile, '10-mobile-enma');
   check('all passive effects and interfaces run without browser errors', errors.length === 0);
   await fs.writeFile(`${output}/results.json`, JSON.stringify({ passed: checks.length, checks, errors, fixtures: 'Blade levels, charge counters, isolated encounter spawns and target HP are explicit fixtures. Actual combat, status ticking, keyboard/touch, rendering, save/reload and pause use game code.' }, null, 2));

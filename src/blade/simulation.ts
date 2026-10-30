@@ -1,4 +1,5 @@
 import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
+import { LEGACY_RELICS, RELIC_CAP, RELIC_IDS, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
 import { freshEnemyEffects, freshPassive, passiveForTier, passiveRules, type BladeId, type EnemyEffects, type PassiveState } from './passives';
 
@@ -13,18 +14,18 @@ export interface Bullet extends Point { id: number; vx: number; vy: number; life
 export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga' }
 export interface Shock extends Point { id: number; radius: number; gap: number }
 export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
-export type RunMode = 'playing' | 'evolving' | 'forge' | 'boss-intro' | 'won' | 'dead';
+export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'won' | 'dead';
 export interface RunState {
-  version: 5; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
+  version: 6; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
-  level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: PerkId[]; evolutionTime: number;
+  level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
   passive: PassiveState;
   aim: number; targetId: number; attackTimer: number; attackCount: number; swing: Swing | null;
   enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive'; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' };
+export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic'; item?: 'thunder' | 'shield'; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' };
 export interface MoveInput { x: number; y: number; dash: boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
@@ -57,7 +58,7 @@ export class BladeRun {
   constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade = 0) {
     if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = 0;
     this.state = snapshot ? structuredClone(snapshot) : {
-      version: 5, blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
+      version: 6, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
       player: { x: 0, y: 0 }, direction: { x: 0, y: -1 }, velocity: { x: 0, y: 0 }, hp: 100, maxHp: 100, invincible: .7, dashTime: 0, dashCooldown: 0,
       level: 1, xp: 0, totalXp: 0, formStartedAt: 0, perks: freshPerks(), pending: [], choices: [], evolutionTime: 0,
@@ -82,7 +83,7 @@ export class BladeRun {
   get bladeId() { return TIERS[this.tier].id; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
   get stats() {
-    const stats = equipmentStats(this.state.level, this.state.perks, this.tier);
+    const stats = equipmentStats(this.state.level, this.state.perks, this.tier, this.state.relics);
     if (this.bladeId === 'tensa' && this.state.passive.haste > 0) {
       stats.moveSpeed *= 1 + this.rules.hasteBonus;
       stats.interval = Math.max(stats.windup + stats.strike + stats.recovery + .015, stats.interval * (1 - this.rules.hasteBonus));
@@ -112,7 +113,7 @@ export class BladeRun {
   }
   grantXp(value: number) {
     if (!Number.isFinite(value) || value <= 0) return;
-    const s = this.state; s.totalXp += value; s.xp += value;
+    const s = this.state; value *= 1 + .06 * s.relics.star; s.totalXp += value; s.xp += value;
     this.processXp();
   }
   private processXp() {
@@ -140,43 +141,85 @@ export class BladeRun {
     const s = this.state;
     if (!s.pending.length) return;
     s.mode = 'evolving'; s.evolutionTime = s.forgeAwakening ? .6 : .12; s.swing = null; s.velocity = { x: 0, y: 0 };
-    s.hp = Math.min(s.maxHp, s.hp + (s.forgeAwakening ? EVOLUTION_HEAL : 1));
-    const available = this.availablePerks;
+    this.heal(s.forgeAwakening ? EVOLUTION_HEAL : 1);
+    const available = this.availableRelics;
+    // Seeded sampling without replacement; only these three can be selected.
     s.choices = [];
-    // Offer blade shaping, handling and a general upgrade when each pool is available.
-    for (const group of [['long', 'broad', 'giant'], ['hollow', 'grip', 'stride'], ['sharp', 'quick', 'range', 'magnet', 'force', 'vital']] as PerkId[][]) {
-      const pool = available.filter(k => group.includes(k));
-      if (pool.length) { const key = pool[Math.floor(this.random() * pool.length)]; s.choices.push(key); available.splice(available.indexOf(key), 1); }
-    }
-    while (s.choices.length < 3) {
-      if (!available.length) { s.choices.push('heal'); continue; }
-      s.choices.push(available.splice(Math.floor(this.random() * available.length), 1)[0]);
-    }
-    for (let i = s.choices.length - 1; i > 0; i--) { const j = Math.floor(this.random() * (i + 1)); [s.choices[i], s.choices[j]] = [s.choices[j], s.choices[i]]; }
+    for (let i = 0; i < 3; i++) s.choices.push(available.splice(Math.floor(this.random() * available.length), 1)[0]);
     this.events.push({ type: 'evolve', tier: this.tier, amount: this.mastery });
   }
-  get availablePerks() {
-    const s = this.state, before = this.stats;
-    return (Object.keys(PERKS) as PerkId[]).filter(k => k !== 'heal' && s.perks[k] < PERKS[k].cap && (!['range', 'long'].includes(k) || equipmentStats(s.level, { ...s.perks, [k]: s.perks[k] + 1 }, this.tier).range > before.range + .001));
-  }
-  choosePerk(index: number) {
+  get availableRelics() {
     const s = this.state;
-    if (s.mode !== 'forge' || !Number.isInteger(index) || index < 0 || index >= s.choices.length) return false;
-    return this.forgePerk(s.choices[index]);
+    return RELIC_IDS.filter(id => s.relics[id] < RELIC_CAP && (id !== 'star' || s.level < MAX_LEVEL)
+      && (id !== 'ruler' || this.stats.range < 419.999));
   }
-  forgePerk(perk: PerkId) {
+  chooseRelic(choice: RelicId | number) {
     const s = this.state;
-    if (s.mode !== 'forge' || !Object.hasOwn(PERKS, perk) || (perk === 'heal' ? !s.choices.includes('heal') : !this.availablePerks.includes(perk))) return false;
-    s.perks[perk]++;
-    if (perk === 'vital') { s.maxHp += 15; s.hp = Math.min(s.maxHp, s.hp + 15); }
-    if (perk === 'heal') s.hp = Math.min(s.maxHp, s.hp + 20);
+    if (s.mode !== 'relic' || s.pending.length !== 1) return false;
+    const id = typeof choice === 'number' && Number.isInteger(choice) && choice >= 0 && choice < 3 ? s.choices[choice] : choice;
+    if (!isRelicId(id) || !s.choices.includes(id) || !this.availableRelics.includes(id)) return false;
+    const before = relicGroups(s.relics);
+    s.relics[id]++;
+    s.relicState.lightning = Math.min(s.relicState.lightning, Math.max(0, 6 - s.relics.thunder));
+    if (id === 'heart') { s.maxHp += 15; this.heal(15); }
+    if (before.spirit < 3 && relicGroups(s.relics).spirit === 3) {
+      s.relicState.shield = true; s.relicState.shieldCooldown = 0;
+      this.events.push({ type: 'relic', item: 'shield', x: s.player.x, y: s.player.y, detail: 'ready' });
+    }
     s.pending.shift(); s.choices = []; s.invincible = Math.max(s.invincible, .35);
-    if (s.pending.length) this.startEvolution(); else s.mode = 'playing';
+    s.mode = 'playing';
     return true;
+  }
+  private heal(value: number) {
+    const s = this.state;
+    s.hp = Math.min(s.maxHp, s.hp + value * (relicGroups(s.relics).spirit >= 2 ? 1.2 : 1));
+  }
+  private updateRelics(dt: number) {
+    const s = this.state, p = s.relicState;
+    if (relicGroups(s.relics).spirit === 3 && !p.shield) {
+      p.shieldCooldown = Math.max(0, p.shieldCooldown - dt);
+      if (p.shieldCooldown <= .000001) {
+        p.shield = true; p.shieldCooldown = 0;
+        this.events.push({ type: 'relic', item: 'shield', x: s.player.x, y: s.player.y, detail: 'ready' });
+      }
+    }
+  }
+  private relicHit(e: Enemy) {
+    const s = this.state, items = s.relics, bonus = relicGroups(items).arcane >= 2 ? 1.2 : 1;
+    if (items.ember) {
+      if (e.burnTime <= 0) e.burnTick = .5;
+      e.burnTime = Math.max(e.burnTime, 2);
+      e.burnDamage = Math.max(e.burnDamage, Math.max(1, Math.round(this.stats.damage * .04 * items.ember * bonus)));
+    }
+    if (items.crystal) {
+      const slow = Math.min(e.kind === 'boss' || e.kind === 'elite' ? .15 : 1, .12 + .04 * items.crystal);
+      // A weak item slow must not indefinitely refresh a stronger innate effect.
+      if (slow >= e.slow) { e.slow = slow; e.slowTime = Math.max(e.slowTime, 1.2); }
+    }
+  }
+  private relicStrike(origin: Point) {
+    const s = this.state, rank = s.relics.thunder;
+    if (!rank) return;
+    if (++s.relicState.lightning < 7 - rank) return;
+    s.relicState.lightning = 0;
+    const damage = Math.round(this.stats.damage * (.55 + .15 * rank) * (relicGroups(s.relics).arcane >= 2 ? 1.2 : 1));
+    const hit = new Set<number>(); let from = origin;
+    for (let hop = 0; hop < 3 && s.mode === 'playing'; hop++) {
+      const target = this.grid.query(from.x, from.y, 185).filter(e => e.hp > 0 && e.spawn <= 0 && !hit.has(e.id) && Math.hypot(e.x - from.x, e.y - from.y) <= 140 + e.radius)
+        .sort((a, b) => Math.hypot(a.x - from.x, a.y - from.y) - Math.hypot(b.x - from.x, b.y - from.y) || a.id - b.id)[0];
+      if (!target) break;
+      hit.add(target.id);
+      this.events.push({ type: 'relic', item: 'thunder', x: from.x, y: from.y, toX: target.x, toY: target.y });
+      this.hitEnemy(target, damage, 0, 'relic'); from = { x: target.x, y: target.y };
+    }
   }
   damagePlayer(amount: number, reason: string) {
     const s = this.state;
     if (s.invincible > 0 || s.mode !== 'playing') return false;
+    if (s.relicState.shield && relicGroups(s.relics).spirit === 3) {
+      s.relicState.shield = false; s.relicState.shieldCooldown = 20; s.invincible = .35;
+      this.events.push({ type: 'relic', item: 'shield', x: s.player.x, y: s.player.y, detail: 'break' }); return false;
+    }
     if (this.bladeId === 'wado' && s.passive.shield) {
       s.passive.shield = false; s.passive.cooldown = this.rules.guardCooldown; s.passive.safeTime = 0; s.invincible = .35;
       if (this.rules.guardCounter) {
@@ -196,7 +239,7 @@ export class BladeRun {
     const s = this.state;
     if (s.mode !== 'playing' || s.dashCooldown > 0) return false;
     this.syncPassive();
-    s.dashTime = .18; s.dashCooldown = 5; s.invincible = Math.max(s.invincible, .12);
+    s.dashTime = .18; s.dashCooldown = relicGroups(s.relics).wind === 3 ? 4.25 : 5; s.invincible = Math.max(s.invincible, .12);
     if (this.bladeId === 'dark-dagger') { s.passive.empowered = this.rules.daggerTime; this.emitPassive('dark-dagger'); }
     if (this.bladeId === 'tensa') s.passive.tensaPending = true;
     this.events.push({ type: 'dash', x: s.player.x, y: s.player.y }); return true;
@@ -225,7 +268,7 @@ export class BladeRun {
     if (e.burnTime <= 0) e.burnTick = .5;
     e.burnTime = this.rules.burnTime; e.burnDamage = Math.max(e.burnDamage, damage);
   }
-  private passiveHit(e: Enemy, source: 'melee' | 'wave' | 'passive' | 'burn') {
+  private passiveHit(e: Enemy, source: 'melee' | 'wave' | 'passive' | 'burn' | 'relic') {
     if (source !== 'melee' && source !== 'wave') return;
     const id = this.bladeId;
     if (id === 'deer-cutter' && source === 'melee') e.hunt = this.rules.huntTime;
@@ -237,12 +280,14 @@ export class BladeRun {
     }
     if (id === 'ryujin') this.ignite(e, Math.max(1, Math.round(this.stats.damage * this.rules.burnTickDamage)));
   }
-  private hitEnemy(e: Enemy, amount: number, angle: number, source: 'melee' | 'wave' | 'passive' | 'burn' = 'melee') {
+  private hitEnemy(e: Enemy, amount: number, angle: number, source: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' = 'melee') {
     if (e.hp <= 0 || e.spawn > 0) return false;
+    if ((source === 'melee' || source === 'wave') && relicGroups(this.state.relics).arcane === 3 && (e.burnTime > 0 || e.slowTime > 0 || e.chill > 0 || e.freeze > 0 || e.stun > 0)) amount = Math.round(amount * 1.1);
     this.passiveHit(e, source);
+    if (source === 'melee' || source === 'wave') this.relicHit(e);
     const s = this.state; e.hp -= amount; e.hit = .15;
     const resistance = e.kind === 'boss' ? 0 : e.kind === 'elite' ? .25 : 1;
-    if (source !== 'burn') {
+    if (source !== 'burn' && source !== 'relic') {
       e.knockX += Math.cos(angle) * this.stats.knockback * 16 * resistance;
       e.knockY += Math.sin(angle) * this.stats.knockback * 16 * resistance;
     }
@@ -321,6 +366,7 @@ export class BladeRun {
       }
       this.emitPassive(id, s.player.x, s.player.y, radius);
     }
+    this.relicStrike(targets[0]);
     return cleave;
   }
   addOrb(x: number, y: number, value: number, kind: 'xp' | 'heal') {
@@ -332,7 +378,7 @@ export class BladeRun {
       }
       if (closest) { closest.value += value; return; }
       // Preserve rewards even when no matching object can be merged.
-      if (kind === 'xp') this.grantXp(value); else s.hp = Math.min(s.maxHp, s.hp + value);
+      if (kind === 'xp') this.grantXp(value); else this.heal(value);
       return;
     }
     s.orbs.push({ id: s.nextId++, x, y, value, kind });
@@ -352,8 +398,8 @@ export class BladeRun {
   private beginBoss() {
     const s = this.state;
     s.bossStarted = true; s.mode = 'boss-intro'; s.transition = 1; s.bullets = []; s.enemies = []; s.waves = []; s.shocks = []; s.swing = null;
-    for (const orb of s.orbs) { if (orb.kind === 'xp') this.grantXp(orb.value); else s.hp = Math.min(s.maxHp, s.hp + orb.value); }
-    s.orbs = []; s.hp = Math.min(s.maxHp, s.hp + 15);
+    for (const orb of s.orbs) { if (orb.kind === 'xp') this.grantXp(orb.value); else this.heal(orb.value); }
+    s.orbs = []; this.heal(15);
     this.spawnEnemy('boss', s.player.x, s.player.y - 190);
     this.events.push({ type: 'boss' });
   }
@@ -455,9 +501,9 @@ export class BladeRun {
   step(dt: number, input: MoveInput) {
     this.events = []; this.passiveFxCount = 0;
     const s = this.state;
-    if (s.mode === 'won' || s.mode === 'dead' || s.mode === 'forge') return;
+    if (s.mode === 'won' || s.mode === 'dead' || s.mode === 'relic') return;
     this.syncPassive();
-    if (s.mode === 'evolving') { s.evolutionTime -= dt; if (s.evolutionTime <= 0) s.mode = 'forge'; return; }
+    if (s.mode === 'evolving') { s.evolutionTime -= dt; if (s.evolutionTime <= 0) s.mode = 'relic'; return; }
     if (s.mode === 'boss-intro') {
       s.transition -= dt;
       if (s.transition <= 0) { s.mode = 'playing'; s.invincible = 1; if (s.pending.length) this.startEvolution(); }
@@ -469,7 +515,7 @@ export class BladeRun {
     this.processXp();
     if (s.pending.length) { this.startEvolution(); return; }
     s.invincible = Math.max(0, s.invincible - dt); s.dashCooldown = Math.max(0, s.dashCooldown - dt);
-    this.updatePassive(dt);
+    this.updatePassive(dt); this.updateRelics(dt);
     const stats = this.stats;
     const magnitude = Math.hypot(input.x, input.y);
     if (magnitude > .05 && s.dashTime <= 0) s.direction = { x: input.x / Math.max(1, magnitude), y: input.y / Math.max(1, magnitude) };
@@ -566,7 +612,7 @@ export class BladeRun {
       }
       if (Math.hypot(s.player.x - orb.x, s.player.y - orb.y) < 18) {
         if (orb.kind === 'xp') { this.grantXp(orb.value); this.events.push({ type: 'pickup', x: orb.x, y: orb.y, amount: orb.value }); }
-        else s.hp = Math.min(s.maxHp, s.hp + orb.value);
+        else this.heal(orb.value);
         orb.value = 0;
       }
     }
@@ -584,23 +630,32 @@ export class BladeRun {
   snapshot() { return structuredClone(this.state); }
 }
 
-export function validSnapshot(value: unknown): value is RunState {
+function validateRun(value: unknown, legacy = false): boolean {
   if (!value || typeof value !== 'object') return false;
   const s = value as RunState;
   const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  if (s.version !== 5 || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= TIERS.length || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !['playing', 'evolving', 'forge', 'boss-intro'].includes(s.mode)) return false;
+  if (s.version !== (legacy ? 5 : 6) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= TIERS.length || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !['playing', 'evolving', legacy ? 'forge' : 'relic', 'boss-intro'].includes(s.mode)) return false;
   if (!s.player || !finite(s.player.x) || !finite(s.player.y) || !s.direction || !finite(s.direction.x) || !finite(s.direction.y)) return false;
   if (!s.velocity || !finite(s.velocity.x) || !finite(s.velocity.y) || Math.hypot(s.velocity.x, s.velocity.y) > 1000) return false;
   for (const key of ['time', 'bossTime', 'hp', 'maxHp', 'level', 'xp', 'totalXp', 'formStartedAt', 'rng', 'seed', 'nextId', 'targetId', 'attackTimer', 'attackCount', 'dashTime', 'dashCooldown', 'invincible', 'aim', 'eliteIndex', 'spawnBudget', 'evolutionTime', 'transition', 'kills', 'eliteKills', 'bestCleave', 'bossHits', 'maxCombo'] as const) if (!finite(s[key])) return false;
   if (typeof s.bossStarted !== 'boolean') return false;
-  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > 190 || s.time < 0 || s.time > GAME_DURATION || s.bossTime < 0 || s.bossTime > BOSS_DURATION) return false;
+  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy ? 190 : 250) || s.time < 0 || s.time > GAME_DURATION || s.bossTime < 0 || s.bossTime > BOSS_DURATION) return false;
   if (s.formStartedAt < 0 || s.formStartedAt > s.time + s.bossTime + .001 || s.xp < 0 || s.totalXp < 0) return false;
   if (!s.perks || !Object.keys(PERKS).every(k => Number.isInteger(s.perks[k as PerkId]) && s.perks[k as PerkId] >= 0 && s.perks[k as PerkId] <= PERKS[k as PerkId].cap)) return false;
   const p = s.passive;
   if (!p || ['tier', 'hits', 'kills', 'stacks', 'empowered', 'cooldown', 'safeTime', 'haste'].some(k => !finite(p[k as keyof PassiveState]) || Number(p[k as keyof PassiveState]) < 0)) return false;
   if (p.tier !== s.blade || !Number.isInteger(p.hits) || p.hits > 7 || !Number.isInteger(p.kills) || !Number.isInteger(p.stacks) || p.stacks > 7 || p.empowered > 5.001 || p.cooldown > 12.001 || p.safeTime > 6.001 || p.haste > 3.001 || typeof p.shield !== 'boolean' || typeof p.tensaPending !== 'boolean') return false;
   if (!Array.isArray(s.pending) || s.pending.length > 1 || s.pending.some(t => !Number.isInteger(t) || t < 2 || t > MAX_LEVEL || t !== s.level)) return false;
-  if (!Array.isArray(s.choices) || s.choices.length > 3 || s.choices.some(k => !Object.hasOwn(PERKS, k)) || (s.mode === 'forge' || s.mode === 'evolving') && (s.pending.length === 0 || s.choices.length !== 3)) return false;
+  if (!Array.isArray(s.choices) || s.choices.length > 3) return false;
+  const selecting = (s.mode as string) === (legacy ? 'forge' : 'relic') || s.mode === 'evolving';
+  if (selecting && (s.pending.length !== 1 || s.choices.length !== 3)) return false;
+  if (legacy) { if (s.choices.some(k => !Object.hasOwn(PERKS, k))) return false; }
+  else {
+    if (!validRelics(s.relics) || Object.values(s.relics).reduce((a, b) => a + b, 0) + s.pending.length > s.level - 1) return false;
+    if (new Set(s.choices).size !== s.choices.length || s.choices.some(k => !isRelicId(k) || s.relics[k] >= RELIC_CAP || k === 'star' && s.level === MAX_LEVEL || k === 'ruler' && equipmentStats(s.level, s.perks, s.blade, s.relics).range >= 419.999) || !selecting && s.choices.length !== 0) return false;
+    const r = s.relicState;
+    if (!r || !Number.isInteger(r.lightning) || r.lightning < 0 || r.lightning > (s.relics.thunder ? 6 - s.relics.thunder : 0) || typeof r.shield !== 'boolean' || !finite(r.shieldCooldown) || r.shieldCooldown < 0 || r.shieldCooldown > 20 || r.shield && r.shieldCooldown !== 0 || (r.shield || r.shieldCooldown > 0) && relicGroups(s.relics).spirit !== 3) return false;
+  }
   for (const [array, max] of [[s.enemies, 280], [s.orbs, 150], [s.bullets, 32], [s.waves, 32], [s.shocks, 8]] as const) {
     if (!Array.isArray(array) || array.length > max || array.some(e => !e || !finite(e.x) || !finite(e.y) || !finite(e.id))) return false;
   }
@@ -617,13 +672,27 @@ export function validSnapshot(value: unknown): value is RunState {
   return true;
 }
 
-// Legacy runs keep their currently equipped blade; further levels train that same blade.
+export function validSnapshot(value: unknown): value is RunState { return validateRun(value); }
+type LegacyRunState = Omit<RunState, 'version' | 'mode' | 'choices' | 'relics' | 'relicState'> & { version: 5; mode: RunMode | 'forge'; choices: PerkId[] };
+function upgradeLegacy(legacy: LegacyRunState): RunState {
+  const state: RunState = { ...legacy, version: 6, mode: legacy.mode === 'forge' ? 'relic' : legacy.mode,
+    relics: freshRelics(), relicState: freshRelicState(), choices: [] };
+  if (state.mode === 'relic' || state.mode === 'evolving') {
+    for (const id of [...legacy.choices.map(k => LEGACY_RELICS[k]), ...RELIC_IDS]) {
+      if (id && !state.choices.includes(id) && !(id === 'star' && state.level === MAX_LEVEL) && !(id === 'ruler' && equipmentStats(state.level, state.perks, state.blade, state.relics).range >= 419.999)) state.choices.push(id);
+      if (state.choices.length === 3) break;
+    }
+  }
+  return state;
+}
+// Legacy runs retain their blade, HP, experience, RNG and all already-earned forge stats.
 export function restoreSnapshot(value: unknown): RunState | null {
   if (validSnapshot(value)) return structuredClone(value);
   if (!value || typeof value !== 'object') return null;
   const version = (value as { version?: unknown }).version;
+  if (version === 5) return validateRun(value, true) ? upgradeLegacy(structuredClone(value) as LegacyRunState) : null;
   if (![1, 2, 3, 4].includes(Number(version))) return null;
-  const migrated = structuredClone(value) as RunState;
+  const migrated = structuredClone(value) as LegacyRunState;
   const oldLevels = [1, 5, 10, 15, 20, 25];
   const oldTiers = [1, 3, 5, 7, 9, 11, 13, 16, 19, 22, 25, 28];
   const oldBlade = (level: number) => oldTiers.reduce((tier, threshold, i) => level >= threshold ? i : tier, 0);
@@ -658,5 +727,5 @@ export function restoreSnapshot(value: unknown): RunState | null {
     const cycle = id === 'well-moon' ? rules.moonCycle : id === 'full-moon' ? rules.ringCycle : id === 'enma' ? rules.enmaCycle : 8;
     migrated.passive.hits = Math.min(migrated.passive.hits, cycle - 1);
   }
-  return validSnapshot(migrated) ? migrated : null;
+  return validateRun(migrated, true) ? upgradeLegacy(migrated) : null;
 }

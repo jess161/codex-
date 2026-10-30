@@ -7,6 +7,7 @@ import { BladeStorage, type Settings } from './storage';
 import { BladeAudio } from './audio';
 import { BladeUI, type Panel } from './ui';
 import { isGroundId } from './grounds';
+import { isRelicId } from './relics';
 import { swingPhase } from './equipment';
 
 export class BladeApp {
@@ -85,13 +86,14 @@ export class BladeApp {
       if (movement.includes(key) || key === 'escape') event.preventDefault();
       if (event.repeat && (key === ' ' || key === 'escape')) return;
       if (key === 'escape' || key === 'p') {
-        if (this.panel === 'settings' || this.panel === 'codex' || this.panel === 'confirm' || this.panel === 'loadout') this.action('back');
+        if (this.panel === 'settings' || this.panel === 'codex' || this.panel === 'confirm' || this.panel === 'loadout' || this.panel === 'relics') this.action('back');
         else if (this.panel === 'pause') this.action('resume'); else if (this.run && this.panel === 'none') this.pause();
         return;
       }
       if (key === 'f') { this.action('fullscreen'); return; }
       if (this.panel !== 'none' || !this.run) return;
-      if (this.run.state.mode === 'forge' && /^[1-6]$/.test(key)) { const perk = this.ui.forgeChoices[Number(key) - 1]; if (perk) this.action('forge', perk); return; }
+      if (this.run.state.mode === 'relic' && /^[1-3]$/.test(key)) { if (!event.repeat) this.action('relic', this.run.state.choices[Number(key) - 1]); return; }
+      if (key === 'i') { this.action('relics'); return; }
       if (this.run.state.mode !== 'playing') return;
       this.keys.add(key);
       if (key === ' ') this.dashQueued = true;
@@ -188,14 +190,15 @@ export class BladeApp {
       if (action === 'codex' && this.run) requestAnimationFrame(() => document.querySelector(`.codex-card[data-tier="${this.run!.tier}"]`)?.scrollIntoView({ block: 'center' }));
       return;
     }
+    if (action === 'relics' && this.run) { this.backPanel = this.panel; this.panel = 'relics'; this.scene.pausedRun = true; this.clearInputs(); this.save(); this.ui.render(true); return; }
+    if (action === 'back' && this.panel === 'relics') { this.panel = this.backPanel; this.scene.pausedRun = this.panel !== 'none'; this.clearInputs(); this.ui.render(true); return; }
     if (action === 'back') { this.panel = this.backPanel === 'none' && !['won', 'dead'].includes(this.run?.state.mode ?? '') ? 'pause' : this.backPanel; this.ui.render(true); return; }
     if (action === 'title' || action === 'save-title') {
       if (action === 'save-title') this.save();
       this.run = undefined; this.scene.activeRun = false; this.scene.pausedRun = false; this.panel = 'title'; this.clearInputs(); this.ui.render(true); return;
     }
     if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
-    if (action === 'forge-tab') { this.ui.setForgeTab(value ?? 'recommended'); return; }
-    if (action === 'forge' && this.panel === 'none' && this.run && (value && Object.hasOwn(this.run.state.perks, value) ? this.run.forgePerk(value as keyof typeof this.run.state.perks) : this.run.choosePerk(Number(value)))) {
+    if (action === 'relic' && this.panel === 'none' && this.run && isRelicId(value) && this.run.chooseRelic(value)) {
       this.clearInputs(); this.audio.choose(); this.save(); this.ui.render(true);
     }
   }
@@ -272,7 +275,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, perks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

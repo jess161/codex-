@@ -1,0 +1,114 @@
+{
+  "verified_at": "2026-10-30T23:04:06.288303+00:00",
+  "scope": "Replace directed forging with four passive collectible families, twelve items, four ranks and strict three-choice offers",
+  "base": {
+    "repository": "jess161/codex-",
+    "ref": "share/blade-evolution-v2.1",
+    "commit": "4c8257ebae93520fb0dfce4bf78325a60f6a13f5",
+    "recovery_note": "The new environment contained skills but no game checkout. The specified GitHub branch was fetched. Uncommitted modifications from the previous unavailable executor were not recovered or reapplied."
+  },
+  "build": {
+    "path": "dist/blade-evolution.html",
+    "bytes": 4890818,
+    "sha256": "3c8ed4a29e1e0f251cabf9a7a1b1642231da1e9f216384a504e3f35e4b55d5f6",
+    "typescript": "passed",
+    "vite": "passed",
+    "single_file_offline": "passed"
+  },
+  "source_sha256": {
+    "src/blade/relics.ts": "83fbfda2cc9663bc7b27ad6809a4ed2cc2518f73e4b8fde35af549fdbe7ff7e8",
+    "src/blade/relic-art.ts": "ee60ef77522fc1b46c6b5ebd09bdb39d658a800e8817d4ce39ed078a3199fa6b",
+    "src/blade/equipment.ts": "a5ad3e085c84abb049950c82e6f5d5f879162b0c5f6121ed193dab51c7abaabd",
+    "src/blade/simulation.ts": "5fcd04e860382babbdae6d6469808846947044ab5284c9aa4a13eb49629caa1b",
+    "src/blade/main.ts": "f5ad58ebb0ad90ce7c02917c15529f806587d1209e3becc57388bfd6a41dd8bb",
+    "src/blade/ui.ts": "5645a79dbc770c87e3d6688fe5548218ce86bacceb1315c587a6eed408d19eb1",
+    "src/blade/storage.ts": "fd54d8b735a3bbf0ef76237d77b291cd6af6879626d079f81ccfd5281dcccaf6",
+    "src/blade/scene.ts": "a46a2d06cedde80d90ea75390b3ab49a160c3b4824b8c9269a77b2e81df72f0d",
+    "src/blade/style.css": "d87727e637b30aa8f80dfa7bdd7b1350ead781babaf9aa1af64bc1eb082ed4b9"
+  },
+  "rules": {
+    "families": 4,
+    "items": 12,
+    "max_rank": 4,
+    "choices": 3,
+    "distinct_offers": true,
+    "selection_only_from_current_offer": true,
+    "full_run_upgrade_count": 29,
+    "all_progression_seeds_checked": 40,
+    "two_and_three_piece_combinations": "Distinct owned items, not ranks",
+    "full_inventory_save_version": 6,
+    "legacy_versions_migrated": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "old_forge_stats_retained": true,
+    "normal_save_reload_does_not_reroll": true
+  },
+  "art": {
+    "manifest": "art/blade-relics/manifest.json",
+    "manifest_sha256": "44a4d604cc2f62c7d4b6b2be63585240402859f433e12bc7ab95f57bcce01799",
+    "source": "art/blade-relics/source/passive-items.png",
+    "runtime_icons": 12,
+    "runtime_dimensions": [
+      384,
+      384
+    ],
+    "runtime_bytes": 714606,
+    "runtime_rgba_bytes": 7077888,
+    "alpha": "Verified transparent margins and non-opaque backgrounds",
+    "in_game_review": [
+      "Desktop card layout",
+      "3x-density phone cards",
+      "Four-family collection panel"
+    ]
+  },
+  "unit": {
+    "passed": 110,
+    "files": 7,
+    "native_campaigns_passed": 12,
+    "report": "test-results/blade/relics/all-unit-results.json",
+    "sha256": "6098a143b43137e20b4a78caa8f8f5b4a7a7ef00bc411646bac02a1c648d94d8"
+  },
+  "browser": {
+    "passed": 144,
+    "reports": [
+      {
+        "path": "test-results/blade/relics/results.json",
+        "passed": 42,
+        "sha256": "1d79f2212b6abb10ee2bbea4252fcedae4ae06a968ffd638dadd9a1b3d41a526"
+      },
+      {
+        "path": "test-results/blade/routes/all-results.json",
+        "passed": 40,
+        "sha256": "0d103814f67a38b4480a163b18028600448c1fd6816a2d1e7902a6843f78ed4e"
+      },
+      {
+        "path": "test-results/blade/touch/results.json",
+        "passed": 23,
+        "sha256": "184279536bc2eecacef63a28340fc3b1dc81defe07de5fbdb80db982c21c72f9"
+      },
+      {
+        "path": "test-results/blade/passives/results.json",
+        "passed": 28,
+        "sha256": "d28a61dddf2eff4a502a72f831a6f50f45a5161b2d0b62cfda7cb37e03d2373b"
+      },
+      {
+        "path": "test-results/blade/offline-results.json",
+        "passed": 11,
+        "sha256": "6bf818aa378eb09cc3e0d43d50f1b84ef81794c57604ae98954090b8c482fe74"
+      }
+    ]
+  },
+  "screenshots": [
+    "test-results/blade/relics/01-desktop-three-choices.png",
+    "test-results/blade/relics/02-desktop-collections.png",
+    "test-results/blade/relics/03-phone-three-choices.png",
+    "test-results/blade/relics/04-phone-landscape.png",
+    "test-results/blade/relics/05-small-phone.png",
+    "test-results/blade/relics/06-webgl-item-combat.png"
+  ],
+  "limits": "Unit campaigns use only native movement, dash and item selection. Some UI/combat fixtures explicitly set XP, clock, offers, old forge sizes, enemy HP and charge. Phone checks use browser emulation; no physical-device FPS or human difficulty claim."
+}

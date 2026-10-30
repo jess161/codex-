@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BladeRun, restoreSnapshot, validSnapshot } from '../src/blade/simulation';
-import { MIN_FORM_TIME, PERKS, xpToLevel, type PerkId } from '../src/blade/config';
+import { MIN_FORM_TIME, xpNext, PERKS, xpToLevel, type PerkId } from '../src/blade/config';
 import { equipmentStats, swingMoveFactor, swingPhase } from '../src/blade/equipment';
 
 const idle = { x: 0, y: 0, dash: false };
@@ -71,12 +71,13 @@ describe('blade size, handling and paced growth', () => {
     attachSwing(r, 'strike'); expect(swingMoveFactor(r.stats, r.state.swing)).toBeGreaterThan(swingMoveFactor(before, r.state.swing));
     r.state.perks.stride = 2; expect(r.stats.moveSpeed).toBeGreaterThan(before.moveSpeed); expect(r.stats.acceleration).toBeGreaterThan(before.acceleration);
   });
-  it('each forge offers shaping, handling and a general upgrade while all pools are available', () => {
-    const r = run(); r.state.time = MIN_FORM_TIME; r.grantXp(xpToLevel(3)); step(r, .6);
-    expect(r.state.choices).toHaveLength(3); expect(new Set(r.state.choices).size).toBe(3);
-    expect(r.state.choices.some(k => ['long', 'broad', 'giant'].includes(k))).toBe(true);
-    expect(r.state.choices.some(k => ['hollow', 'grip', 'stride'].includes(k))).toBe(true);
-    expect(r.state.choices.some(k => ['sharp', 'quick', 'range', 'magnet', 'force', 'vital'].includes(k))).toBe(true);
+  it('offers exactly three distinct passive collectibles with deterministic random draws', () => {
+    for (let seed = 1; seed <= 30; seed++) {
+      const a = new BladeRun(seed), b = new BladeRun(seed);
+      for (const r of [a, b]) { r.state.enemies = []; r.grantXp(xpNext(1)); r.step(1 / 60, idle); }
+      expect(a.state.choices).toHaveLength(3); expect(new Set(a.state.choices).size).toBe(3);
+      expect(a.state.choices).toEqual(b.state.choices); expect(a.state.rng).toBe(b.state.rng);
+    }
   });
   it('practice gates advancement without losing XP, and ordinary waiting does not reroll choices', () => {
     const r = run(); r.state.level = 5; r.grantXp(10000); r.state.time = MIN_FORM_TIME - .5; const xp = r.state.xp;
@@ -99,7 +100,7 @@ describe('blade size, handling and paced growth', () => {
     const perks = Object.fromEntries(['sharp', 'quick', 'range', 'magnet', 'force', 'vital', 'heal'].map(k => [k, 0]));
     const old = { ...current, version: 2, level: 9, xp: 15, totalXp: 500, time: 111, perks, velocity: undefined, formStartedAt: undefined };
     const restored = restoreSnapshot(old)!;
-    expect(restored.version).toBe(5); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
+    expect(restored.version).toBe(6); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
     for (const key of ['long', 'broad', 'giant', 'hollow', 'grip', 'stride'] as PerkId[]) expect(restored.perks[key]).toBe(0);
     expect(restoreSnapshot({ ...old, bossStarted: true, time: 420 })!.time).toBe(600);
     const maxed = equipmentStats(30, Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>);

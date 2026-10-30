@@ -8,6 +8,7 @@ import type { BladeId } from './passives';
 
 interface Particle { x: number; y: number; vx: number; vy: number; age: number; life: number; color: number; size: number }
 interface DamageLabel { object: Phaser.GameObjects.Text; age: number; life: number; startY: number }
+interface RelicFX { x: number; y: number; toX: number; toY: number; item: 'thunder' | 'shield'; age: number }
 interface PassiveFX { skill: BladeId; x: number; y: number; age: number; radius: number; detail?: 'ready' | 'break' }
 export class BattleScene extends Phaser.Scene {
   run?: BladeRun;
@@ -37,6 +38,7 @@ export class BattleScene extends Phaser.Scene {
   private used = new Set<string>();
   private particles: Particle[] = [];
   private passiveFx: PassiveFX[] = [];
+  private relicFx: RelicFX[] = [];
   private labels: DamageLabel[] = [];
   private spareLabels: Phaser.GameObjects.Text[] = [];
   private clock = 0;
@@ -71,7 +73,7 @@ export class BattleScene extends Phaser.Scene {
     this.onReady?.();
   }
   reset(run: BladeRun) {
-    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = [];
+    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = [];
     for (const label of this.labels) { label.object.setVisible(false); this.spareLabels.push(label.object); }
     this.labels = [];
   }
@@ -84,6 +86,7 @@ export class BattleScene extends Phaser.Scene {
   ingest(events: RunEvent[]) {
     for (const event of events) {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
+      if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, age: 0 });
       if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, detail: event.detail });
       if (event.type === 'hit' || event.type === 'kill' || event.type === 'dash') {
         const count = event.type === 'kill' ? (this.simplified ? 3 : 8) : event.type === 'dash' ? 10 : 3;
@@ -141,7 +144,7 @@ export class BattleScene extends Phaser.Scene {
     const effort = Math.min(1, Math.max(0, stats.mass - 1) / 2.4);
     const strain = phase ? effort * (phase.phase === 'recovery' ? 1 - phase.progress * .75 : phase.phase === 'windup' ? .45 + phase.progress * .55 : 1) : 0;
     this.effortLevel = strain;
-    const frozen = this.pausedRun || ['forge', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
+    const frozen = this.pausedRun || ['relic', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
     const moving = !frozen && (s.dashTime > 0 || Math.hypot(s.velocity.x, s.velocity.y) > .1);
     const walkFrequency = 11 / (1 + effort * .5);
     const bob = this.reducedMotion || !moving ? 0 : Math.sin(this.clock * walkFrequency) * (.8 + effort * 1.2);
@@ -185,6 +188,7 @@ export class BattleScene extends Phaser.Scene {
         g.lineStyle(1.5, 0xd9b75f, .9).lineBetween(sx - 2, sy, sx + 2, sy).lineBetween(sx, sy - 2, sx, sy + 2);
       }
       if (e.dragonHits > 0) for (let i = 0; i < 2; i++) g.fillStyle(i < e.dragonHits ? 0x6c85ae : 0xc4d0df, .85).fillCircle(e.x - 3 + i * 6, e.y + e.radius + 6, 1.8);
+      if (e.slowTime > 0) g.lineStyle(1.4, 0x8fd7ed, .7).strokeEllipse(e.x, e.y + e.radius * .7, e.radius * 2.2, e.radius * .6);
       if (e.burnTime > 0) for (let i = 0; i < (this.simplified ? 2 : 3); i++) {
         const sx = e.x - e.radius * .6 + e.radius * .6 * i, sy = e.y + e.radius * .7;
         const flame = this.reducedMotion ? 9 : 8 + Math.sin(this.clock * 10 + e.id + i) * 3;
@@ -268,6 +272,28 @@ export class BattleScene extends Phaser.Scene {
       g.beginPath().lineStyle(2.5, color, .95).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
       g.beginPath().lineStyle(1.2, 0xffffff, 1).arc(wave.x, wave.y, radius - 1, wave.angle - 1.1, wave.angle + 1.1).strokePath();
     }
+    if (s.relicState.shield) {
+      g.fillStyle(0x82cee8, .08).fillCircle(s.player.x, s.player.y, 26);
+      g.lineStyle(1.6, 0x88cfe7, .75).strokeCircle(s.player.x, s.player.y, 26);
+      g.beginPath().lineStyle(2.2, 0xffffff, .9).arc(s.player.x, s.player.y, 22, -2.6, -1.9).strokePath();
+    }
+    for (const effect of this.relicFx) {
+      effect.age += fxDt; const alpha = Math.max(0, 1 - effect.age / .24);
+      if (effect.item === 'shield') {
+        g.lineStyle(2, 0xa9def1, alpha).strokeCircle(effect.x, effect.y, 26 + (this.reducedMotion ? 0 : effect.age * 35));
+        continue;
+      }
+      const dx = effect.toX - effect.x, dy = effect.toY - effect.y, length = Math.hypot(dx, dy) || 1;
+      const count = this.reducedMotion ? 2 : 5;
+      const points = Array.from({ length: count }, (_, i) => {
+        const t = i / (count - 1), bend = i === 0 || i === count - 1 ? 0 : (i % 2 ? 1 : -1) * 5;
+        return { x: effect.x + dx * t - dy / length * bend, y: effect.y + dy * t + dx / length * bend };
+      });
+      g.lineStyle(4, 0xaa8ad7, alpha * .5).strokePoints(points, false);
+      g.lineStyle(1.5, 0xffedb2, alpha).strokePoints(points, false);
+      g.fillStyle(0xfff5cf, alpha).fillCircle(effect.toX, effect.toY, 3);
+    }
+    this.relicFx = this.relicFx.filter(effect => effect.age < .24);
     for (const effect of this.passiveFx) {
       effect.age += fxDt;
       const progress = Math.min(1, effect.age / .5), alpha = 1 - progress;

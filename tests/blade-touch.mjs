@@ -75,11 +75,11 @@ try {
   await send('touchStart', [point(285, 450)]); await send('touchMove', [evolvingFinger]); await advance(100);
   // Fixture skips XP waiting; the pause, selection, pointer capture and resume paths are real.
   await page.evaluate(() => { const r = window.__BLADE__.run; r.state.time = Math.max(r.state.time, r.state.formStartedAt + 75); r.grantXp(Math.max(0, 19 - r.state.totalXp)); }); await advance(700);
-  check('an evolution clears the floating gesture before forge selection', await page.locator('.forge-card').count() === 3 && await page.locator('#touch-joystick').isHidden());
-  const choice = await center(page.locator('.forge-card').nth(1));
+  check('an evolution clears the floating gesture before item selection', await page.locator('.relic-card').count() === 3 && await page.locator('#touch-joystick').isHidden());
+  const choice = await center(page.locator('.relic-card').nth(1));
   await send('touchStart', [evolvingFinger, choice]); await send('touchEnd', [choice]);
   const forged = await position(); await send('touchMove', [point(265, 460)]); await advance(180);
-  check('a held finger cannot continue walking after choosing a forge card', near(forged, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
+  check('a held finger cannot continue walking after choosing a item card', near(forged, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
   await page.getByRole('button', { name: '暂停', exact: true }).tap();
   await page.getByRole('button', { name: '保存并返回首页', exact: true }).tap(); await page.waitForTimeout(100);
   check('a completed touch cannot click through into the next menu', await page.evaluate(() => window.__BLADE__.panel === 'title' && window.__BLADE__.run === undefined) && await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());
