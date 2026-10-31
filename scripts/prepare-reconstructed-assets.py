@@ -1,0 +1,91 @@
+"""Normalize generated families into lossless runtime sprites; keep sources intact."""
+from pathlib import Path
+from PIL import Image
+import json, hashlib
+
+ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / 'art/reconstructed/source'
+OUT = ROOT / 'src/blade/assets'
+manifest = {'source': 'Reimplemented from conversation; original generated PNGs retained.', 'assets': []}
+
+def gaps(image, count, axis):
+    alpha = image.getchannel('A')
+    w, h = image.size
+    limit = w if axis == 0 else h
+    scores = [sum(v > 48 for v in alpha.crop((i, 0, i+1, h) if axis == 0 else (0, i, w, i+1)).getdata()) for i in range(limit)]
+    boundaries = [0]
+    for k in range(1, count):
+        mid = round(limit*k/count); radius = round(limit/count*.24)
+        candidates = list(range(mid-radius, mid+radius))
+        empty = [i for i in candidates if scores[i] == min(scores[j] for j in candidates)]
+        # The midpoint of the empty valley is more stable than one extreme.
+        runs = []; run = []
+        for i in empty:
+            if run and i != run[-1]+1: runs.append(run); run = []
+            run.append(i)
+        if run: runs.append(run)
+        best = max(runs, key=len)
+        boundaries.append(best[len(best)//2])
+    return boundaries+[limit]
+
+def bbox(im): return im.getchannel('A').point(lambda a: 255 if a > 48 else 0).getbbox()
+def save(im, path, extra):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    im.save(path, 'WEBP', lossless=True, exact=True, method=6)
+    manifest['assets'].append({'path': str(path.relative_to(ROOT)), 'size': list(im.size), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest(), **extra})
+
+names = ['hero','blob','swift','armor','shooter','charger','wisp','splitter','brood','spiker','elite','boss','poison','bomber','stalker','xp']
+sheet = Image.open(SRC/'orbs.png').convert('RGBA')
+xs, ys = gaps(sheet,4,0), gaps(sheet,4,1)
+for i, name in enumerate(names):
+    crop = sheet.crop((xs[i%4],ys[i//4],xs[i%4+1],ys[i//4+1]))
+    bounds = bbox(crop); crop = crop.crop(bounds)
+    original_size = list(crop.size)
+    fit = min(448/crop.width,448/crop.height)
+    crop = crop.resize((round(crop.width*fit),round(crop.height*fit)),Image.Resampling.LANCZOS)
+    canvas = Image.new('RGBA',(512,512)); canvas.paste(crop,((512-crop.width)//2,(512-crop.height)//2))
+    save(canvas, OUT/'orbs'/f'{name}.webp', {'source':'orbs.png','cell':i,'sourceCropPixels':original_size,'pivot':[256,256],'contentMaxSize':448})
+
+shapes = []
+for batch in range(4):
+    sheet = Image.open(SRC/f'blades-{batch}.png').convert('RGBA'); rows = gaps(sheet,3,1)
+    for row in range(3):
+        i = batch*3+row
+        crop = sheet.crop((0,rows[row],sheet.width,rows[row+1])); crop = crop.crop(bbox(crop))
+        a = crop.getchannel('A'); w,h = crop.size
+        extents = []
+        for x in range(w):
+            box = a.crop((x,0,x+1,h)).point(lambda v:255 if v>48 else 0).getbbox()
+            extents.append(box[3]-box[1] if box else 0)
+        peak = max(range(round(w*.15), round(w*.31)), key=lambda x:extents[x])
+        guard_height = extents[peak]
+        joint = next((x for x in range(peak+1,min(w,peak+round(w*.12))) if extents[x]<guard_height*.71), peak+round(w*.035))
+        joint = min(round(w*.36),max(round(w*.22),joint))
+        grip_column = a.crop((round(joint*.40),0,round(joint*.40)+1,h)).point(lambda v:255 if v>48 else 0).getbbox()
+        gy = (grip_column[1]+grip_column[3])/2 if grip_column else h/2
+        scale = min(220/max(gy,1),220/max(h-gy,1))
+        atlas = Image.new('RGBA',(1280,512))
+        for l,r,dl,dr in [(0,joint,36,264),(joint,w,264,1132)]:
+            piece = crop.crop((l,0,r,h)).resize((dr-dl,max(1,round(h*scale))),Image.Resampling.LANCZOS)
+            atlas.paste(piece,(dl,round(256-gy*scale)))
+        alpha = atlas.getchannel('A')
+        def column(x):
+            box = alpha.crop((x,0,x+1,512)).point(lambda v:255 if v>48 else 0).getbbox()
+            return (box[1],box[3]-1) if box else (256,256)
+        samples = []
+        for n in range(25):
+            x = min(1131,264+round(867*n/24)); top,bottom = column(x)
+            y = (top+bottom)/2 if n==24 else top
+            samples.append({'x': round(n/24,6),'edge': round((y-256)/512,6)})
+        def polygon(left,right):
+            points = []
+            columns = sorted(set([left,right]+list(range(left,right,8))))
+            for x in columns: points.append((x/2,column(x)[0]/2))
+            for x in reversed(columns): points.append((x/2,column(x)[1]/2))
+            return 'M'+' '.join(f'{x:.1f},{y:.1f}' for x,y in points)+'Z'
+        shapes.append({'body':polygon(264,1131),'hilt':polygon(36,263),'samples':samples})
+        save(atlas,OUT/'candy'/f'blade-{i+1}.webp',{'source':f'blades-{batch}.png','row':row,'sourceJoint':joint,'grip':[112,256],'bodyFrame':[264,0,868,512],'hiltFrame':[36,0,228,512]})
+
+(OUT/'candy/blade-shapes.ts').write_text('// Generated by scripts/prepare-reconstructed-assets.py from sprite alpha.\nexport const BLADE_SHAPES = '+json.dumps(shapes,separators=(',',':'))+';\n')
+(ROOT/'art/reconstructed/manifest.json').write_text(json.dumps(manifest,indent=2)+'\n')
+print(f'Prepared {len(manifest["assets"])} lossless sprites, 12 matching silhouettes.')

@@ -12,7 +12,7 @@ const voices: Record<VoiceFamily, MonsterVoice> = {
   thorn: { family: 'thorn', start: 375, end: 150, duration: .16, formant: 2450, noise: .14, type: 'triangle' },
   giant: { family: 'giant', start: 140, end: 65, duration: .26, formant: 600, noise: .17, type: 'sawtooth' },
 };
-const families: Record<EnemyKind, VoiceFamily> = { blob: 'soft', swift: 'swift', armor: 'shell', shooter: 'breath', charger: 'horn', wisp: 'spirit', splitter: 'soft', brood: 'swift', spiker: 'thorn', elite: 'giant', boss: 'giant' };
+const families: Record<EnemyKind, VoiceFamily> = { blob: 'soft', swift: 'swift', armor: 'shell', shooter: 'breath', charger: 'horn', wisp: 'spirit', splitter: 'soft', brood: 'swift', spiker: 'thorn', poison: 'breath', bomber: 'thorn', stalker: 'spirit', elite: 'giant', boss: 'giant' };
 export function monsterVoice(kind: EnemyKind, lethal = false): MonsterVoice {
   const voice = voices[families[kind]];
   return { ...voice, start: voice.start * (lethal ? .85 : 1), end: voice.end * (lethal ? .72 : 1), duration: voice.duration * (lethal ? 1.25 : 1) };

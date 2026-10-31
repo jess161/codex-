@@ -19,7 +19,7 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
     const distance = (p: { x: number; y: number }) => Math.hypot(p.x - s.player.x, p.y - s.player.y);
     const enemies = s.enemies.filter(e => e.spawn <= 0 && e.hp > 0).sort((a, b) => distance(a) - distance(b));
     const orbs = [...s.orbs].sort((a, b) => distance(a) - distance(b));
-    const target = orbs.find(o => o.kind === 'heal' && s.hp < s.maxHp - 10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
+    const target = (s.bossStarted ? enemies.find(e=>e.kind==='boss') : undefined) ?? orbs.find(o => o.kind === 'heal' && s.hp < s.maxHp - 10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
     let dx = target.x - s.player.x, dy = target.y - s.player.y;
     const norm = Math.hypot(dx, dy) || 1; dx /= norm; dy /= norm;
     let dash = false;
@@ -31,6 +31,15 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
         const cross = Math.abs((s.player.x - e.x) * Math.sin(e.angle) - (s.player.y - e.y) * Math.cos(e.angle));
         if (cross < e.radius + 28) { dx = -Math.sin(e.angle); dy = Math.cos(e.angle); dash = s.dashCooldown <= 0 && e.timer < .25; }
       }
+    }
+    // Avoid the three reconstructed threats using only movement and dash input.
+    for(const h of s.hazards??[]) if(h.kind==='poison') {
+      const ex=s.player.x-h.x,ey=s.player.y-h.y,d=Math.hypot(ex,ey)||1,safe=h.radius+38;
+      if(d<safe) { dx+=(ex/d||1)*(safe-d)/safe*5; dy+=ey/d*(safe-d)/safe*5; }
+    }
+    for(const e of enemies) if(e.action==='windup' && (e.kind==='poison'||e.kind==='bomber'||e.kind==='stalker')) {
+      if(e.kind==='stalker') { const cross=Math.abs((s.player.x-e.x)*Math.sin(e.angle)-(s.player.y-e.y)*Math.cos(e.angle)); if(cross<34) {dx=-Math.sin(e.angle);dy=Math.cos(e.angle);} }
+      else { const x=e.kind==='poison'?e.targetX:e.x,y=e.kind==='poison'?e.targetY:e.y,ex=s.player.x-x,ey=s.player.y-y,d=Math.hypot(ex,ey)||1; if(d<110) {dx+=(ex/d||1)*4;dy+=ey/d*4;dash=s.dashCooldown<=0&&e.timer<.25;} }
     }
     for (const b of s.bullets) {
       const ex = s.player.x - b.x, ey = s.player.y - b.y, d = Math.hypot(ex, ey) || 1;

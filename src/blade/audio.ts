@@ -12,16 +12,21 @@ export class BladeAudio {
   private lastMonster = -Infinity;
   private familyTimes = new Map<string, number>();
   monsterEnabled = true;
-  enabled = true;
+  private audible = true;
+  get enabled() { return this.audible; }
+  set enabled(value: boolean) {
+    this.audible = value;
+    if (this.master && this.context) { this.master.gain.cancelScheduledValues(this.context.currentTime); this.master.gain.setTargetAtTime(value ? .23 : 0,this.context.currentTime,.008); }
+  }
   unlock() {
     if (!this.context) {
       try {
-        this.context = new AudioContext(); this.master = this.context.createGain(); this.master.gain.value = .23;
+        const Context = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext; this.context = new Context(); this.master = this.context.createGain(); this.master.gain.value = this.enabled ? .23 : 0;
         const limiter = this.context.createDynamicsCompressor(); limiter.threshold.value = -18; limiter.knee.value = 12; limiter.ratio.value = 5; limiter.attack.value = .005; limiter.release.value = .12;
         this.master.connect(limiter); limiter.connect(this.context.destination); this.noise = voiceNoise(this.context);
       } catch { return; }
     }
-    void this.context.resume();
+    void this.context.resume().catch(() => {});
   }
   private tone(frequency: number, duration: number, type: OscillatorType = 'sine', volume = .2, end?: number, delay = 0) {
     if (!this.enabled || !this.context || !this.master || this.context.state !== 'running') return;
@@ -36,7 +41,7 @@ export class BladeAudio {
     this.tone((250 + tier * 110) / (1 + weight * .24), .12 + weight * .025, 'triangle', .12, 70 + tier * 16);
     if (weight > .7) this.tone(90 / (1 + weight * .12), .16, 'triangle', .08, 44);
   }
-  hit() { const t = performance.now(); if (t - this.lastHit < 85) return; this.lastHit = t; this.tone(145, .055, 'triangle', .16, 55); }
+  hit(weight = 0) { const t = performance.now(); if (t - this.lastHit < 85) return; this.lastHit = t; this.tone(145 - weight * 15, .055 + weight * .015, 'triangle', .16, 55); if(weight > 1) this.tone(65,.1,'sine',.10,38); }
   enemyHurt(kind: EnemyKind, lethal = false, source = 'melee') {
     if (!this.enabled || !this.monsterEnabled || !this.context || !this.master || !this.noise || this.context.state !== 'running' || source === 'burn' && !lethal) return false;
     const now = performance.now(), voice = monsterVoice(kind, lethal);
@@ -44,6 +49,7 @@ export class BladeAudio {
     this.lastMonster = now; this.familyTimes.set(voice.family, now);
     playMonsterVoice(this.context, this.master, this.noise, voice); return true;
   }
+  explode() { this.tone(90,.24,'triangle',.22,28); this.tone(170,.1,'sawtooth',.05,45); }
   pickup() { const t = performance.now(); if (t - this.lastPickup < 90) return; this.lastPickup = t; this.tone(780 + this.melody++ % 4 * 90, .07, 'sine', .10); }
   dash() { this.tone(470, .16, 'triangle', .13, 75); }
   hurt() { this.tone(110, .18, 'sawtooth', .10, 40); }

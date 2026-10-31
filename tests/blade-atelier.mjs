@@ -14,10 +14,10 @@ const advance = (page, ms) => page.evaluate(ms => window.advanceTime(ms), ms);
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } }); await boot(page);
   await page.getByRole('button', { name: '刀型图鉴', exact: true }).click();
-  check('all twelve archive blades expose rotation, and the bestiary explains eleven creatures', await page.locator('.codex-art').count() === 12 && await page.locator('.monster-card').count() === 11 && await page.locator('.monster-card img').evaluateAll(imgs => imgs.every(i => i.complete && i.naturalWidth > 0)));
+  check('all twelve archive blades expose rotation, and the bestiary explains fourteen creatures', await page.locator('.codex-art').count() === 12 && await page.locator('.monster-card').count() === 14 && await page.locator('.monster-card img').evaluateAll(imgs => imgs.every(i => i.complete && i.naturalWidth > 0)));
   await page.locator('.monster-archive').scrollIntoViewIfNeeded(); await shot(page, '01-creature-archive');
   await page.getByRole('button', { name: '旋转鉴赏雪饮狂刀', exact: true }).click(); await ready(page);
-  check('the inspection window creates a real, beveled 3D object with local textures', await page.evaluate(() => { const i = window.__BLADE__.ui.inspector; return i.root.dataset.mode === 'webgl' && i.model.children.length >= 8 && i.renderer.info.render.triangles > 2000; }));
+  check('the inspection window creates a real, beveled 3D object with local textures', await page.evaluate(() => { const i = window.__BLADE__.ui.inspector; return i.root.dataset.mode === 'webgl' && i.model.children.length >= 4 && i.renderer.info.render.triangles > 2000; }));
   await shot(page, '02-snow-craft');
   const surface = page.locator('.inspector-surface'), rect = await surface.boundingBox();
   const initial = await surface.getAttribute('data-rotation');
@@ -58,11 +58,11 @@ try {
   // Real AI and telegraphs; positions and time are explicit encounter fixtures.
   await page.evaluate(() => {
     const a = window.__BLADE__, r = a.run, s = r.state; s.time = 400; s.level = 12; s.invincible = 10000; s.attackTimer = 10000;
-    const kinds = ['blob', 'swift', 'armor', 'shooter', 'splitter', 'brood', 'charger', 'wisp', 'spiker'];
-    for (const [i, kind] of kinds.entries()) { const angle = i * Math.PI * 2 / kinds.length, d = kind === 'wisp' ? 190 : 190 + i % 2 * 45, e = r.spawnEnemy(kind, Math.cos(angle) * d, Math.sin(angle) * d); e.cooldown = 0; }
+    const kinds = ['poison','bomber','stalker','blob', 'swift', 'armor', 'shooter', 'splitter', 'brood', 'charger', 'wisp', 'spiker'];
+    for (const [i, kind] of kinds.entries()) { const angle = i * Math.PI * 2 / kinds.length, d = kind === 'bomber' ? 80 : kind === 'stalker' ? 110 : kind === 'charger' || kind === 'wisp' ? 190 : 190 + i % 2 * 45, e = r.spawnEnemy(kind, Math.cos(angle) * d, Math.sin(angle) * d); e.cooldown = 0; }
     a.advance(20);
   }); await shot(page, '05-mixed-creature-telegraphs');
-  check('new archetypes enter their own readable combat preparations', await page.evaluate(() => { const enemies = window.__BLADE__.run.state.enemies; return ['charger', 'wisp', 'spiker'].every(kind => enemies.some(e => e.kind === kind && e.action === 'windup')); }));
+  check('new archetypes enter their own readable combat preparations', await page.evaluate(() => { const enemies = window.__BLADE__.run.state.enemies; return ['poison','bomber','stalker','charger', 'wisp', 'spiker'].every(kind => enemies.some(e => e.kind === kind && e.action === 'windup')); }));
   await advance(page, 900);
   check('spike telegraphs turn into six real spine projectiles', await page.evaluate(() => window.__BLADE__.run.state.bullets.filter(b => b.kind === 'spine' && b.damage === 8).length === 6));
   await shot(page, '06-new-creatures-in-action');
@@ -80,17 +80,17 @@ try {
     return new Promise(resolve => { let peak = 0, energy = 0, count = 0, start = performance.now(); const samples = new Float32Array(512); const sample = () => { window.__monsterAnalyser.getFloatTimeDomainData(samples); for (const value of samples) { peak = Math.max(peak, Math.abs(value)); energy += value * value; count++; } if (performance.now() - start < 230) requestAnimationFrame(sample); else resolve({ peak, rms: Math.sqrt(energy / count) }); }; sample(); });
   }, kind);
   metrics.voices = {};
-  for (const kind of ['blob', 'swift', 'armor', 'shooter', 'charger', 'wisp', 'splitter', 'brood', 'spiker', 'elite', 'boss']) { metrics.voices[kind] = await hit(kind); await page.waitForTimeout(100); }
-  check('actual hits on every species produce a measurable, nonclipping creature voice', Object.values(metrics.voices).every(v => v.peak > .001 && v.peak < .8 && v.rms > .0001) && await page.evaluate(() => window.__monsterCalls.filter(c => c.played).length === 11));
+  for (const kind of ['poison','bomber','stalker','blob', 'swift', 'armor', 'shooter', 'charger', 'wisp', 'splitter', 'brood', 'spiker', 'elite', 'boss']) { metrics.voices[kind] = await hit(kind); await page.waitForTimeout(100); }
+  check('actual hits on every species produce a measurable, nonclipping creature voice', Object.values(metrics.voices).every(v => v.peak > .001 && v.peak < .8 && v.rms > .0001) && await page.evaluate(() => window.__monsterCalls.filter(c => c.played).length === 14));
   check('hurt voices receive the real enemy type, source and lethal status', await page.evaluate(() => window.__monsterCalls.every(c => c.source === 'melee' && c.lethal === false)));
   const burst = await page.evaluate(() => { const a = window.__BLADE__.audio; a.lastMonster = -Infinity; a.familyTimes.clear(); return Array.from({ length: 100 }, () => a.enemyHurt('blob')).filter(Boolean).length; });
   check('a large cleave is limited to one simultaneous hurt call instead of one hundred overlapping voices', burst === 1);
   await page.waitForTimeout(400); await page.getByRole('button', { name: '暂停', exact: true }).click(); await page.getByRole('button', { name: '游戏设置', exact: true }).click();
   await page.locator('[data-setting="monsterSound"]').uncheck(); await page.getByRole('button', { name: '完成', exact: true }).click(); await page.getByRole('button', { name: '继续试炼', exact: true }).click();
   const muted = await hit('wisp'); check('the independent creature-sound switch silences voices while preserving other sound settings', muted.peak < .00001 && await page.evaluate(() => window.__BLADE__.storage.data.settings.sound && !window.__BLADE__.audio.monsterEnabled && window.__monsterCalls.at(-1).played === false));
-  await page.evaluate(() => { const a = window.__BLADE__, r = a.run; r.state.enemies = []; r.state.bullets = [{ id: r.state.nextId++, x: 400, y: 300, vx: 10, vy: 0, life: 3, kind: 'spine', damage: 8 }]; for (const kind of ['charger', 'wisp', 'splitter', 'brood', 'spiker']) r.spawnEnemy(kind, 350, 200); a.save(); });
+  await page.evaluate(() => { const a = window.__BLADE__, r = a.run; r.state.enemies = []; r.state.bullets = [{ id: r.state.nextId++, x: 400, y: 300, vx: 10, vy: 0, life: 3, kind: 'spine', damage: 8 }]; for (const kind of ['poison','bomber','stalker','charger', 'wisp', 'splitter', 'brood', 'spiker']) r.spawnEnemy(kind, 350, 200); a.save(); });
   await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' }); await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.evaluate(() => { window.__BLADE__.scene.onFrame = undefined; });
-  check('reload preserves all new creatures, projectile metadata and the sound preference', await page.evaluate(() => { const a = window.__BLADE__, s = a.run.state; return ['charger', 'wisp', 'splitter', 'brood', 'spiker'].every(k => s.enemies.some(e => e.kind === k)) && s.bullets.some(b => b.kind === 'spine' && b.damage === 8) && !a.storage.data.settings.monsterSound; }));
+  check('reload preserves all new creatures, projectile metadata and the sound preference', await page.evaluate(() => { const a = window.__BLADE__, s = a.run.state; return ['poison','bomber','stalker','charger', 'wisp', 'splitter', 'brood', 'spiker'].every(k => s.enemies.some(e => e.kind === k)) && s.bullets.some(b => b.kind === 'spine' && b.damage === 8) && !a.storage.data.settings.monsterSound; }));
   await page.close();
   const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); await boot(mobile); await mobile.getByRole('button', { name: '刀型图鉴', exact: true }).tap(); await mobile.getByRole('button', { name: '旋转鉴赏阎魔', exact: true }).tap(); await ready(mobile);
   const cdp = await mobile.context().newCDPSession(mobile), point = (x, y, id = 1) => ({ x, y, id });

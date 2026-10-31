@@ -8,7 +8,9 @@ import { BladeAudio } from './audio';
 import { BladeUI, type Panel } from './ui';
 import { isGroundId } from './grounds';
 import { isRelicId } from './relics';
+import { displayProfile } from './display';
 import { swingPhase } from './equipment';
+import { impactFeedback } from './feedback';
 
 export class BladeApp {
   readonly storage = new BladeStorage();
@@ -38,21 +40,39 @@ export class BladeApp {
     this.ui = new BladeUI(this);
     this.scene.onReady = () => { this.ready = true; this.ui.ready(); this.applySettings(); if (this.storage.warning) this.ui.toast(this.storage.warning); };
     this.scene.onFrame = dt => this.frame(dt);
+    const display = displayProfile(innerWidth, innerHeight, devicePixelRatio, this.storage.data.settings.simplified);
+    this.scene.pixelRatio = display.ratio;
     this.game = new Phaser.Game({
       type: new URLSearchParams(location.search).get('renderer') === 'webgl' ? Phaser.AUTO : Phaser.CANVAS,
       parent: 'game', backgroundColor: '#f3f6f9', antialias: true, transparent: false,
-      scale: { mode: Phaser.Scale.RESIZE, width: window.innerWidth, height: window.innerHeight },
+      scale: { mode: Phaser.Scale.NONE, width: display.width, height: display.height },
       scene: [this.scene], banner: false, fps: { target: 60, smoothStep: true },
       render: { pixelArt: false, roundPixels: false, maxTextures: 16 },
       input: { activePointers: 3 }, audio: { noAudio: true },
     });
-    this.bindInputs();
+    this.bindInputs(); this.watchDisplay();
     this.applySettings();
   }
+  private dprMedia?: MediaQueryList;
+  private dprListener = () => { this.syncDisplay(); this.watchDisplay(); };
+  private watchDisplay() {
+    this.dprMedia?.removeEventListener('change', this.dprListener);
+    this.dprMedia = matchMedia(`(resolution: ${devicePixelRatio}dppx)`);
+    this.dprMedia.addEventListener('change', this.dprListener, { once: true });
+  }
+  private syncDisplay() {
+    if (!this.game?.canvas) return;
+    const p = displayProfile(innerWidth, innerHeight, devicePixelRatio, this.storage.data.settings.simplified);
+    this.scene.pixelRatio = p.ratio;
+    if (this.game.canvas.width !== p.width || this.game.canvas.height !== p.height) this.game.scale.resize(p.width, p.height);
+    this.game.canvas.style.width = `${p.cssWidth}px`; this.game.canvas.style.height = `${p.cssHeight}px`;
+  }
   private applySettings() {
-    const settings = this.storage.data.settings;
+    const settings = this.storage.data.settings; this.syncDisplay();
     this.audio.enabled = settings.sound; this.audio.monsterEnabled = settings.monsterSound;
     this.scene.reducedMotion = !settings.motion; this.scene.shakeEnabled = settings.shake; this.scene.simplified = settings.simplified;
+    if (!settings.motion || !settings.hitPause) { this.hitStop = 0; this.scene.impactStopped = false; }
+    if (!settings.motion || !settings.shake) this.scene.clearImpact();
     this.scene.heroColor = settings.color;
     this.scene.groundTheme = settings.ground;
     document.body.dataset.battleTheme = settings.ground;
@@ -62,14 +82,13 @@ export class BladeApp {
         const r = this.run, s = r.state, special = s.enemies.filter(e => e.kind === 'boss' || e.kind === 'elite');
         const normal = s.enemies.filter(e => e.kind !== 'boss' && e.kind !== 'elite').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y));
         s.enemies = [...special, ...normal.slice(0, Math.max(0, encounterDensity(s.time, true).cap - special.length))]; s.bullets = s.bullets.slice(0, 24);
-        while (s.orbs.length > 100) { const orb = s.orbs.pop()!; r.addOrb(orb.x, orb.y, orb.value, orb.kind); }
       }
     }
   }
   clearInputs() {
     this.keys.clear(); this.dashQueued = false; this.releaseTouch();
     if (this.run) this.run.state.velocity = { x: 0, y: 0 };
-    this.accumulator = 0;
+    this.accumulator = 0; this.hitStop = 0; this.scene.clearImpact();
   }
   private releaseTouch() {
     const id = this.activeTouch;
@@ -86,15 +105,17 @@ export class BladeApp {
       if (movement.includes(key) || key === 'escape') event.preventDefault();
       if (event.repeat && (key === ' ' || key === 'escape')) return;
       if (key === 'escape' || key === 'p') {
-        if (this.panel === 'settings' || this.panel === 'codex' || this.panel === 'confirm' || this.panel === 'loadout' || this.panel === 'relics') this.action('back');
+        if (this.panel === 'settings' || this.panel === 'codex' || this.panel === 'confirm' || this.panel === 'loadout' || this.panel === 'relics' || this.panel === 'power') this.action('back');
         else if (this.panel === 'pause') this.action('resume'); else if (this.run && this.panel === 'none') this.pause();
         return;
       }
       if (key === 'f') { this.action('fullscreen'); return; }
       if (this.panel !== 'none' || !this.run) return;
       if (this.run.state.mode === 'relic' && /^[1-3]$/.test(key)) { if (!event.repeat) this.action('relic', this.run.state.choices[Number(key) - 1]); return; }
+      if (key === 'c') { this.action('power'); return; }
       if (key === 'i') { this.action('relics'); return; }
       if (this.run.state.mode !== 'playing') return;
+      if (movement.includes(key) && !event.repeat) this.audio.unlock();
       this.keys.add(key);
       if (key === ' ') this.dashQueued = true;
     });
@@ -102,7 +123,7 @@ export class BladeApp {
     window.addEventListener('blur', () => { this.clearInputs(); if (this.run && this.panel === 'none' && !['won', 'dead'].includes(this.run.state.mode)) { this.pausedByBlur = true; this.pause(); } });
     document.addEventListener('visibilitychange', () => { if (document.hidden) { this.clearInputs(); if (this.run && this.panel === 'none') this.pause(); this.save(); } });
     window.addEventListener('pagehide', () => this.save());
-    window.addEventListener('resize', () => this.clearInputs());
+    window.addEventListener('resize', () => { this.clearInputs(); this.syncDisplay(); });
     const surface = document.querySelector<HTMLElement>('#game')!;
     const joystick = document.querySelector<HTMLElement>('#touch-joystick')!;
     const updateStick = (event: PointerEvent) => {
@@ -190,8 +211,8 @@ export class BladeApp {
       if (action === 'codex' && this.run) requestAnimationFrame(() => document.querySelector(`.codex-card[data-tier="${this.run!.tier}"]`)?.scrollIntoView({ block: 'center' }));
       return;
     }
-    if (action === 'relics' && this.run) { this.backPanel = this.panel; this.panel = 'relics'; this.scene.pausedRun = true; this.clearInputs(); this.save(); this.ui.render(true); return; }
-    if (action === 'back' && this.panel === 'relics') { this.panel = this.backPanel; this.scene.pausedRun = this.panel !== 'none'; this.clearInputs(); this.ui.render(true); return; }
+    if ((action === 'relics' || action === 'power') && this.run) { this.backPanel = this.panel; this.panel = action; this.scene.pausedRun = true; this.clearInputs(); this.save(); this.ui.render(true); return; }
+    if (action === 'back' && (this.panel === 'relics' || this.panel === 'power')) { this.panel = this.backPanel; this.scene.pausedRun = this.panel !== 'none'; this.clearInputs(); this.ui.render(true); return; }
     if (action === 'back') { this.panel = this.backPanel === 'none' && !['won', 'dead'].includes(this.run?.state.mode ?? '') ? 'pause' : this.backPanel; this.ui.render(true); return; }
     if (action === 'title' || action === 'save-title') {
       if (action === 'save-title') this.save();
@@ -203,9 +224,9 @@ export class BladeApp {
     }
   }
   setSetting(key: string, value: boolean) {
-    if (!['sound', 'monsterSound', 'simplified', 'motion', 'shake'].includes(key)) return;
+    if (!['sound', 'monsterSound', 'simplified', 'motion', 'shake', 'hitPause', 'haptics'].includes(key)) return;
     (this.storage.data.settings as unknown as Record<string, boolean>)[key] = value;
-    this.applySettings(); this.storage.write(); this.ui.render(true);
+    this.applySettings(); if ((key === 'sound' || key === 'monsterSound') && value) this.audio.unlock(); this.storage.write(); this.ui.render(true);
   }
   private input(): MoveInput {
     const right = this.keys.has('d') || this.keys.has('arrowright'), left = this.keys.has('a') || this.keys.has('arrowleft');
@@ -217,13 +238,20 @@ export class BladeApp {
     const modeBefore = this.run.state.mode;
     this.run.step(FIXED_STEP, this.input()); this.dashQueued = false;
     this.scene.ingest(this.run.events);
+    const contacts = this.run.events.filter(e=>e.type==='hit' && (e.source==='melee' || e.source==='wave'));
+    if (contacts.length) {
+      const impact = impactFeedback(Math.max(...contacts.map(e=>e.amount??0)),this.run.stats.mass,contacts.length,contacts.some(e=>e.elite));
+      this.audio.hit(impact.index); this.scene.impact(impact.shake);
+      const settings = this.storage.data.settings;
+      if (settings.motion && settings.hitPause && performance.now()-this.lastHitStop>120) { this.lastHitStop=performance.now(); this.hitStop=impact.hitStop; }
+      if (settings.haptics && impact.index>=2) navigator.vibrate?.(impact.index===3 ? 12:8);
+    }
     for (const event of this.run.events) {
       if (event.type === 'slash') this.audio.slash(event.tier ?? 0, this.run.stats.mass);
       if (event.type === 'hit') {
-        if (event.source !== 'burn') this.audio.hit();
         if (event.enemyKind) this.audio.enemyHurt(event.enemyKind, event.lethal, event.source);
-        if (event.elite && this.storage.data.settings.motion && performance.now() - this.lastHitStop > 200) { this.lastHitStop = performance.now(); this.hitStop = .025; }
       }
+      if (event.type === 'blast') this.audio.explode();
       if (event.type === 'pickup') this.audio.pickup();
       if (event.type === 'passive') this.audio.passive(event.tier ?? this.run.tier);
       if (event.type === 'hurt') this.audio.hurt();
@@ -262,11 +290,12 @@ export class BladeApp {
   }
   frame(dt: number) {
     this.scene.pausedRun = this.panel !== 'none';
-    if (this.hitStop > 0) { this.hitStop -= dt; this.ui.render(); return; }
+    this.scene.impactStopped = false;
+    if (this.hitStop > 0 && this.panel === 'none') { this.scene.impactStopped = true; this.hitStop = Math.max(0,this.hitStop-dt); this.accumulator=0; this.ui.render(); return; }
     if (this.run && this.panel === 'none' && !['won', 'dead'].includes(this.run.state.mode)) {
       this.accumulator += Math.min(dt, .1);
       let ticks = 0;
-      while (this.accumulator >= FIXED_STEP && ticks++ < 6) { this.accumulator -= FIXED_STEP; this.tick(); }
+      while (this.accumulator >= FIXED_STEP && ticks++ < 6) { this.accumulator -= FIXED_STEP; this.tick(); if(this.hitStop>0) { this.accumulator=0; this.scene.impactStopped=true; break; } }
       if (performance.now() - this.lastSaved > 5000) { this.lastSaved = performance.now(); this.save(); }
     }
     this.hudClock += dt;

@@ -75,14 +75,14 @@ describe('passive item choices and progression', () => {
   it('adds max HP once per heart rank and heals with the active two-piece bonus', () => {
     const r = run(); r.state.hp = 20; award(r, 'heart'); expect(r.state.maxHp).toBe(115); expect(r.state.hp).toBe(35);
     award(r, 'magnet'); const before = r.state.hp; award(r, 'heart'); expect(r.state.maxHp).toBe(130); expect(r.state.hp - before).toBe(18);
-    r.state.hp = 50; r.addOrb(0, 0, 10, 'heal'); step(r); expect(r.state.hp).toBe(62);
+    r.state.hp = 50; r.addOrb(0, 0, 10, 'heal'); step(r,14); expect(r.state.hp).toBe(62);
   });
   it('applies the healing group to the native boss-entry recovery as well as pickups and upgrades', () => {
     const r = run(); award(r, 'heart'); award(r, 'magnet'); r.state.hp = 50; r.state.time = 599.99;
     step(r); expect(r.state.mode).toBe('boss-intro'); expect(r.state.hp).toBe(68);
   });
   it('credits XP candy exactly once on pickup and never reapplies it on restore', () => {
-    const r = run(); award(r, 'star'); r.addOrb(0, 0, 10, 'xp'); step(r);
+    const r = run(); award(r, 'star'); r.addOrb(0, 0, 10, 'xp'); step(r,14);
     expect(r.state.totalXp).toBeCloseTo(10.6); expect(r.state.xp).toBeCloseTo(10.6);
     const restored = new BladeRun(1, restoreSnapshot(r.snapshot())!); step(restored);
     expect(restored.state.totalXp).toBeCloseTo(10.6); expect(restored.state.orbs).toHaveLength(0);

@@ -3,6 +3,7 @@ export const BOSS_DURATION = 90;
 export const SAVE_KEY = 'blade-evolution-save-v1';
 export const FIXED_STEP = 1 / 60;
 export const MAX_LEVEL = 30;
+export const XP_DROP_TIME = .22;
 export const EVOLUTION_HEAL = 4;
 export const MIN_FORM_TIME = 75;
 export const ELITE_INTERVAL = GAME_DURATION / 5;
@@ -42,19 +43,22 @@ export const PERKS: Record<PerkId, { name: string; label: string; description: s
   heal: { name: '修复', label: '恢复 20 生命', description: '稍作喘息，继续向前', cap: 999, icon: 'heart', color: '#72ba87' },
 };
 export const freshPerks = (): Record<PerkId, number> => Object.fromEntries(Object.keys(PERKS).map(id => [id, 0])) as Record<PerkId, number>;
-export type EnemyKind = 'blob' | 'swift' | 'armor' | 'shooter' | 'charger' | 'wisp' | 'splitter' | 'brood' | 'spiker' | 'elite' | 'boss';
+export type EnemyKind = 'blob' | 'swift' | 'armor' | 'shooter' | 'charger' | 'wisp' | 'splitter' | 'brood' | 'spiker' | 'poison' | 'bomber' | 'stalker' | 'elite' | 'boss';
 export const ENEMIES: Record<EnemyKind, { hp: number; damage: number; speed: number; xp: number; radius: number; size: number }> = {
-  blob: { hp: 22, damage: 10, speed: 80, xp: 3, radius: 14, size: 38 },
-  swift: { hp: 16, damage: 8, speed: 155, xp: 4, radius: 11, size: 31 },
-  armor: { hp: 90, damage: 14, speed: 65, xp: 7, radius: 17, size: 43 },
+  blob: { hp: 20, damage: 10, speed: 80, xp: 3, radius: 14, size: 38 },
+  swift: { hp: 15, damage: 8, speed: 155, xp: 4, radius: 11, size: 31 },
+  armor: { hp: 70, damage: 14, speed: 65, xp: 7, radius: 17, size: 43 },
   shooter: { hp: 28, damage: 8, speed: 75, xp: 6, radius: 15, size: 40 },
-  charger: { hp: 42, damage: 10, speed: 76, xp: 6, radius: 16, size: 44 },
+  charger: { hp: 38, damage: 10, speed: 76, xp: 6, radius: 16, size: 44 },
   wisp: { hp: 24, damage: 8, speed: 102, xp: 5, radius: 12, size: 37 },
-  splitter: { hp: 50, damage: 10, speed: 62, xp: 5, radius: 20, size: 50 },
+  splitter: { hp: 44, damage: 10, speed: 62, xp: 5, radius: 20, size: 50 },
   brood: { hp: 9, damage: 5, speed: 125, xp: 1, radius: 9, size: 25 },
   spiker: { hp: 38, damage: 10, speed: 58, xp: 7, radius: 17, size: 45 },
-  elite: { hp: 450, damage: 16, speed: 68, xp: 25, radius: 26, size: 68 },
-  boss: { hp: 10000, damage: 20, speed: 65, xp: 0, radius: 42, size: 109 },
+  poison: { hp: 42, damage: 8, speed: 68, xp: 7, radius: 16, size: 43 },
+  bomber: { hp: 32, damage: 18, speed: 105, xp: 6, radius: 14, size: 38 },
+  stalker: { hp: 30, damage: 11, speed: 108, xp: 7, radius: 13, size: 38 },
+  elite: { hp: 420, damage: 16, speed: 68, xp: 25, radius: 26, size: 68 },
+  boss: { hp: 8000, damage: 20, speed: 65, xp: 0, radius: 42, size: 109 },
 };
 export const ENEMY_INFO: Record<EnemyKind, { name: string; role: string; description: string; from: number }> = {
   blob: { name: '软团', role: '追逐', description: '缓慢靠近，适合聚在一起清扫。', from: 0 },
@@ -66,11 +70,15 @@ export const ENEMY_INFO: Record<EnemyKind, { name: string; role: string; descrip
   charger: { name: '赤角冲兽', role: '蓄力冲锋', description: '红色路径预警后直线冲锋，侧移躲过，再趁收势反击。', from: 165 },
   wisp: { name: '游灯幽魂', role: '绕行突进', description: '侧向飘移包抄，青色路径亮起时准备短距离突进。', from: 240 },
   spiker: { name: '针背刺团', role: '放射尖刺', description: '六道橙色预警后沿固定方向发射尖刺，从两道之间穿过。', from: 330 },
+  poison: { name: '毒气泡团', role: '毒气封路', description: '落点预警后留下短时毒气，离开圈外即可安全；可在蓄气时击杀。', from: 210 },
+  bomber: { name: '爆燃球', role: '定点爆炸', description: '靠近后停下引爆，趁倒计时击杀或离开橙色范围。', from: 300 },
+  stalker: { name: '隐纹幽球', role: '隐身突袭', description: '平时呈淡紫轮廓；显形锁向后直线突刺，侧移躲开并趁收势反击。', from: 420 },
   elite: { name: '裂甲先锋', role: '精英', description: '高生命、强冲锋，倒下后留下治疗。', from: 120 },
   boss: { name: '圆甲暴君', role: '首领', description: '在冲锋、震荡波与召唤之间切换，找到缺口再出刀。', from: 600 },
 };
 const ENCOUNTERS: { kind: EnemyKind; weight: number; cap?: number }[] = [
   { kind: 'blob', weight: 40 }, { kind: 'swift', weight: 18 }, { kind: 'armor', weight: 13 }, { kind: 'shooter', weight: 8, cap: 6 },
+  { kind: 'poison', weight: 5, cap: 3 }, { kind: 'bomber', weight: 5, cap: 5 }, { kind: 'stalker', weight: 5, cap: 5 },
   { kind: 'splitter', weight: 9, cap: 12 }, { kind: 'charger', weight: 7, cap: 8 }, { kind: 'wisp', weight: 5, cap: 10 }, { kind: 'spiker', weight: 3, cap: 3 },
 ];
 export function encounterKind(time: number, roll: number, counts: Partial<Record<EnemyKind, number>> = {}): EnemyKind {
@@ -101,5 +109,5 @@ export function sectorHits(dx: number, dy: number, radius: number, facing: numbe
 export function encounterDensity(time: number, simplified = false) {
   const progress = Math.max(0, Math.min(1, time / GAME_DURATION));
   const surge = Math.max(0, (progress - .4) / .6);
-  return { rate: .5 + 3.3 * progress + 9.2 * surge * surge, cap: Math.floor((simplified ? 80 : 120) + (simplified ? 100 : 160) * surge) };
+  return { rate: .9 + 3.0 * progress + 6.9 * surge * surge, cap: Math.floor((simplified ? 72 : 100) + (simplified ? 108 : 180) * surge) };
 }

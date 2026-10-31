@@ -94,9 +94,9 @@ describe('parallel blade routes and exaggerated forging', () => {
     for (let i = 0; i < 3; i++) { f.knockX = f.knockY = 0; strike(enma); }
     expect(enma.state.hp).toBe(98); expect(enma.state.passive.hits).toBe(0);
   });
-  it('endgame density rises to thirteen spawns per second and respects each rendering budget', () => {
-    expect(encounterDensity(0)).toEqual({ rate: .5, cap: 120 }); expect(encounterDensity(600)).toEqual({ rate: 13, cap: 280 });
-    expect(encounterDensity(590).rate).toBeGreaterThan(encounterDensity(300).rate * 4);
+  it('endgame density rises to 10.8 spawns per second and respects each rendering budget', () => {
+    expect(encounterDensity(0)).toEqual({ rate: .9, cap: 100 }); expect(encounterDensity(600)).toEqual({ rate: 10.8, cap: 280 });
+    expect(encounterDensity(590).rate).toBeGreaterThan(encounterDensity(300).rate * 3);
     for (const lite of [false, true]) {
       const r = isolated(0); r.simplified = lite; r.state.time = 599; r.state.spawnBudget = 1000;
       const cap = encounterDensity(599, lite).cap;

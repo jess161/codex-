@@ -12,16 +12,16 @@ const strike = (r: BladeRun) => {
   r.step(1 / 60, idle);
 };
 describe('new creature behaviors, sound events and persistence', () => {
-  it('introduces eight naturally spawning archetypes gradually and keeps infants out of the spawn pool', () => {
+  it('introduces eleven naturally spawning archetypes gradually and keeps infants out of the spawn pool', () => {
     const pool = (time: number) => new Set(Array.from({ length: 1000 }, (_, i) => encounterKind(time, i / 1000)));
     expect([...pool(0)]).toEqual(['blob']); expect(pool(89).has('splitter')).toBe(false); expect(pool(90).has('splitter')).toBe(true);
     expect(pool(164).has('charger')).toBe(false); expect(pool(165).has('charger')).toBe(true);
     expect(pool(239).has('wisp')).toBe(false); expect(pool(240).has('wisp')).toBe(true);
     expect(pool(329).has('spiker')).toBe(false); expect(pool(330).has('spiker')).toBe(true);
-    expect(pool(590).size).toBe(8); expect(pool(590).has('brood')).toBe(false); expect(Object.keys(ENEMY_INFO)).toHaveLength(11);
+    expect(pool(590).size).toBe(11); expect(pool(590).has('brood')).toBe(false); expect(Object.keys(ENEMY_INFO)).toHaveLength(14);
   });
   it('limits ranged and charging threats even when late spawn density is high', () => {
-    const counts = { spiker: 3, shooter: 6, charger: 8, wisp: 10, splitter: 12 };
+    const counts = { poison:3,bomber:5,stalker:5,spiker: 3, shooter: 6, charger: 8, wisp: 10, splitter: 12 };
     const kinds = new Set(Array.from({ length: 1000 }, (_, i) => encounterKind(590, i / 1000, counts)));
     expect([...kinds].sort()).toEqual(['armor', 'blob', 'swift']);
   });

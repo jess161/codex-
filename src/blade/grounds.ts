@@ -9,7 +9,10 @@ export const GROUNDS = [
 export type GroundId = typeof GROUNDS[number]['id'];
 export const isGroundId = (id: unknown): id is GroundId => GROUNDS.some(ground => ground.id === id);
 export const groundInfo = (id: GroundId) => GROUNDS.find(ground => ground.id === id)!;
-const patterns = new Map<GroundId, HTMLCanvasElement>();
+export const GROUND_TILE_SIZE = 576;
+export const GROUND_MAX_DENSITY = 6;
+export const groundDensity = (zoom: number) => Math.min(GROUND_MAX_DENSITY, Math.max(1, Math.ceil(zoom)));
+const patterns = new Map<string, HTMLCanvasElement>();
 const previews = new Map<GroundId, string>();
 
 // Rendering uses its own stable seed. Changing scenery never consumes combat RNG.
@@ -21,11 +24,13 @@ function pebble(c: CanvasRenderingContext2D, x: number, y: number, size: number,
   c.strokeStyle = '#ffffff55'; c.lineWidth = .8; c.beginPath(); c.moveTo(x - size * .55, y - size * .2); c.lineTo(x + size * .1, y - size * .45); c.stroke();
 }
 
-export function groundPattern(id: GroundId): HTMLCanvasElement {
-  const cached = patterns.get(id); if (cached) return cached;
+export function groundPattern(id: GroundId, density = 1): HTMLCanvasElement {
+  density = Math.max(1, Math.min(GROUND_MAX_DENSITY, Math.ceil(density)));
+  const key = `${id}:${density}`, cached = patterns.get(key);
+  if (cached) { patterns.delete(key); patterns.set(key, cached); return cached; }
   const canvas = document.createElement('canvas'), size = id === 'classic' ? 40 : 576;
-  canvas.width = canvas.height = size;
-  const c = canvas.getContext('2d')!;
+  canvas.width = canvas.height = size * density;
+  const c = canvas.getContext('2d')!; c.scale(density, density);
   c.fillStyle = groundInfo(id).base; c.fillRect(0, 0, size, size);
   const random = randomSource(4381);
   if (id === 'classic') {
@@ -99,12 +104,14 @@ export function groundPattern(id: GroundId): HTMLCanvasElement {
     }
     c.strokeStyle = '#8cb2c528'; c.lineWidth = 1; c.beginPath(); c.arc(285, 185, 42, .3, 2); c.stroke();
   }
-  patterns.set(id, canvas); return canvas;
+  patterns.set(key, canvas);
+  while (patterns.size > 2) patterns.delete(patterns.keys().next().value!);
+  return canvas;
 }
 
 export function groundPreview(id: GroundId) {
   const cached = previews.get(id); if (cached) return cached;
-  const canvas = document.createElement('canvas'); canvas.width = 240; canvas.height = 120;
-  const context = canvas.getContext('2d')!; context.scale(.75, .75); context.fillStyle = context.createPattern(groundPattern(id), 'repeat')!; context.fillRect(0, 0, 320, 160);
+  const canvas = document.createElement('canvas'); canvas.width = 720; canvas.height = 360;
+  const context = canvas.getContext('2d')!; context.scale(.75, .75); context.fillStyle = context.createPattern(groundPattern(id, 3), 'repeat')!; context.fillRect(0, 0, 960, 480);
   const url = canvas.toDataURL('image/png'); previews.set(id, url); return url;
 }

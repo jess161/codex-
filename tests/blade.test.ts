@@ -61,14 +61,14 @@ describe('Blade Evolution combat and progression', () => {
     step(r, .2); expect(r.state.player.y).toBeCloseTo(-140, 4); expect(r.state.dashCooldown).toBeGreaterThan(4.7);
     expect(r.damagePlayer(10, 'hit')).toBe(true); expect(r.damagePlayer(10, 'hit')).toBe(false); expect(r.state.hp).toBe(90);
   });
-  it('merges XP objects at the cap without losing any reward', () => {
+  it('keeps every XP object at its original drop position without merging', () => {
     const r = empty(); for (let i = 0; i < 200; i++) r.addOrb(i * 10, 0, 3, 'xp');
-    expect(r.state.orbs).toHaveLength(150); expect(r.state.orbs.reduce((v, o) => v + o.value, 0)).toBe(600);
+    expect(r.state.orbs).toHaveLength(200); expect(r.state.orbs.map(o=>o.x)).toEqual(Array.from({length:200},(_,i)=>i*10)); expect(r.state.orbs.reduce((v, o) => v + o.value, 0)).toBe(600);
   });
-  it('starts boss cleanly, vacuums dropped XP, and never awards removed monster XP', () => {
+  it('starts boss without clearing dropped XP or awarding removed monster XP', () => {
     const r = empty(); r.state.time = GAME_DURATION - .01; r.state.hp = 50; r.spawnEnemy('blob', 100, 100); r.addOrb(300, 300, 3, 'xp');
-    r.step(1 / 60, input); expect(r.state.mode).toBe('boss-intro'); expect(r.state.totalXp).toBe(3); expect(r.state.kills).toBe(0);
-    expect(r.state.hp).toBe(65); expect(r.state.enemies).toHaveLength(1); expect(r.state.enemies[0].hp).toBe(10000);
+    r.step(1 / 60, input); expect(r.state.mode).toBe('boss-intro'); expect(r.state.totalXp).toBe(0); expect(r.state.orbs).toHaveLength(1); expect(r.state.orbs[0]).toMatchObject({x:300,y:300,value:3}); expect(r.state.kills).toBe(0);
+    expect(r.state.hp).toBe(65); expect(r.state.enemies).toHaveLength(1); expect(r.state.enemies[0].hp).toBe(8000);
     const time = r.state.time; step(r, .5); expect(r.state.time).toBe(time); expect(r.state.bossTime).toBe(0);
   });
   it('ends the run at the boss deadline and freezes the terminal result', () => {
@@ -79,7 +79,7 @@ describe('Blade Evolution combat and progression', () => {
   it('can defeat the boss through regular melee and computes the exact victory score', () => {
     const r = empty(); r.state.level = 28; r.state.bossStarted = true; r.state.time = GAME_DURATION; r.state.bossTime = 10; r.state.attackTimer = 0;
     const boss = r.spawnEnemy('boss', 80, 0); boss.hp = 100; boss.speed = 0;
-    step(r, .3); expect(r.state.mode).toBe('won'); expect(r.score()).toBe(1000 + Math.floor(90 - r.state.bossTime) * 10);
+    step(r, 2); expect(r.state.mode).toBe('won'); expect(r.score()).toBe(1000 + Math.floor(90 - r.state.bossTime) * 10);
   });
   it('restarts all combat stats and keeps seeded simulation repeatable', () => {
     const a = empty(42), b = empty(42); step(a, 5); step(b, 5);

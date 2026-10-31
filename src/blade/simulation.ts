@@ -1,15 +1,16 @@
-import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
+import { THREATS, type Hazard } from './threats';
+import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { LEGACY_RELICS, RELIC_CAP, RELIC_IDS, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
 import { freshEnemyEffects, freshPassive, passiveForTier, passiveRules, type BladeId, type EnemyEffects, type PassiveState } from './passives';
 
 export interface Point { x: number; y: number }
 export interface Enemy extends Point, EnemyEffects {
-  id: number; kind: EnemyKind; hp: number; maxHp: number; radius: number; damage: number; speed: number; xp: number;
+  id: number; kind: EnemyKind; reveal?: number; hp: number; maxHp: number; radius: number; damage: number; speed: number; xp: number;
   hit: number; spawn: number; age: number; cooldown: number; action: 'idle' | 'windup' | 'charge' | 'recover';
   timer: number; angle: number; move: number; targetX: number; targetY: number; knockX: number; knockY: number;
 }
-export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal' }
+export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal'; dropTimer?: number }
 export interface Bullet extends Point { id: number; vx: number; vy: number; life: number; kind?: 'orb' | 'spine'; damage?: number }
 export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga' }
 export interface Shock extends Point { id: number; radius: number; gap: number }
@@ -22,10 +23,10 @@ export interface RunState {
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
   passive: PassiveState;
   aim: number; targetId: number; attackTimer: number; attackCount: number; swing: Swing | null;
-  enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
+  hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic'; item?: 'thunder' | 'shield'; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' };
+export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast'; item?: 'thunder' | 'shield'; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' };
 export interface MoveInput { x: number; y: number; dash: boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
@@ -64,7 +65,7 @@ export class BladeRun {
       level: 1, xp: 0, totalXp: 0, formStartedAt: 0, perks: freshPerks(), pending: [], choices: [], evolutionTime: 0,
       passive: freshPassive(blade),
       aim: -Math.PI / 4, targetId: -1, attackTimer: .2, attackCount: 0, swing: null,
-      enemies: [], orbs: [], bullets: [], waves: [], shocks: [],
+      hazards: [], enemies: [], orbs: [], bullets: [], waves: [], shocks: [],
       kills: 0, eliteKills: 0, bestCleave: 0, bossHits: 0, recentKills: [], maxCombo: 0, failure: '',
     };
     if (!snapshot) for (let i = 0; i < 3; i++) {
@@ -105,10 +106,10 @@ export class BladeRun {
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number, cue = 0) {
-    const s = this.state, c = ENEMIES[kind], minute = Math.floor(s.time / GAME_DURATION * 7);
-    let hp = c.hp * (kind === 'boss' || kind === 'elite' ? 1 : 1 + (kind === 'armor' ? .12 : .08) * minute);
-    if (kind === 'elite') hp = [450, 1000, 1800, 2800][Math.max(0, Math.min(3, s.eliteIndex - 1))];
-    const e: Enemy = { id: s.nextId++, kind, x, y, hp, maxHp: hp, radius: c.radius, speed: c.speed, damage: c.damage, xp: c.xp, hit: 0, spawn: cue, age: 0, cooldown: 1.6 + this.random(), action: 'idle', timer: 0, angle: 0, move: 0, targetX: 0, targetY: 0, knockX: 0, knockY: 0, ...freshEnemyEffects() };
+    const s = this.state, c = ENEMIES[kind], minute = s.time / 60;
+    let hp = c.hp * (kind === 'boss' || kind === 'elite' ? 1 : 1 + (kind === 'armor' ? .17 : .12) * minute + .025 * Math.max(0, minute - 4) ** 2);
+    if (kind === 'elite') hp = [420, 1000, 1800, 2800][Math.max(0, Math.min(3, s.eliteIndex - 1))];
+    const e: Enemy = { id: s.nextId++, kind, x, y, hp, maxHp: hp, radius: c.radius, speed: c.speed, damage: c.damage, xp: c.xp, hit: 0, spawn: cue, age: 0, cooldown: 1.6 + this.random(), action: 'idle', timer: 0, angle: 0, move: 0, targetX: 0, targetY: 0, knockX: 0, knockY: 0, reveal: 0, ...freshEnemyEffects() };
     s.enemies.push(e); return e;
   }
   grantXp(value: number) {
@@ -285,15 +286,15 @@ export class BladeRun {
     if ((source === 'melee' || source === 'wave') && relicGroups(this.state.relics).arcane === 3 && (e.burnTime > 0 || e.slowTime > 0 || e.chill > 0 || e.freeze > 0 || e.stun > 0)) amount = Math.round(amount * 1.1);
     this.passiveHit(e, source);
     if (source === 'melee' || source === 'wave') this.relicHit(e);
-    const s = this.state; e.hp -= amount; e.hit = .15;
+    const s = this.state; e.hp -= amount; e.hit = .15; e.reveal = .85;
     const resistance = e.kind === 'boss' ? 0 : e.kind === 'elite' ? .25 : 1;
     if (source !== 'burn' && source !== 'relic') {
       e.knockX += Math.cos(angle) * this.stats.knockback * 16 * resistance;
       e.knockY += Math.sin(angle) * this.stats.knockback * 16 * resistance;
     }
-    this.events.push({ type: 'hit', x: e.x, y: e.y, amount, elite: e.kind === 'elite' || e.kind === 'boss', enemyKind: e.kind, lethal: e.hp <= 0, source });
+    this.events.push({ type: 'hit', x: e.x, y: e.y, amount, elite: e.kind === 'elite' || e.kind === 'boss', enemyKind: e.kind, enemyId:e.id, lethal: e.hp <= 0, source });
     if (e.hp > 0) return false;
-    this.events.push({ type: 'kill', x: e.x, y: e.y, tier: this.tier, elite: e.kind === 'elite' || e.kind === 'boss' });
+    this.events.push({ type: 'kill', enemyKind:e.kind, enemyId:e.id, source, x: e.x, y: e.y, tier: this.tier, elite: e.kind === 'elite' || e.kind === 'boss' });
     const p = s.passive;
     if (this.bladeId === 'scrap') {
       p.kills++;
@@ -304,11 +305,11 @@ export class BladeRun {
       s.dashCooldown = Math.max(0, s.dashCooldown - this.rules.huntRefund); p.cooldown = .6; this.emitPassive('deer-cutter', e.x, e.y);
     }
     if (this.bladeId === 'ryujin' && (e.burnTime > 0 || source === 'burn')) {
-      for (const other of this.grid.query(e.x, e.y, this.rules.burnSpread + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= this.rules.burnSpread + other.radius) this.ignite(other, e.burnDamage);
+      for (const other of this.grid.query(e.x, e.y, this.rules.burnSpread + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= this.rules.burnSpread + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
       this.emitPassive('ryujin', e.x, e.y, this.rules.burnSpread);
     }
     if (e.kind === 'boss') { s.mode = 'won'; this.events.push({ type: 'win' }); return true; }
-    if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 10, 'heal'); }
+    if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal'); }
     else s.kills++;
     if (e.kind === 'splitter') {
       let slots = encounterDensity(s.time, this.simplified).cap - s.enemies.filter(other => other.hp > 0).length;
@@ -370,18 +371,9 @@ export class BladeRun {
     return cleave;
   }
   addOrb(x: number, y: number, value: number, kind: 'xp' | 'heal') {
-    const s = this.state, limit = this.simplified ? 100 : 150;
-    if (s.orbs.length >= limit) {
-      let closest: Orb | undefined, distance = Infinity;
-      for (const orb of s.orbs) if (orb.kind === kind) {
-        const d = Math.hypot(orb.x - x, orb.y - y); if (d < distance) { closest = orb; distance = d; }
-      }
-      if (closest) { closest.value += value; return; }
-      // Preserve rewards even when no matching object can be merged.
-      if (kind === 'xp') this.grantXp(value); else this.heal(value);
-      return;
-    }
-    s.orbs.push({ id: s.nextId++, x, y, value, kind });
+    if (!Number.isFinite(value) || value <= 0) return;
+    // Every reward keeps its own world position and identity. Never merge or credit remotely.
+    const s = this.state; s.orbs.push({ id: s.nextId++, x, y, value, kind, dropTimer: XP_DROP_TIME });
   }
   private spawnOutside(kind?: EnemyKind) {
     const s = this.state, angle = this.random() * Math.PI * 2;
@@ -398,8 +390,7 @@ export class BladeRun {
   private beginBoss() {
     const s = this.state;
     s.bossStarted = true; s.mode = 'boss-intro'; s.transition = 1; s.bullets = []; s.enemies = []; s.waves = []; s.shocks = []; s.swing = null;
-    for (const orb of s.orbs) { if (orb.kind === 'xp') this.grantXp(orb.value); else this.heal(orb.value); }
-    s.orbs = []; this.heal(15);
+    s.hazards = []; this.heal(15);
     this.spawnEnemy('boss', s.player.x, s.player.y - 190);
     this.events.push({ type: 'boss' });
   }
@@ -418,9 +409,49 @@ export class BladeRun {
       if (e.burnTime === 0) { e.burnDamage = 0; e.burnTick = .5; }
     }
   }
+  private updateThreat(e: Enemy, dt: number, factor: number, dx: number, dy: number, distance: number) {
+    const s = this.state; let moving = e.action === 'idle';
+    if (e.action === 'windup') {
+      e.timer -= dt;
+      if (e.timer <= 0) {
+        if (e.kind === 'poison') {
+          const hazards = s.hazards ??= [];
+          if (hazards.length < (this.simplified ? 8 : 12) && hazards.filter(h => h.kind === 'poison').length < (this.simplified ? 4 : 6)) hazards.push({ id: s.nextId++, kind: 'poison', x: e.targetX, y: e.targetY, radius: 56, age: 0, duration: 3.2, damage: 3 });
+          e.action = 'idle'; e.cooldown = 6.2;
+        } else if (e.kind === 'bomber') {
+          e.hp = 0; const hazards = s.hazards ??= [];
+          if (hazards.length < (this.simplified ? 8 : 12)) hazards.push({ id: s.nextId++, kind: 'blast', x: e.x, y: e.y, radius: 72, age: 0, duration: .28, damage: 0 });
+          if (distance <= 72) this.damagePlayer(18, '未能离开爆燃球的爆炸范围');
+          this.addOrb(e.x, e.y, e.xp, 'xp'); this.events.push({ type: 'blast', x: e.x, y: e.y }); return;
+        } else { e.action = 'charge'; e.timer = .42; }
+      }
+    } else if (e.action === 'charge') {
+      e.x += Math.cos(e.angle) * 260 * dt * factor; e.y += Math.sin(e.angle) * 260 * dt * factor;
+      e.timer -= dt;
+      if (Math.hypot(e.x - s.player.x, e.y - s.player.y) < e.radius + 16) this.damagePlayer(11, '未能躲过隐纹幽球的锁向突刺');
+      if (e.timer <= 0) { e.action = 'recover'; e.timer = 1.15; }
+    } else if (e.action === 'recover') {
+      e.timer -= dt; if (e.timer <= 0) { e.action = 'idle'; e.cooldown = 3.5; }
+    } else if (e.cooldown <= 0 && distance < (e.kind === 'poison' ? 240 : e.kind === 'bomber' ? 96 : 125)) {
+      e.action = 'windup'; moving = false;
+      e.timer = e.kind === 'poison' ? .85 : e.kind === 'bomber' ? 1.1 : .8;
+      e.targetX = s.player.x; e.targetY = s.player.y; e.angle = Math.atan2(dy, dx);
+    }
+    if (moving) { e.x += dx / distance * e.speed * dt * factor; e.y += dy / distance * e.speed * dt * factor; }
+    e.x += e.knockX * dt; e.y += e.knockY * dt; e.knockX *= Math.exp(-16 * dt); e.knockY *= Math.exp(-16 * dt);
+    if (e.kind === 'poison' && Math.hypot(e.x - s.player.x, e.y - s.player.y) < e.radius + 16) this.damagePlayer(e.damage, '被毒气泡团贴近');
+  }
+  private updateHazards(dt: number) {
+    const s = this.state; if (!s.hazards) return;
+    for (const hazard of s.hazards) {
+      hazard.age += dt;
+      if (hazard.kind === 'poison' && hazard.age < hazard.duration && Math.hypot(hazard.x - s.player.x, hazard.y - s.player.y) <= hazard.radius) this.damagePlayer(hazard.damage, '停留在毒气区域中');
+    }
+    s.hazards = s.hazards.filter(h => h.age < h.duration);
+  }
   private updateEnemy(e: Enemy, dt: number) {
     const s = this.state;
-    e.hit = Math.max(0, e.hit - dt); e.age += dt;
+    e.hit = Math.max(0, e.hit - dt); e.reveal = Math.max(0, (e.reveal ?? 0) - dt); e.age += dt;
     if (e.spawn > 0) { e.spawn = Math.max(0, e.spawn - dt); return; }
     this.updateEnemyEffects(e, dt);
     if (e.hp <= 0 || s.mode !== 'playing') return;
@@ -431,6 +462,7 @@ export class BladeRun {
     const moveFactor = 1 - slow;
     const dx = s.player.x - e.x, dy = s.player.y - e.y, d = Math.hypot(dx, dy) || 1;
     e.cooldown -= dt;
+    if (e.kind === 'poison' || e.kind === 'bomber' || e.kind === 'stalker') { this.updateThreat(e, dt, moveFactor, dx, dy, d); return; }
     const special = e.kind === 'boss' || e.kind === 'elite';
     let moving = true;
     if (e.action === 'windup') {
@@ -559,6 +591,7 @@ export class BladeRun {
     s.attackTimer -= dt;
     if (s.swing) {
       s.swing.age += dt;
+      if(s.swing.age >= s.swing.windup && s.swing.age-dt < s.swing.windup) this.events.push({type:'slash',x:s.player.x,y:s.player.y,tier:this.tier});
       if (s.swing.age >= s.swing.windup + s.swing.strike * .45 && !s.swing.resolved) {
         s.swing.resolved = true;
         const cleave = this.resolveMelee(s.swing.angle);
@@ -576,7 +609,6 @@ export class BladeRun {
       if (target) {
         s.targetId = target.id; s.aim = Math.atan2(target.y - s.player.y, target.x - s.player.x); s.attackTimer = stats.interval;
         s.swing = { id: s.nextId++, angle: s.aim, age: 0, resolved: false, tier: this.tier, windup: stats.windup, strike: stats.strike, recovery: stats.recovery };
-        this.events.push({ type: 'slash', x: s.player.x, y: s.player.y, tier: this.tier });
       }
     }
     for (const wave of s.waves) {
@@ -604,7 +636,12 @@ export class BladeRun {
       if (Math.abs(d - shock.radius) < 25 && Math.abs(angleDelta(a, shock.gap)) > 35 * Math.PI / 180) this.damagePlayer(20, '被暴君的震荡波击中');
     }
     s.shocks = s.shocks.filter(a => a.radius <= 240);
+    this.updateHazards(dt);
+    if (s.mode !== 'playing') return;
+    let collected = false;
     for (const orb of s.orbs) {
+      if ((orb.dropTimer ?? 0) > 0) { orb.dropTimer = Math.max(0, orb.dropTimer! - dt); if (orb.dropTimer > 0) continue; }
+      if (Math.abs(orb.x - s.player.x) > Math.max(100, stats.magnet) || Math.abs(orb.y - s.player.y) > Math.max(100, stats.magnet)) continue;
       const dx = s.player.x - orb.x, dy = s.player.y - orb.y, distance = Math.hypot(dx, dy);
       if (distance < stats.magnet || orb.kind === 'heal' && distance < 100) {
         const amount = Math.min(distance, (270 + (stats.magnet - distance) * 4) * dt);
@@ -613,10 +650,10 @@ export class BladeRun {
       if (Math.hypot(s.player.x - orb.x, s.player.y - orb.y) < 18) {
         if (orb.kind === 'xp') { this.grantXp(orb.value); this.events.push({ type: 'pickup', x: orb.x, y: orb.y, amount: orb.value }); }
         else this.heal(orb.value);
-        orb.value = 0;
+        orb.value = 0; collected = true;
       }
     }
-    s.orbs = s.orbs.filter(o => o.value > 0);
+    if (collected) s.orbs = s.orbs.filter(o => o.value > 0);
     const far = Math.hypot(this.view.width, this.view.height) + 400;
     s.enemies = s.enemies.filter(e => e.hp > 0 && (e.kind === 'boss' || e.kind === 'elite' || Math.hypot(e.x - s.player.x, e.y - s.player.y) < far));
     s.recentKills = s.recentKills.filter(t => t > s.time + s.bossTime - 10);
@@ -656,14 +693,16 @@ function validateRun(value: unknown, legacy = false): boolean {
     const r = s.relicState;
     if (!r || !Number.isInteger(r.lightning) || r.lightning < 0 || r.lightning > (s.relics.thunder ? 6 - s.relics.thunder : 0) || typeof r.shield !== 'boolean' || !finite(r.shieldCooldown) || r.shieldCooldown < 0 || r.shieldCooldown > 20 || r.shield && r.shieldCooldown !== 0 || (r.shield || r.shieldCooldown > 0) && relicGroups(s.relics).spirit !== 3) return false;
   }
-  for (const [array, max] of [[s.enemies, 280], [s.orbs, 150], [s.bullets, 32], [s.waves, 32], [s.shocks, 8]] as const) {
+  for (const [array, max] of [[s.enemies, 280], [s.orbs, Infinity], [s.bullets, 32], [s.waves, 32], [s.shocks, 8]] as const) {
     if (!Array.isArray(array) || array.length > max || array.some(e => !e || !finite(e.x) || !finite(e.y) || !finite(e.id))) return false;
   }
   const enemyNumbers = ['hp', 'maxHp', 'radius', 'damage', 'speed', 'xp', 'hit', 'spawn', 'age', 'cooldown', 'timer', 'angle', 'move', 'targetX', 'targetY', 'knockX', 'knockY'] as const;
   if (s.enemies.some(e => !Object.hasOwn(ENEMIES, e.kind) || enemyNumbers.some(k => !finite(e[k])) || !['idle', 'windup', 'charge', 'recover'].includes(e.action))) return false;
   const effectKeys = Object.keys(freshEnemyEffects()) as (keyof EnemyEffects)[];
   if (s.enemies.some(e => effectKeys.some(k => !finite(e[k]) || e[k] < 0) || !Number.isInteger(e.chillStacks) || e.chillStacks > 3 || !Number.isInteger(e.dragonHits) || e.dragonHits > 2 || e.slow > 1 || e.burnTime > 4.001 || e.burnTick > .501 || e.hunt > 6.001 || e.chill > 3.001 || e.freeze > 1.401 || e.freezeCooldown > 4.001 || e.stun > 1.201 || e.slowTime > 1.201)) return false;
-  if (s.orbs.some(o => !finite(o.value) || o.value <= 0 || !['xp', 'heal'].includes(o.kind))) return false;
+  if (s.hazards !== undefined && (!Array.isArray(s.hazards) || s.hazards.length > 12 || s.hazards.some(h => !h || !['poison', 'blast'].includes(h.kind) || ['id','x','y','radius','age','duration','damage'].some(k => !finite(h[k as keyof Hazard])) || h.radius <= 0 || h.radius > 80 || h.age < 0 || h.age > h.duration || h.duration <= 0 || h.duration > 3.201 || h.damage < 0 || h.damage > 18))) return false;
+  if (s.enemies.some(e => e.reveal !== undefined && (!finite(e.reveal) || e.reveal < 0 || e.reveal > .851))) return false;
+  if (s.orbs.some(o => o.dropTimer !== undefined && (!finite(o.dropTimer) || o.dropTimer < 0 || o.dropTimer > XP_DROP_TIME + .001) || !finite(o.value) || o.value <= 0 || !['xp', 'heal'].includes(o.kind))) return false;
   if (s.bullets.some(b => !finite(b.vx) || !finite(b.vy) || !finite(b.life) || b.kind !== undefined && !['orb', 'spine'].includes(b.kind) || b.damage !== undefined && (!finite(b.damage) || b.damage <= 0 || b.damage > 30))) return false;
   if (s.waves.some(w => !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
   if (s.shocks.some(shock => !finite(shock.radius) || !finite(shock.gap))) return false;

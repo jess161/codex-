@@ -1,0 +1,633 @@
+{
+  "source": "Reimplemented from conversation; original generated PNGs retained.",
+  "assets": [
+    {
+      "path": "src/blade/assets/orbs/hero.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "b64dcc3955a0a8ff20b4084de82949243f8c68cb723a2e1c2a84243aa79aa014",
+      "source": "orbs.png",
+      "cell": 0,
+      "sourceCropPixels": [
+        237,
+        232
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/blob.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "365d571efa6283de1fd01b4548bebf1bcd71d10d0561391fa51605812d5ade91",
+      "source": "orbs.png",
+      "cell": 1,
+      "sourceCropPixels": [
+        245,
+        232
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/swift.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "aeec24b1f70efa0c062ad06751681f806a731c022d6e66b7d4e9db2f7a704b36",
+      "source": "orbs.png",
+      "cell": 2,
+      "sourceCropPixels": [
+        285,
+        237
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/armor.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "597ffe8cd965dd4d9d7b352167800a49116d31a6f73adbd6cc8d2445264d612c",
+      "source": "orbs.png",
+      "cell": 3,
+      "sourceCropPixels": [
+        250,
+        241
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/shooter.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "828d2df7daa307e334cee713d35b4fd8050e5e8756dbccf3fc0b6c8fc7805b57",
+      "source": "orbs.png",
+      "cell": 4,
+      "sourceCropPixels": [
+        273,
+        228
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/charger.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "961d9325280028a698b6d13de8f25454a0e277eaf57b4a08c41dbb969fc3a073",
+      "source": "orbs.png",
+      "cell": 5,
+      "sourceCropPixels": [
+        248,
+        240
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/wisp.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "e8cd00e87fac7bf8a254e4a61be3169b6bcb411f99452ef7d3ee3521bb5f6601",
+      "source": "orbs.png",
+      "cell": 6,
+      "sourceCropPixels": [
+        279,
+        230
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/splitter.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "a751730bbcddc8100798481d6491fa7b4f02d3fd35758369d6ca7453dabb539f",
+      "source": "orbs.png",
+      "cell": 7,
+      "sourceCropPixels": [
+        246,
+        235
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/brood.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "61a24ec714e5eee2ca2653c14e7c4a4dd90ed3942d85e0071fe3dc78dead5ced",
+      "source": "orbs.png",
+      "cell": 8,
+      "sourceCropPixels": [
+        231,
+        260
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/spiker.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "e68fdf9a8c2c271b716bb26cca1d69e6013769dde1d15a4b5600aeadf84e5b84",
+      "source": "orbs.png",
+      "cell": 9,
+      "sourceCropPixels": [
+        271,
+        251
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/elite.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "7b09e293f701e1e3eac7d9dc4a6098c9c6f5d10db26a3efb8828503e4fd7ad07",
+      "source": "orbs.png",
+      "cell": 10,
+      "sourceCropPixels": [
+        246,
+        274
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/boss.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "13009e178b643393e2d882cb05621ce8bdd719d41c15f48674f0dbae69fabaab",
+      "source": "orbs.png",
+      "cell": 11,
+      "sourceCropPixels": [
+        262,
+        258
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/poison.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "e7e8bc94f989257975fac9991cbc036db41a4c011349f545d498c1179f578642",
+      "source": "orbs.png",
+      "cell": 12,
+      "sourceCropPixels": [
+        240,
+        285
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/bomber.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "462737bcf2ccc48a912184541168cedc8fee0e40e7db5c44541ba2798f346bfd",
+      "source": "orbs.png",
+      "cell": 13,
+      "sourceCropPixels": [
+        239,
+        293
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/stalker.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "5b93e0ddce901f6167a7e9e9f1e8a8ba44ab22ac9e196f2a24fbd531da26958c",
+      "source": "orbs.png",
+      "cell": 14,
+      "sourceCropPixels": [
+        250,
+        239
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/orbs/xp.webp",
+      "size": [
+        512,
+        512
+      ],
+      "sha256": "487b979a09d30692d570c876d21f4269e83dde8dc7837eb895fd5d845202c773",
+      "source": "orbs.png",
+      "cell": 15,
+      "sourceCropPixels": [
+        181,
+        183
+      ],
+      "pivot": [
+        256,
+        256
+      ],
+      "contentMaxSize": 448
+    },
+    {
+      "path": "src/blade/assets/candy/blade-1.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "364a5dcdbdd82babbde5d31f67e50a541319afcd1bcd3bdcb2c1f722061fc0dc",
+      "source": "blades-0.png",
+      "row": 0,
+      "sourceJoint": 401,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-2.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "239f36cb4f4a0671dce755a07dbd24ea77487295a8393ebc366509f45c31cb03",
+      "source": "blades-0.png",
+      "row": 1,
+      "sourceJoint": 425,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-3.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "61c45caa918f59c5ca8d9dd146a761d8e613cfce1a6c566bd9724d292cef5686",
+      "source": "blades-0.png",
+      "row": 2,
+      "sourceJoint": 435,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-4.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "f211ad5600c742a20c2c9e51566a9cae0684dd9dc8d98cef391e0e38e29293cc",
+      "source": "blades-1.png",
+      "row": 0,
+      "sourceJoint": 392,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-5.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "7a44e2b8ec48edc7cc0456608b9c631384622d259c72af05bb77b909391c25d2",
+      "source": "blades-1.png",
+      "row": 1,
+      "sourceJoint": 421,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-6.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "df978198a6586adafc30beaa5bb27ea9c8ae51874743c92cd7a0e02e1d0e85b8",
+      "source": "blades-1.png",
+      "row": 2,
+      "sourceJoint": 396,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-7.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "83a81c5a306121f07ec8ececb16d77dbf99ed3cf2fd7d51112f233949ada3691",
+      "source": "blades-2.png",
+      "row": 0,
+      "sourceJoint": 406,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-8.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "ca14f1c654d02da989c2467d9ee414acf4479e0c4939c68760be389887016a38",
+      "source": "blades-2.png",
+      "row": 1,
+      "sourceJoint": 398,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-9.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "5d16c2d57724baa54a0496d6d267905f66e5bea377dd0ec8b1e3d6ed5aeeb441",
+      "source": "blades-2.png",
+      "row": 2,
+      "sourceJoint": 420,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-10.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "ff496cacefd5a65bfc6cbea2aade16008835657cd16df93d073d69d75f08f7ba",
+      "source": "blades-3.png",
+      "row": 0,
+      "sourceJoint": 362,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-11.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "f7c37cdf6b9a2818d6880f3e4d775a6453bd908bfac5bd68224fe9c70db27fbe",
+      "source": "blades-3.png",
+      "row": 1,
+      "sourceJoint": 365,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    },
+    {
+      "path": "src/blade/assets/candy/blade-12.webp",
+      "size": [
+        1280,
+        512
+      ],
+      "sha256": "29e3dd1380c0690faea62c90d687932e4087ff63e6ae1e31c2ae84445c3cd394",
+      "source": "blades-3.png",
+      "row": 2,
+      "sourceJoint": 369,
+      "grip": [
+        112,
+        256
+      ],
+      "bodyFrame": [
+        264,
+        0,
+        868,
+        512
+      ],
+      "hiltFrame": [
+        36,
+        0,
+        228,
+        512
+      ]
+    }
+  ]
+}

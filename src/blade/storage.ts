@@ -1,7 +1,7 @@
 import { SAVE_KEY, TIERS, TIER_LEVELS } from './config';
 import { restoreSnapshot, type RunState } from './simulation';
 import { isGroundId, type GroundId } from './grounds';
-export interface Settings { sound: boolean; monsterSound: boolean; simplified: boolean; motion: boolean; shake: boolean; color: number; ground: GroundId; blade: number }
+export interface Settings { sound: boolean; monsterSound: boolean; simplified: boolean; motion: boolean; shake: boolean; hitPause: boolean; haptics: boolean; color: number; ground: GroundId; blade: number }
 export interface Meta { maxTier: number; seenBlades: number[]; achievements: string[]; runs: number; wins: number; bestScore: number; bestKills: number; bestTime: number; lastFinishedId: string }
 export interface SaveData { version: 6; meta: Meta; settings: Settings; run: RunState | null }
 export const freshMeta = (): Meta => ({ maxTier: 0, seenBlades: [], achievements: [], runs: 0, wins: 0, bestScore: 0, bestKills: 0, bestTime: 0, lastFinishedId: '' });
@@ -9,7 +9,7 @@ export class BladeStorage {
   data: SaveData;
   warning = '';
   constructor() {
-    this.data = { version: 6, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, color: 0, ground: 'grid', blade: 0 }, run: null };
+    this.data = { version: 6, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, hitPause: true, haptics: false, color: 0, ground: 'grid', blade: 0 }, run: null };
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const saved = JSON.parse(raw);
@@ -31,7 +31,7 @@ export class BladeStorage {
         if (typeof saved.meta.lastFinishedId === 'string') this.data.meta.lastFinishedId = saved.meta.lastFinishedId;
       }
       if (saved.settings) {
-        for (const key of ['sound', 'monsterSound', 'simplified', 'motion', 'shake'] as const) if (typeof saved.settings[key] === 'boolean') this.data.settings[key] = saved.settings[key];
+        for (const key of ['sound', 'monsterSound', 'simplified', 'motion', 'shake', 'hitPause', 'haptics'] as const) if (typeof saved.settings[key] === 'boolean') this.data.settings[key] = saved.settings[key];
         if (Number.isInteger(saved.settings.color) && saved.settings.color >= 0 && saved.settings.color < 3) this.data.settings.color = saved.settings.color;
         if (isGroundId(saved.settings.ground)) this.data.settings.ground = saved.settings.ground;
         if (Number.isInteger(saved.settings.blade) && saved.settings.blade >= 0 && saved.settings.blade < TIERS.length) this.data.settings.blade = saved.settings.blade;

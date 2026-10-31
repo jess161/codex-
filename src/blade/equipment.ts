@@ -21,7 +21,7 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const strike = .10 + Math.min(.08, load * .022);
   const recovery = .10 + Math.min(.18, load * .05) * handling;
   return {
-    damage: Math.round((14 + 2 * (level - 1)) * t.multiplier * (1 + .20 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1)),
+    damage: Math.round((20 + (level - 1)) * t.multiplier * (1 + .10 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1)),
     interval: Math.max(windup + strike + recovery + .015, Math.max(.26, t.interval * .92 ** p.quick) * (1 + Math.min(.5, load * .13) * handling)),
     range,
     arc: Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
