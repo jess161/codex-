@@ -11,12 +11,17 @@ export function combatPower(run: BladeRun) {
   const s = run.state, stats = run.stats, base = equipmentStats(1,freshPerks(),run.tier,freshRelics()), groups = relicGroups(s.relics);
   // Relative growth within the chosen blade. Conditional powers use average uptime, not an invented DPS claim.
   const stackBonus = run.bladeId === 'scrap' ? 1+s.passive.stacks*run.rules.scrapBonus : 1;
-  const itemDamage = 1+s.relics.ember*.08+(s.relics.thunder ? (.55+.15*s.relics.thunder)/(7-s.relics.thunder) : 0);
+  const elemental=(1+.15*s.relics.prism)*(groups.arcane>=2?1.2:1)*(groups.chaos>=2?1.2:1);
+  const itemDamage = 1+elemental*(s.relics.ember*.08+s.relics.venom*.075+(s.relics.thunder ? (.55+.15*s.relics.thunder)/(7-s.relics.thunder) : 0))
+    +(s.relics.echo?(.30+.15*s.relics.echo)/5:0)+(s.relics.comet?3*(.20+.15*s.relics.comet)/4:0)
+    +(s.relics.fan?(.25+.15*s.relics.fan)*stats.interval/stats.dashCooldown:0)+s.relics.blackhole*.15/8;
   const ratios = {
-    output: stats.damage/base.damage * base.interval/stats.interval * stackBonus * itemDamage,
-    crowd: Math.sqrt(stats.range/base.range)*(stats.arc/base.arc)**.65*(1+s.relics.crystal*.045),
-    mobility: (stats.moveSpeed/base.moveSpeed)**.7 * (stats.acceleration/base.acceleration)**.15 * (groups.wind===3 ? 1.08:1),
-    survival: s.maxHp/100 * (groups.spirit>=2 ? 1.06:1) * (groups.spirit===3 ? 1.18:1),
+    output: stats.damage/base.damage * base.interval/stats.interval * stackBonus * itemDamage * (1+stats.critChance*(stats.critMultiplier-1))*(1+.024*s.relics.execution),
+    crowd: Math.sqrt(stats.range/base.range)*(stats.arc/base.arc)**.65*(1+s.relics.crystal*.045+s.relics.scope*.025+s.relics.blackhole*.035),
+    mobility: (stats.moveSpeed/base.moveSpeed)**.7 * (stats.acceleration/base.acceleration)**.15 * (base.dashCooldown/stats.dashCooldown)**.2,
+    survival: s.maxHp/100 * (groups.spirit>=2 ? 1.06:1) * (groups.spirit>=3 ? 1.18:1) / (1-stats.damageReduction)
+      * (s.relics.phoenix&&!s.relicState.phoenixUsed?1+(.2+.1*s.relics.phoenix)*.25:1)
+      * (1+(s.relics.food*.025+s.relics.leech*.025)*(1-.12*s.relics.redmoon)),
   };
   const axes = POWER_AXES.map(axis=>({...axis,ratio:Math.max(.05,Math.min(100,ratios[axis.id]))}));
   const value = Math.round(1000*Math.exp(axes.reduce((sum,a)=>sum+a.weight*Math.log(a.ratio),0)));

@@ -20,10 +20,10 @@ const strike = (r: BladeRun) => {
 };
 
 describe('passive item choices and progression', () => {
-  it('defines four coherent groups of three distinct four-rank items', () => {
-    expect(RELIC_IDS).toHaveLength(12);
-    for (const group of Object.keys(RELIC_GROUPS)) expect(RELIC_IDS.filter(id => RELICS[id].group === group)).toHaveLength(3);
-    expect(relicGroups(freshRelics())).toEqual({ forge: 0, wind: 0, arcane: 0, spirit: 0 });
+  it('defines six coherent groups of five distinct five-rank items', () => {
+    expect(RELIC_IDS).toHaveLength(30);
+    for (const group of Object.keys(RELIC_GROUPS)) expect(RELIC_IDS.filter(id => RELICS[id].group === group)).toHaveLength(5);
+    expect(relicGroups(freshRelics())).toEqual({ forge: 0, wind: 0, arcane: 0, spirit: 0, hunt:0, chaos:0 });
   });
   it('allows only one offered item and rejects legacy forge IDs, invalid indices and repeat selection', () => {
     const r = run(); r.state.level = 2; r.state.mode = 'relic'; r.state.pending = [2]; r.state.choices = ['stone', 'ruler', 'anvil'];
@@ -33,7 +33,7 @@ describe('passive item choices and progression', () => {
     expect(r.state.choices).toEqual([]); expect(r.state.pending).toEqual([]); expect(r.chooseRelic('stone')).toBe(false);
     expect(r.state.perks.sharp).toBe(0);
   });
-  it('always offers three unique eligible items for all 29 real upgrade steps across varied seeds', () => {
+  it('offers up to three unique eligible items for all 29 real upgrade steps across varied seeds', () => {
     for (let seed = 1; seed <= 40; seed++) {
       const r = new BladeRun(seed); r.state.enemies = []; r.state.attackTimer = 10000; r.state.spawnBudget = -100000; r.grantXp(1000000);
       let picks = 0;
@@ -41,18 +41,18 @@ describe('passive item choices and progression', () => {
         if (r.holdingXp) r.state.time = r.state.formStartedAt + MIN_FORM_TIME;
         step(r);
         if (r.state.mode === 'relic') {
-          expect(r.state.choices).toHaveLength(3); expect(new Set(r.state.choices).size).toBe(3);
+          expect(r.state.choices).toHaveLength(Math.min(3,r.availableRelics.length)); expect(new Set(r.state.choices).size).toBe(r.state.choices.length);
           expect(r.state.choices.every(id => r.availableRelics.includes(id))).toBe(true);
           expect(validSnapshot(r.snapshot())).toBe(true);
-          expect(r.chooseRelic(picks % 3)).toBe(true); picks++;
+          expect(r.state.choices.length?r.chooseRelic(picks % r.state.choices.length):r.skipRelic()).toBe(true); picks++;
         }
       }
-      expect(picks).toBe(29); expect(Object.values(r.state.relics).reduce((a, b) => a + b, 0)).toBe(29);
-      expect(Object.values(r.state.relics).every(rank => rank <= 4)).toBe(true);
+      expect(picks).toBe(29); expect(Object.values(r.state.relics).reduce((a, b) => a + b, 0)+r.state.skipped).toBe(29);
+      expect(Object.values(r.state.relics).every(rank => rank <= 5)).toBe(true);
     }
   });
   it('removes max-rank items, the capped ruler and endgame XP candy from the pool', () => {
-    const r = run(); for (let i = 0; i < 4; i++) award(r, 'stone'); expect(r.availableRelics).not.toContain('stone');
+    const r = run(); for (let i = 0; i < 5; i++) award(r, 'stone'); expect(r.availableRelics).not.toContain('stone');
     r.state.perks.long = 12; r.state.perks.range = 6; r.state.level = 30;
     expect(r.stats.range).toBe(420); expect(r.availableRelics).not.toContain('ruler'); expect(r.availableRelics).not.toContain('star');
     expect(r.availableRelics.length).toBeGreaterThanOrEqual(3);
@@ -68,9 +68,9 @@ describe('passive item choices and progression', () => {
     award(r, 'anvil'); const wide = r.stats; expect(wide.widthScale).toBeGreaterThan(long.widthScale * 1.4);
     award(r, 'feather'); expect(r.stats.range).toBe(wide.range); expect(r.stats.widthScale).toBe(wide.widthScale); expect(r.stats.mass).toBeCloseTo(wide.mass * .86);
     const before = r.stats; award(r, 'bell'); expect(r.stats.moveSpeed).toBeGreaterThan(before.moveSpeed);
-    award(r, 'hourglass'); expect(r.stats.interval).toBeLessThan(before.interval);
-    const magnet = r.stats.magnet; award(r, 'magnet'); expect(r.stats.magnet).toBeCloseTo(magnet + 21);
-    r.state.dashCooldown = 0; expect(r.dash()).toBe(true); expect(r.state.dashCooldown).toBe(4.25);
+    const other=run(), interval=other.stats.interval;award(other,'hourglass');expect(other.stats.interval).toBeLessThan(interval);
+    const magnet=other.stats.magnet;award(other,'magnet');expect(other.stats.magnet).toBeCloseTo(magnet+21);
+    award(other,'feather');award(other,'bell');other.dash();expect(other.state.dashCooldown).toBe(4.25);
   });
   it('adds max HP once per heart rank and heals with the active two-piece bonus', () => {
     const r = run(); r.state.hp = 20; award(r, 'heart'); expect(r.state.maxHp).toBe(115); expect(r.state.hp).toBe(35);
@@ -150,7 +150,7 @@ describe('save compatibility and validation', () => {
     const { relics: _items, relicState: _state, ...rest } = r.snapshot();
     const legacy = { ...rest, version: 5, mode: 'forge', pending: [20], choices: ['long', 'range', 'sharp'] };
     const before = JSON.stringify(legacy), copy = restoreSnapshot(legacy)!;
-    expect(copy.version).toBe(6); expect(copy.mode).toBe('relic'); expect(new Set(copy.choices).size).toBe(3);
+    expect(copy.version).toBe(7); expect(copy.mode).toBe('relic'); expect(new Set(copy.choices).size).toBe(3);
     expect(copy.perks).toEqual(legacy.perks); expect(copy.relics).toEqual(freshRelics()); expect(copy.enemies).toEqual(legacy.enemies);
     expect(copy.rng).toBe(legacy.rng); expect(copy.hp).toBe(legacy.hp); expect(copy.totalXp).toBe(legacy.totalXp);
     expect(new BladeRun(0, copy).stats).toEqual(r.stats); expect(JSON.stringify(legacy)).toBe(before);

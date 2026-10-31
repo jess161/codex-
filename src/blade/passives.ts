@@ -24,8 +24,9 @@ export const freshPassive = (tier = 0): PassiveState => ({ tier, hits: 0, kills:
 export interface EnemyEffects {
   hunt: number; chill: number; chillStacks: number; freeze: number; freezeCooldown: number;
   stun: number; slow: number; slowTime: number; burnTime: number; burnTick: number; burnDamage: number; dragonHits: number;
+  poisonTime:number; poisonTick:number; poisonDamage:number;
 }
-export const freshEnemyEffects = (): EnemyEffects => ({ hunt: 0, chill: 0, chillStacks: 0, freeze: 0, freezeCooldown: 0, stun: 0, slow: 0, slowTime: 0, burnTime: 0, burnTick: .5, burnDamage: 0, dragonHits: 0 });
+export const freshEnemyEffects = (): EnemyEffects => ({ hunt: 0, chill: 0, chillStacks: 0, freeze: 0, freezeCooldown: 0, stun: 0, slow: 0, slowTime: 0, burnTime: 0, burnTick: .5, burnDamage: 0, dragonHits: 0, poisonTime:0,poisonTick:.5,poisonDamage:0 });
 // All routes use their own passive from the first second. Mastery strengthens that identity.
 export function passiveRules(mastery = 0) {
   const m = Math.max(0, Math.min(4, mastery));

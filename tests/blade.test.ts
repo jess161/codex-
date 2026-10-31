@@ -4,7 +4,7 @@ import { GAME_DURATION, MIN_FORM_TIME, MASTERIES, TIER_LEVELS, sectorHits, xpNex
 const input = { x: 0, y: 0, dash: false };
 const step = (r: BladeRun, seconds: number) => { for (let i = 0; i < Math.round(seconds * 60); i++) r.step(1 / 60, input); };
 const empty = (seed = 1234) => { const r = new BladeRun(seed); r.state.enemies = []; return r; };
-const resolveUpgrades = (r: BladeRun) => { while (r.state.pending.length) { r.step(1 / 60, input); step(r, .5); expect(r.state.mode).toBe('relic'); r.chooseRelic(0); } };
+const resolveUpgrades = (r: BladeRun) => { while (r.state.pending.length) { r.step(1 / 60, input); step(r, .5); expect(r.state.mode).toBe('relic'); if(r.state.choices.length)r.chooseRelic(0);else r.skipRelic(); } };
 
 describe('Blade Evolution combat and progression', () => {
   it('stores surplus XP, grants 29 forges and preserves the chosen blade across five mastery stages', () => {
@@ -14,11 +14,11 @@ describe('Blade Evolution combat and progression', () => {
     for (let i = 0; i < 5000 && (r.state.level < 30 || r.state.pending.length); i++) {
       if (r.holdingXp) r.state.time = r.state.formStartedAt + MIN_FORM_TIME;
       r.step(1 / 60, input);
-      if (r.state.mode === 'relic') { if (r.state.forgeAwakening) awakenings++; r.chooseRelic(0); forges++; }
+      if (r.state.mode === 'relic') { if (r.state.forgeAwakening) awakenings++; if(r.state.choices.length)r.chooseRelic(0);else r.skipRelic(); forges++; }
     }
     expect(r.state.level).toBe(30); expect(r.state.totalXp).toBe(2787); expect(r.state.xp).toBe(0);
     expect(r.tier).toBe(6); expect(r.mastery).toBe(MASTERIES.length - 1); expect(forges).toBe(29); expect(awakenings).toBe(4);
-    expect(Object.values(r.state.relics).reduce((a, b) => a + b)).toBe(29); expect(r.chooseRelic(0)).toBe(false);
+    expect(Object.values(r.state.relics).reduce((a, b) => a + b) + r.state.skipped).toBe(29); expect(r.chooseRelic(0)).toBe(false);
   });
   it('ordinary levels grant a brief frozen forge and one recovery point', () => {
     const r = empty(); r.state.hp = 42; r.grantXp(xpNext(1)); step(r, .2);
@@ -107,7 +107,7 @@ describe('Blade Evolution combat and progression', () => {
       waves: [{ id: 50, x: 10, y: 20, angle: 0, distance: 20, maxRange: 300, damage: 99, pierce: 8, hit: [2], tier: 5 }],
       swing: { id: 51, age: .02, angle: 0, tier: 3, resolved: false } };
     const before = JSON.stringify(legacy), restored = restoreSnapshot(legacy)!;
-    expect(validSnapshot(restored)).toBe(true); expect(restored.version).toBe(6);
+    expect(validSnapshot(restored)).toBe(true); expect(restored.version).toBe(7);
     expect(restored.pending).toEqual([15]); expect(restored.choices).toEqual(['stone', 'hourglass', 'ruler']);
     expect(restored.rng).toBe(legacy.rng); expect(restored.totalXp).toBe(530); expect(restored.xp).toBe(10);
     expect(restored.waves[0]).toMatchObject({ tier: 10, damage: 99, hit: [2] }); expect(restored.swing!.tier).toBe(6);

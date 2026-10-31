@@ -11,19 +11,19 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   for (let tick = 0; tick < 45000; tick++) {
     const s = r.state;
     if (s.mode === 'relic') {
-      // At higher pressure the bot must spend real offered upgrades on survival, too.
-      const survival = s.level > 20 && (s.relics.heart === 0 || s.hp < s.maxHp * .65);
-      const preference = survival
-        ? ['heart', 'bell', 'feather', 'hourglass', 'stone', 'ruler', 'anvil', 'thunder', 'crystal', 'ember', 'magnet', 'star']
-        : ['magnet', 'star', 'stone', 'ruler', 'anvil', 'feather', 'hourglass', 'heart', 'thunder', 'crystal', 'ember', 'bell'];
-      const choice = s.choices.map((perk, index) => ({ index, rank: preference.indexOf(perk) })).sort((a, b) => a.rank - b.rank)[0];
-      if (s.forgeAwakening) formTimes.push(s.time + s.bossTime); r.chooseRelic(choice.index); forgeChoices++; continue;
+      // Commit to a legal five-item build; skip offers outside it to reserve space.
+      const preference = blade===6 ? ['stone','ruler','venom','magnet','heart'] : s.hp < s.maxHp*.65
+        ? ['heart','magnet','ruler','stone','feather']
+        : ['magnet','ruler','stone','heart','feather'];
+      const choice = s.choices.map((perk,index)=>({index,rank:preference.indexOf(perk)})).filter(c=>c.rank>=0).sort((a,b)=>a.rank-b.rank)[0];
+      if(s.forgeAwakening)formTimes.push(s.time+s.bossTime);
+      if(choice)r.chooseRelic(choice.index);else r.skipRelic();forgeChoices++;continue;
     }
     if (s.mode === 'won' || s.mode === 'dead') break;
     const distance = (p: { x: number; y: number }) => Math.hypot(p.x - s.player.x, p.y - s.player.y);
     const enemies = s.enemies.filter(e => e.spawn <= 0 && e.hp > 0).sort((a, b) => distance(a) - distance(b));
-    const orbs = [...s.orbs].sort((a, b) => distance(a) - distance(b));
-    const target = (s.bossStarted ? enemies.find(e=>e.kind==='boss') : undefined) ?? orbs.find(o => o.kind === 'heal' && s.hp < s.maxHp - 10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
+    const orbs = s.orbs.filter(o=>o.kind==='xp'||s.hp<s.maxHp-5).sort((a, b) => distance(a) - distance(b));
+    const target = orbs.find(o => o.kind === 'heal' && s.hp < s.maxHp*.65) ?? (s.bossStarted ? enemies.find(e=>e.kind==='boss') : undefined) ?? orbs.find(o=>o.kind==='heal'&&s.hp<s.maxHp-10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
     let dx = target.x - s.player.x, dy = target.y - s.player.y;
     const norm = Math.hypot(dx, dy) || 1; dx /= norm; dy /= norm;
     let dash = false;

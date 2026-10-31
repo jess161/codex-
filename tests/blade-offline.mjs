@@ -25,7 +25,7 @@ try {
   const after = await page.evaluate(() => JSON.parse(window.render_game_to_text()));
   check('movement and dash work after all network access is disabled', after.position.x > before.position.x + 150 && after.dashCooldown > 3);
   await page.getByRole('button', { name: '查看被动道具', exact: true }).click();
-  check('all twelve passive icons and four groups work without a network connection', await page.locator('.relic-family').count() === 4 && await page.locator('.relic-icon').evaluateAll(images => images.length === 12 && images.every(i => i.complete && i.naturalWidth === 384 && i.src.startsWith('data:'))));
+  check('all thirty passive icons and six groups work without a network connection', await page.locator('.relic-family').count() === 6 && await page.locator('.relic-owned .relic-icon').evaluateAll(images => images.length === 30 && images.every(i => i.complete && i.naturalWidth === 384 && i.src.startsWith('data:'))));
   await page.getByRole('button', { name: '返回', exact: true }).click();
   await page.keyboard.press('Escape'); await page.getByRole('button', { name: '保存并返回首页', exact: true }).click();
   check('offline play saves a valid resumable local run', await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());

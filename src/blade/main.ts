@@ -112,6 +112,7 @@ export class BladeApp {
       if (key === 'f') { this.action('fullscreen'); return; }
       if (this.panel !== 'none' || !this.run) return;
       if (this.run.state.mode === 'relic' && /^[1-3]$/.test(key)) { if (!event.repeat) this.action('relic', this.run.state.choices[Number(key) - 1]); return; }
+      if(this.run.state.mode==='relic' && key==='0'){event.preventDefault();if(!event.repeat)this.action('relic-skip');return;}
       if (key === 'c') { this.action('power'); return; }
       if (key === 'i') { this.action('relics'); return; }
       if (this.run.state.mode !== 'playing') return;
@@ -219,6 +220,9 @@ export class BladeApp {
       this.run = undefined; this.scene.activeRun = false; this.scene.pausedRun = false; this.panel = 'title'; this.clearInputs(); this.ui.render(true); return;
     }
     if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
+    if(action==='relic-trim-toggle' && this.panel==='none' && isRelicId(value)){this.ui.toggleTrim(value);return;}
+    if(action==='relic-trim-confirm' && this.panel==='none' && this.run?.trimRelics([...this.ui.trimSelected])){this.clearInputs();this.audio.choose();this.save();this.ui.render(true);return;}
+    if(action==='relic-skip' && this.panel==='none' && this.run?.skipRelic()){this.clearInputs();this.save();this.ui.render(true);return;}
     if (action === 'relic' && this.panel === 'none' && this.run && isRelicId(value) && this.run.chooseRelic(value)) {
       this.clearInputs(); this.audio.choose(); this.save(); this.ui.render(true);
     }

@@ -1,0 +1,512 @@
+{
+  "generator": "OpenAI image_gen, original PNGs retained; reference: passive-items.png",
+  "style": "Rounded candy forms, navy outlines, white highlights",
+  "preparation": "Transparent separator slicing; tight crop; aspect-preserving fit with padding; lossless WebP",
+  "runtime_rgba_bytes": 12386304,
+  "items": [
+    {
+      "id": "wrap",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        0,
+        0,
+        399,
+        358
+      ],
+      "crop": [
+        28,
+        56,
+        388,
+        338
+      ],
+      "file": "src/blade/assets/relics/wrap.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 71026,
+      "sha256": "6dd051f6b26f497b18d813c5e2c71bc68cb0b6f975df2bcf0383cb369038ebd9"
+    },
+    {
+      "id": "echo",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        399,
+        0,
+        759,
+        358
+      ],
+      "crop": [
+        0,
+        44,
+        349,
+        338
+      ],
+      "file": "src/blade/assets/relics/echo.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 79660,
+      "sha256": "a88ff79810e5a142fdaedb989431fe8514a65aa2f784e78965a41bd66175c39a"
+    },
+    {
+      "id": "boots",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        759,
+        0,
+        1138,
+        358
+      ],
+      "crop": [
+        18,
+        39,
+        379,
+        353
+      ],
+      "file": "src/blade/assets/relics/boots.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 92944,
+      "sha256": "e4d6ced0b441eac33956fbe481122928f7612e866fbf930d0ebf98e98781bda8"
+    },
+    {
+      "id": "fan",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        1138,
+        0,
+        1536,
+        358
+      ],
+      "crop": [
+        1,
+        70,
+        375,
+        358
+      ],
+      "file": "src/blade/assets/relics/fan.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 83166,
+      "sha256": "bff7300c0dc257a2019275ce5a8c05fdfdc4870573bb0b452fd712b4bd43c101"
+    },
+    {
+      "id": "venom",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        0,
+        358,
+        399,
+        670
+      ],
+      "crop": [
+        27,
+        0,
+        380,
+        312
+      ],
+      "file": "src/blade/assets/relics/venom.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 86028,
+      "sha256": "ed68fdab485088d43189ce09f03b6fd2b86765ba4893b55b7025296ccea7a536"
+    },
+    {
+      "id": "prism",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        399,
+        358,
+        759,
+        670
+      ],
+      "crop": [
+        20,
+        10,
+        307,
+        312
+      ],
+      "file": "src/blade/assets/relics/prism.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 58488,
+      "sha256": "000512610d4cd6f7ae53406d70be107dc99e1fa6a601a94f71cb5dfdb5fbfd2f"
+    },
+    {
+      "id": "food",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        759,
+        358,
+        1138,
+        670
+      ],
+      "crop": [
+        20,
+        3,
+        374,
+        301
+      ],
+      "file": "src/blade/assets/relics/food.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 86442,
+      "sha256": "0115e712eb267c3bd429b45228a18bbf895cb07088c28df5ed5421028220477a"
+    },
+    {
+      "id": "phoenix",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        1138,
+        358,
+        1536,
+        670
+      ],
+      "crop": [
+        49,
+        0,
+        370,
+        312
+      ],
+      "file": "src/blade/assets/relics/phoenix.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 101078,
+      "sha256": "be6e1a3f6d04a57ff60dd4d807f46bab01ab5dd78ba919e3122910b84a9ed303"
+    },
+    {
+      "id": "fang",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        0,
+        670,
+        399,
+        1024
+      ],
+      "crop": [
+        39,
+        0,
+        398,
+        316
+      ],
+      "file": "src/blade/assets/relics/fang.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 52772,
+      "sha256": "627fe3cff0572cc68ef87e767345266ae6e52685f2b5cf70de79846f7af2a85f"
+    },
+    {
+      "id": "scope",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        399,
+        670,
+        759,
+        1024
+      ],
+      "crop": [
+        0,
+        32,
+        360,
+        324
+      ],
+      "file": "src/blade/assets/relics/scope.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 67368,
+      "sha256": "1a2df2709f2b6c7b43e5d31b5327b05294c44582e5a8ced0e9f88d83a671649d"
+    },
+    {
+      "id": "leech",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        759,
+        670,
+        1138,
+        1024
+      ],
+      "crop": [
+        0,
+        11,
+        345,
+        318
+      ],
+      "file": "src/blade/assets/relics/leech.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 87544,
+      "sha256": "5a377a37aba9f6442553cc0d66a610d6ed2881081a28f9c7e6020298113652c6"
+    },
+    {
+      "id": "comet",
+      "source": "art/blade-relics/source/expanded-a.png",
+      "source_sha256": "6afebf84e7f1cac3bcb41b074791b84ec05a8f6ff4cd4c0291d20c918db01564",
+      "cell": [
+        1138,
+        670,
+        1536,
+        1024
+      ],
+      "crop": [
+        5,
+        0,
+        383,
+        306
+      ],
+      "file": "src/blade/assets/relics/comet.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 67228,
+      "sha256": "fc41efbfc2d3e04b17d13d4428b93a7ec7d422187bec36f4b298390e9f946d2a"
+    },
+    {
+      "id": "execution",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        0,
+        0,
+        449,
+        422
+      ],
+      "crop": [
+        0,
+        2,
+        422,
+        403
+      ],
+      "file": "src/blade/assets/relics/execution.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 62060,
+      "sha256": "bc04d5878590270da22d818442529561f13b58895ff7a68a604a8575a572ab72"
+    },
+    {
+      "id": "crown",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        449,
+        0,
+        853,
+        422
+      ],
+      "crop": [
+        2,
+        27,
+        397,
+        422
+      ],
+      "file": "src/blade/assets/relics/crown.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 89538,
+      "sha256": "6080d949163025c91b544b515d4dbdc2275103b8bc06f8af2ab2e284733d4200"
+    },
+    {
+      "id": "redmoon",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        853,
+        0,
+        1254,
+        422
+      ],
+      "crop": [
+        0,
+        60,
+        369,
+        403
+      ],
+      "file": "src/blade/assets/relics/redmoon.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 85562,
+      "sha256": "70720ed75e88a0ee521c10a9482d34ddc3aab6126ff968965fb8546192f009fe"
+    },
+    {
+      "id": "blackhole",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        0,
+        422,
+        449,
+        839
+      ],
+      "crop": [
+        35,
+        17,
+        449,
+        398
+      ],
+      "file": "src/blade/assets/relics/blackhole.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 81454,
+      "sha256": "5bce78cccc94e1caa18e229b4384fbc47edbb98f9b82deaf8e0d16fd1ad0795a"
+    },
+    {
+      "id": "mirror",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        449,
+        422,
+        853,
+        839
+      ],
+      "crop": [
+        0,
+        0,
+        379,
+        414
+      ],
+      "file": "src/blade/assets/relics/mirror.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 69338,
+      "sha256": "6c9fce5616cb057b6dbe1c2b55f194381cbea65dd6b7b6a50d2fa4d63ab1563c"
+    },
+    {
+      "id": "overdrive",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        853,
+        422,
+        1254,
+        839
+      ],
+      "crop": [
+        4,
+        36,
+        373,
+        417
+      ],
+      "file": "src/blade/assets/relics/overdrive.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 78814,
+      "sha256": "5730ad6db3ca3305d833063aa3e11ac20a6353bf31c3041935f5e491f2b108e2"
+    },
+    {
+      "id": "berry",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        0,
+        839,
+        449,
+        1254
+      ],
+      "crop": [
+        0,
+        28,
+        449,
+        365
+      ],
+      "file": "src/blade/assets/food/food-berry.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 73800,
+      "sha256": "b217d9ebee75375276709fd5f72be973bd9d55f02279d66333622e94b33c71b9"
+    },
+    {
+      "id": "bread",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        449,
+        839,
+        853,
+        1254
+      ],
+      "crop": [
+        0,
+        3,
+        387,
+        397
+      ],
+      "file": "src/blade/assets/food/food-bread.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 88020,
+      "sha256": "aa409eef4c1dc3c78e49b3df1581aa0e5c6feb7978a720e5d63bd2eae08aee9b"
+    },
+    {
+      "id": "drumstick",
+      "source": "art/blade-relics/source/expanded-b.png",
+      "source_sha256": "e9b14c1cc2b393e675d0ddbb84154247f8471f580bbab8037b1276aac9fb8e34",
+      "cell": [
+        853,
+        839,
+        1254,
+        1254
+      ],
+      "crop": [
+        22,
+        0,
+        377,
+        401
+      ],
+      "file": "src/blade/assets/food/food-drumstick.webp",
+      "size": [
+        384,
+        384
+      ],
+      "bytes": 60760,
+      "sha256": "b75ff79e725280dedb9d25a1b15b0cfbc70a1b5168d523b5e9555503c98d8a48"
+    }
+  ]
+}

@@ -100,7 +100,7 @@ describe('blade size, handling and paced growth', () => {
     const perks = Object.fromEntries(['sharp', 'quick', 'range', 'magnet', 'force', 'vital', 'heal'].map(k => [k, 0]));
     const old = { ...current, version: 2, level: 9, xp: 15, totalXp: 500, time: 111, perks, velocity: undefined, formStartedAt: undefined };
     const restored = restoreSnapshot(old)!;
-    expect(restored.version).toBe(6); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
+    expect(restored.version).toBe(7); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
     for (const key of ['long', 'broad', 'giant', 'hollow', 'grip', 'stride'] as PerkId[]) expect(restored.perks[key]).toBe(0);
     expect(restoreSnapshot({ ...old, bossStarted: true, time: 420 })!.time).toBe(600);
     const maxed = equipmentStats(30, Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>);

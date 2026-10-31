@@ -3,13 +3,13 @@ import { restoreSnapshot, type RunState } from './simulation';
 import { isGroundId, type GroundId } from './grounds';
 export interface Settings { sound: boolean; monsterSound: boolean; simplified: boolean; motion: boolean; shake: boolean; hitPause: boolean; haptics: boolean; color: number; ground: GroundId; blade: number }
 export interface Meta { maxTier: number; seenBlades: number[]; achievements: string[]; runs: number; wins: number; bestScore: number; bestKills: number; bestTime: number; lastFinishedId: string }
-export interface SaveData { version: 6; meta: Meta; settings: Settings; run: RunState | null }
+export interface SaveData { version: 7; meta: Meta; settings: Settings; run: RunState | null }
 export const freshMeta = (): Meta => ({ maxTier: 0, seenBlades: [], achievements: [], runs: 0, wins: 0, bestScore: 0, bestKills: 0, bestTime: 0, lastFinishedId: '' });
 export class BladeStorage {
   data: SaveData;
   warning = '';
   constructor() {
-    this.data = { version: 6, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, hitPause: true, haptics: false, color: 0, ground: 'grid', blade: 0 }, run: null };
+    this.data = { version: 7, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, hitPause: true, haptics: false, color: 0, ground: 'grid', blade: 0 }, run: null };
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const saved = JSON.parse(raw);
@@ -17,7 +17,7 @@ export class BladeStorage {
         for (const key of ['maxTier', 'runs', 'wins', 'bestScore', 'bestKills', 'bestTime'] as const)
           if (Number.isFinite(saved.meta[key]) && saved.meta[key] >= 0) this.data.meta[key] = saved.meta[key];
         const highest = Math.floor(this.data.meta.maxTier);
-        if ([5, 6].includes(saved.version)) {
+        if ([5, 6, 7].includes(saved.version)) {
           this.data.meta.maxTier = Math.min(TIER_LEVELS.length - 1, highest);
           if (Array.isArray(saved.meta.seenBlades)) this.data.meta.seenBlades = [...new Set<number>(saved.meta.seenBlades.filter((i: unknown) => Number.isInteger(i) && Number(i) >= 0 && Number(i) < TIERS.length))];
         } else {
@@ -37,7 +37,7 @@ export class BladeStorage {
         if (Number.isInteger(saved.settings.blade) && saved.settings.blade >= 0 && saved.settings.blade < TIERS.length) this.data.settings.blade = saved.settings.blade;
       }
       if (saved.run) {
-        if ([1, 2, 3, 4, 5, 6].includes(saved.version)) this.data.run = restoreSnapshot(saved.run);
+        if ([1, 2, 3, 4, 5, 6, 7].includes(saved.version)) this.data.run = restoreSnapshot(saved.run);
         if (!this.data.run) this.warning = '上次对局无法恢复，已保留图鉴与战绩。';
       }
     } catch { this.warning = '存档无法读取，将开始新的试炼。'; }

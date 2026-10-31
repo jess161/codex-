@@ -185,7 +185,7 @@ describe('story-inspired blade passives', () => {
     const oldEnemy = target(r); const bare = { ...oldEnemy } as Record<string, unknown>;
     for (const key of Object.keys(freshEnemyEffects())) delete bare[key];
     legacy.enemies = [bare]; const before = JSON.stringify(legacy), restored = restoreSnapshot(legacy)!;
-    expect(restored.version).toBe(6); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
+    expect(restored.version).toBe(7); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
     expect(restored.passive).toEqual(freshPassive(2)); expect(restored.enemies[0].burnTime).toBe(0);
     expect(new BladeRun(0, restored).stats).toEqual(r.stats); expect(JSON.stringify(legacy)).toBe(before);
   });

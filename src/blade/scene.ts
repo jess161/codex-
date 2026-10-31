@@ -14,7 +14,7 @@ import type { BladeId } from './passives';
 
 interface Particle { x: number; y: number; vx: number; vy: number; age: number; life: number; color: number; size: number }
 interface DamageLabel { object: Phaser.GameObjects.Text; age: number; life: number; startY: number }
-interface RelicFX { x: number; y: number; toX: number; toY: number; item: 'thunder' | 'shield'; age: number }
+interface RelicFX { x: number; y: number; toX: number; toY: number; item: 'thunder' | 'shield' | 'vortex' | 'phoenix'; radius?:number; age: number }
 interface PassiveFX { skill: BladeId; x: number; y: number; age: number; radius: number; scale: number; detail?: 'ready' | 'break' }
 export class BattleScene extends Phaser.Scene {
   run?: BladeRun;
@@ -123,7 +123,7 @@ export class BattleScene extends Phaser.Scene {
       const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
-      if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, age: 0 });
+      if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });
       if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, scale: event.size ?? 1, detail: event.detail });
       if (direct || event.type === 'kill' || event.type === 'dash') {
         const count = event.type === 'kill' ? (this.simplified ? 3 : 8) : event.type === 'dash' ? 10 : 3;
@@ -133,7 +133,8 @@ export class BattleScene extends Phaser.Scene {
           this.particles.push({ x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, age: 0, life: .25 + (i % 3) * .07, color: event.type === 'dash' ? 0x52c4cf : color, size: 1.4 + (i % 3) });
         }
       }
-      if (event.type==='hit' && (event.elite || performance.now()-this.lastDamage>140)) { this.lastDamage=performance.now(); this.damageLabel(String(event.amount),x,y); }
+      if (event.type==='hit' && (event.elite || performance.now()-this.lastDamage>140)) { this.lastDamage=performance.now(); this.damageLabel(`${event.critical?'暴击 ':''}${event.amount}`,x,y); }
+      if(event.type==='pickup' && event.food)this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
       if(event.type==='hurt') this.impact(2.2);
 
     }
@@ -188,7 +189,7 @@ export class BattleScene extends Phaser.Scene {
     const effort = Math.min(1, Math.max(0, stats.mass - 1) / 2.4);
     const strain = phase ? effort * (phase.phase === 'recovery' ? 1 - phase.progress * .75 : phase.phase === 'windup' ? .45 + phase.progress * .55 : 1) : 0;
     this.effortLevel = strain;
-    const frozen = this.pausedRun || this.impactStopped || ['relic', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
+    const frozen = this.pausedRun || this.impactStopped || ['relic', 'relic-trim', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
     const moving = !frozen && (s.dashTime > 0 || Math.hypot(s.velocity.x, s.velocity.y) > .1);
     const walkFrequency = 11 / (1 + effort * .5);
     const bob = this.reducedMotion || !moving ? 0 : Math.sin(this.clock * walkFrequency) * (.8 + effort * 1.2);
@@ -208,8 +209,8 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const orb of s.orbs) {
       if (Math.abs(orb.x - s.player.x) > run.view.width / 2 + 40 || Math.abs(orb.y - s.player.y) > run.view.height / 2 + 40) continue;
-      const size = orb.kind === 'heal' ? 21 : 12 + Math.min(7, Math.log2(orb.value + 1));
-      this.sprite(`o${orb.id}`, orb.kind, orb.x, orb.y, size, 29).setRotation(orb.kind === 'xp' ? Math.sin(this.clock * 2 + orb.id) * .12 : 0);
+      const size = orb.kind === 'heal' ? 30 : 12 + Math.min(7, Math.log2(orb.value + 1));
+      this.sprite(`o${orb.id}`, orb.kind==='heal'?`food-${orb.food??'bread'}`:orb.kind, orb.x, orb.y, size, 29).setRotation(orb.kind === 'xp' ? Math.sin(this.clock * 2 + orb.id) * .12 : 0);
     }
     for (const e of s.enemies) {
       const size = ENEMIES[e.kind].size;
@@ -241,6 +242,7 @@ export class BattleScene extends Phaser.Scene {
       }
       if (e.dragonHits > 0) for (let i = 0; i < 2; i++) g.fillStyle(i < e.dragonHits ? 0x6c85ae : 0xc4d0df, .85).fillCircle(e.x - 3 + i * 6, e.y + e.radius + 6, 1.8);
       if (e.slowTime > 0) g.lineStyle(1.4, 0x8fd7ed, .7).strokeEllipse(e.x, e.y + e.radius * .7, e.radius * 2.2, e.radius * .6);
+      if(e.poisonTime>0)for(let i=0;i<(this.simplified?2:3);i++){const sx=e.x-e.radius*.6+i*e.radius*.6,sy=e.y-e.radius-3-(this.reducedMotion?0:Math.sin(this.clock*4+i)*2);g.fillStyle(0x70bb8c,.65).fillCircle(sx,sy,2.5).lineStyle(1,0xd4f4ac,.85).strokeCircle(sx,sy,2.5);}
       if (e.burnTime > 0) for (let i = 0; i < (this.simplified ? 2 : 3); i++) {
         const sx = e.x - e.radius * .6 + e.radius * .6 * i, sy = e.y + e.radius * .7;
         const flame = this.reducedMotion ? 9 : 8 + Math.sin(this.clock * 10 + e.id + i) * 3;
@@ -361,6 +363,7 @@ export class BattleScene extends Phaser.Scene {
         g.lineStyle(2, 0xa9def1, alpha).strokeCircle(effect.x, effect.y, 26 + (this.reducedMotion ? 0 : effect.age * 35));
         continue;
       }
+      if(effect.item==='vortex'||effect.item==='phoenix'){const radius=(effect.radius??60)*(this.reducedMotion?1:.65+effect.age*1.4),color=effect.item==='vortex'?0xa58bd8:0xf1b969;g.fillStyle(color,alpha*.06).fillCircle(effect.x,effect.y,radius).lineStyle(2,color,alpha*.7).strokeCircle(effect.x,effect.y,radius);continue;}
       const dx = effect.toX - effect.x, dy = effect.toY - effect.y, length = Math.hypot(dx, dy) || 1;
       const count = this.reducedMotion ? 2 : 5;
       const points = Array.from({ length: count }, (_, i) => {

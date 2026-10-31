@@ -43,7 +43,7 @@ export class BladeAudio {
   }
   hit(weight = 0) { const t = performance.now(); if (t - this.lastHit < 85) return; this.lastHit = t; this.tone(145 - weight * 15, .055 + weight * .015, 'triangle', .16, 55); if(weight > 1) this.tone(65,.1,'sine',.10,38); }
   enemyHurt(kind: EnemyKind, lethal = false, source = 'melee') {
-    if (!this.enabled || !this.monsterEnabled || !this.context || !this.master || !this.noise || this.context.state !== 'running' || source === 'burn' && !lethal) return false;
+    if (!this.enabled || !this.monsterEnabled || !this.context || !this.master || !this.noise || this.context.state !== 'running' || (source === 'burn' || source==='poison') && !lethal) return false;
     const now = performance.now(), voice = monsterVoice(kind, lethal);
     if (now - this.lastMonster < 85 || now - (this.familyTimes.get(voice.family) ?? -Infinity) < 150) return false;
     this.lastMonster = now; this.familyTimes.set(voice.family, now);

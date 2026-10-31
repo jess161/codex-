@@ -1,5 +1,5 @@
 import { TIERS, freshPerks, tierForLevel, type PerkId } from './config';
-import { freshRelics, relicGroups, type RelicInventory } from './relics';
+import { freshRelics, ownedRelics, relicGroups, type RelicInventory } from './relics';
 
 export interface SwingTiming { age: number; windup: number; strike: number; recovery: number }
 export type SwingPhase = 'windup' | 'strike' | 'recovery';
@@ -9,8 +9,8 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const groups = relicGroups(items), t = TIERS[blade], mastery = tierForLevel(level);
   const p = { ...perks, sharp: perks.sharp + items.stone * 1.5, long: perks.long + items.ruler * 1.5,
     broad: perks.broad + items.anvil * 1.5, hollow: perks.hollow + items.feather, stride: perks.stride + items.bell,
-    quick: perks.quick + items.hourglass, grip: perks.grip + (groups.wind >= 2 ? 2 : 0) };
-  const range = Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range) * (groups.forge === 3 ? 1.1 : 1));
+    quick: perks.quick + items.hourglass, grip: perks.grip + items.wrap + (groups.wind >= 2 ? 2 : 0) };
+  const range = Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range) * (groups.forge >= 3 ? 1.1 : 1));
   const lengthScale = (range - 10) / (t.range - 10);
   const widthScale = (1 + .09 * mastery) * (1 + .35 * p.broad + .28 * p.giant);
   const baseMass = (t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
@@ -21,15 +21,18 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const strike = .10 + Math.min(.08, load * .022);
   const recovery = .10 + Math.min(.18, load * .05) * handling;
   return {
-    damage: Math.round((20 + (level - 1)) * t.multiplier * (1 + .10 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1)),
+    damage: Math.round((20 + (level - 1)) * t.multiplier * (1 + .10 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1) * (1 + .025 * items.crown * ownedRelics(items).length) * (1 + .25 * items.redmoon)),
     interval: Math.max(windup + strike + recovery + .015, Math.max(.26, t.interval * .92 ** p.quick) * (1 + Math.min(.5, load * .13) * handling)),
     range,
     arc: Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
-    magnet: 84 * (1 + .35 * p.magnet + .25 * items.magnet), knockback: 18 * (1 + .35 * p.force + .15 * p.broad + .22 * p.giant) * (groups.forge === 3 ? 1.15 : 1),
+    magnet: 84 * (1 + .35 * p.magnet + .25 * items.magnet), knockback: 18 * (1 + .35 * p.force + .15 * p.broad + .22 * p.giant) * (groups.forge >= 3 ? 1.15 : 1),
     lengthScale, widthScale, mass, burden, windup, strike, recovery,
     moveSpeed: 210 * (1 + .07 * p.stride) * (1 - Math.min(.28, load * .065)),
     acceleration: 2800 * (1 + .2 * p.stride) / (1 + .6 * Math.min(12, load)),
     waveEvery: mastery === 0 ? 0 : Math.max(3, 7 - mastery), waveRange: 150 + mastery * 45, pierce: 1 + mastery * 2,
+    critChance: .05 * items.fang + (groups.hunt >= 2 ? .08 : 0), critMultiplier: groups.hunt >= 2 ? 2 : 1.75,
+    damageReduction: .03 * items.mirror,
+    dashCooldown: Math.max(2.5, (groups.wind >= 3 ? 4.25 : 5) - .25 * items.boots),
   };
 }
 export type EquipmentStats = ReturnType<typeof equipmentStats>;
