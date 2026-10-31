@@ -73,7 +73,7 @@ describe('parallel blade routes and exaggerated forging', () => {
     const r = isolated(2, 28), e = target(r);
     for (let i = 0; i < 4; i++) { e.knockX = e.knockY = 0; strike(r); }
     const waves = r.state.waves.filter(w => w.kind === 'moon'); expect(waves).toHaveLength(5);
-    expect(waves.every(w => w.pierce === 10 && w.maxRange === 380)).toBe(true); expect(r.state.passive.hits).toBe(0);
+    expect(waves.every(w => w.pierce === 10 && Math.abs(w.maxRange - 380 * Math.sqrt(r.stats.lengthScale)) < .001 && w.hitRadius! > 10)).toBe(true); expect(r.state.passive.hits).toBe(0);
   });
   it('awakened Snow freezes normal enemies in two hits while special enemies remain unfrozen', () => {
     const r = isolated(6, 28), ordinary = target(r), boss = r.spawnEnemy('boss', 60, 10);

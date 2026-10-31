@@ -2,6 +2,7 @@ import { THREATS, type Hazard } from './threats';
 import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { LEGACY_RELICS, RELIC_CAP, RELIC_IDS, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
+import { PASSIVE_SIZE_LIMITS, passiveSize, waveDimensions } from './passive-size';
 import { freshEnemyEffects, freshPassive, passiveForTier, passiveRules, type BladeId, type EnemyEffects, type PassiveState } from './passives';
 
 export interface Point { x: number; y: number }
@@ -12,7 +13,7 @@ export interface Enemy extends Point, EnemyEffects {
 }
 export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal'; dropTimer?: number }
 export interface Bullet extends Point { id: number; vx: number; vy: number; life: number; kind?: 'orb' | 'spine'; damage?: number }
-export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga' }
+export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga'; radius?: number; hitRadius?: number }
 export interface Shock extends Point { id: number; radius: number; gap: number }
 export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
 export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'won' | 'dead';
@@ -26,7 +27,7 @@ export interface RunState {
   hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast'; item?: 'thunder' | 'shield'; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' };
+export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast'; item?: 'thunder' | 'shield'; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'relic' };
 export interface MoveInput { x: number; y: number; dash: boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
@@ -83,6 +84,7 @@ export class BladeRun {
   }
   get bladeId() { return TIERS[this.tier].id; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
+  get passiveSize() { return passiveSize(this.stats, this.rules); }
   get stats() {
     const stats = equipmentStats(this.state.level, this.state.perks, this.tier, this.state.relics);
     if (this.bladeId === 'tensa' && this.state.passive.haste > 0) {
@@ -224,10 +226,10 @@ export class BladeRun {
     if (this.bladeId === 'wado' && s.passive.shield) {
       s.passive.shield = false; s.passive.cooldown = this.rules.guardCooldown; s.passive.safeTime = 0; s.invincible = .35;
       if (this.rules.guardCounter) {
-        const radius = this.stats.range * 1.1;
+        const radius = this.passiveSize.guardCounterRadius;
         for (const e of s.enemies) if (Math.hypot(e.x - s.player.x, e.y - s.player.y) <= radius + e.radius) this.hitEnemy(e, Math.round(this.stats.damage * this.rules.guardCounter), Math.atan2(e.y - s.player.y, e.x - s.player.x), 'passive');
       }
-      this.emitPassive('wado', s.player.x, s.player.y, 32, 'break'); return false;
+      this.emitPassive('wado', s.player.x, s.player.y, this.rules.guardCounter ? this.passiveSize.guardCounterRadius : this.passiveSize.guardRadius, 'break'); return false;
     }
     s.hp = Math.max(0, s.hp - amount); s.invincible = .65;
     s.passive.safeTime = 0;
@@ -245,14 +247,18 @@ export class BladeRun {
     if (this.bladeId === 'tensa') s.passive.tensaPending = true;
     this.events.push({ type: 'dash', x: s.player.x, y: s.player.y }); return true;
   }
-  private emitPassive(skill: BladeId, x = this.state.player.x, y = this.state.player.y, radius = 32, detail?: 'ready' | 'break') {
+  private emitPassive(skill: BladeId, x = this.state.player.x, y = this.state.player.y, radius = this.passiveSize.pulseRadius, detail?: 'ready' | 'break') {
     if (this.passiveFxCount++ >= 8) return;
-    this.events.push({ type: 'passive', skill, x, y, radius, detail, tier: this.tier });
+    this.events.push({ type: 'passive', skill, x, y, radius, size: this.passiveSize.scale, detail, tier: this.tier });
   }
   private createWave(angle: number, damage: number, maxRange: number, pierce: number, kind: Wave['kind'] = 'basic') {
     const s = this.state;
     if (s.waves.length >= 32) return;
-    s.waves.push({ id: s.nextId++, x: s.player.x, y: s.player.y, angle, distance: 0, maxRange, damage, pierce, hit: [], tier: this.tier, kind });
+    // Freeze dimensions at release so a later upgrade cannot resize an airborne wave.
+    const size = this.passiveSize, shape = waveDimensions({ kind }, this.mastery, size.scale);
+    s.waves.push({ id: s.nextId++, x: s.player.x, y: s.player.y, angle, distance: 0,
+      maxRange: Math.min(PASSIVE_SIZE_LIMITS.travel, maxRange * size.travelScale), damage, pierce, hit: [], tier: this.tier, kind,
+      radius: shape.radius, hitRadius: shape.hitRadius });
   }
   private updatePassive(dt: number) {
     const p = this.state.passive;
@@ -260,7 +266,7 @@ export class BladeRun {
     if (this.bladeId === 'wado') {
       p.safeTime = Math.min(this.rules.guardSafe, p.safeTime + dt);
       if (!p.shield && p.cooldown <= .0001 && p.safeTime >= this.rules.guardSafe - .0001) {
-        p.shield = true; this.emitPassive('wado', this.state.player.x, this.state.player.y, 28, 'ready');
+        p.shield = true; this.emitPassive('wado', this.state.player.x, this.state.player.y, this.passiveSize.guardRadius, 'ready');
       }
     }
   }
@@ -276,7 +282,7 @@ export class BladeRun {
     if (id === 'snow-drinker') {
       e.chill = this.rules.chillTime; e.chillStacks = Math.min(3, e.chillStacks + 1);
       if (e.chillStacks >= this.rules.freezeStacks && e.kind !== 'boss' && e.kind !== 'elite' && e.freezeCooldown <= 0) {
-        e.freeze = this.rules.freezeTime; e.freezeCooldown = 4; this.emitPassive(id, e.x, e.y, e.radius + 12);
+        e.freeze = this.rules.freezeTime; e.freezeCooldown = 4; this.emitPassive(id, e.x, e.y, e.radius + 12 * this.passiveSize.scale);
       }
     }
     if (id === 'ryujin') this.ignite(e, Math.max(1, Math.round(this.stats.damage * this.rules.burnTickDamage)));
@@ -305,8 +311,9 @@ export class BladeRun {
       s.dashCooldown = Math.max(0, s.dashCooldown - this.rules.huntRefund); p.cooldown = .6; this.emitPassive('deer-cutter', e.x, e.y);
     }
     if (this.bladeId === 'ryujin' && (e.burnTime > 0 || source === 'burn')) {
-      for (const other of this.grid.query(e.x, e.y, this.rules.burnSpread + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= this.rules.burnSpread + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
-      this.emitPassive('ryujin', e.x, e.y, this.rules.burnSpread);
+      const radius = this.passiveSize.burnSpread;
+      for (const other of this.grid.query(e.x, e.y, radius + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= radius + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
+      this.emitPassive('ryujin', e.x, e.y, radius);
     }
     if (e.kind === 'boss') { s.mode = 'won'; this.events.push({ type: 'win' }); return true; }
     if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal'); }
@@ -332,7 +339,7 @@ export class BladeRun {
     let spent = 0, cleave = 0;
     if (id === 'enma' && p.hits === 0) {
       spent = s.hp > s.maxHp * .35 ? rules.enmaCost : 0; s.hp -= spent;
-      multiplier = 1 + (spent ? rules.enmaPaidBonus : rules.enmaBonus); this.emitPassive(id, s.player.x, s.player.y, stats.range);
+      multiplier = 1 + (spent ? rules.enmaPaidBonus : rules.enmaBonus); this.emitPassive(id, s.player.x, s.player.y, this.passiveSize.meleeRadius);
     }
     for (const e of targets) {
       let damage = stats.damage * multiplier;
@@ -340,24 +347,24 @@ export class BladeRun {
       if (id === 'deer-cutter' && e.hunt > 0) damage *= 1 + rules.huntBonus;
       if (id === 'shusui') {
         e.dragonHits = (e.dragonHits + 1) % rules.dragonCycle;
-        if (e.dragonHits === 0) { damage += stats.damage * rules.dragonBonus * (e.kind === 'boss' || e.kind === 'elite' ? 2 : 1); this.emitPassive(id, e.x, e.y, e.radius + 24); }
+        if (e.dragonHits === 0) { damage += stats.damage * rules.dragonBonus * (e.kind === 'boss' || e.kind === 'elite' ? 2 : 1); this.emitPassive(id, e.x, e.y, e.radius + 24 * this.passiveSize.scale); }
       }
       if (this.hitEnemy(e, Math.round(damage), angle)) cleave++;
     }
-    if (id === 'dark-dagger' && p.empowered > 0) { p.empowered = 0; this.emitPassive(id, s.player.x, s.player.y, stats.range); }
+    if (id === 'dark-dagger' && p.empowered > 0) { p.empowered = 0; this.emitPassive(id, s.player.x, s.player.y, this.passiveSize.meleeRadius); }
     if (spent && cleave) s.hp = Math.min(s.maxHp, s.hp + spent);
     if (id === 'well-moon' && p.hits === 0) {
       const spreads = rules.moonCount === 5 ? [-.6, -.3, 0, .3, .6] : [-.36, 0, .36];
       for (const spread of spreads) this.createWave(angle + spread, Math.round(stats.damage * rules.moonDamage), rules.moonRange, rules.moonPierce, 'moon');
-      this.emitPassive(id, s.player.x, s.player.y, stats.range);
+      this.emitPassive(id, s.player.x, s.player.y, this.passiveSize.meleeRadius);
     }
     if (id === 'full-moon' && p.hits === 0) {
-      const radius = stats.range * rules.ringRadius;
+      const radius = this.passiveSize.ringRadius;
       for (const e of this.grid.query(s.player.x, s.player.y, radius + 45)) if (Math.hypot(e.x - s.player.x, e.y - s.player.y) <= radius + e.radius) this.hitEnemy(e, Math.round(stats.damage * rules.ringDamage), Math.atan2(e.y - s.player.y, e.x - s.player.x), 'passive');
       this.emitPassive(id, s.player.x, s.player.y, radius);
     }
     if (id === 'dragon-slayer' && p.cooldown <= 0) {
-      const radius = stats.range + 45; p.cooldown = rules.roarCooldown;
+      const radius = this.passiveSize.roarRadius; p.cooldown = rules.roarCooldown;
       for (const e of this.grid.query(s.player.x, s.player.y, radius + 45)) if (e.hp > 0 && e.spawn <= 0 && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= radius + e.radius) {
         if (e.kind === 'boss' || e.kind === 'elite') { e.slow = rules.roarSlow; e.slowTime = 1.2; }
         else e.stun = rules.roarStun;
@@ -561,7 +568,7 @@ export class BladeRun {
       if (s.dashTime <= .000001 && s.passive.tensaPending && this.bladeId === 'tensa') {
         s.passive.tensaPending = false; s.passive.haste = this.rules.hasteTime;
         this.createWave(Math.atan2(s.direction.y, s.direction.x), Math.round(stats.damage * this.rules.getsugaDamage), this.rules.getsugaRange, this.rules.getsugaPierce, 'getsuga');
-        this.emitPassive('tensa', s.player.x, s.player.y, 44);
+        this.emitPassive('tensa', s.player.x, s.player.y, 44 * this.passiveSize.scale);
       }
     } else if (magnitude <= .05) {
       // Release always stops, including on touch. Inertia applies to starting/turning only.
@@ -614,12 +621,13 @@ export class BladeRun {
     for (const wave of s.waves) {
       const ox = wave.x, oy = wave.y, length = Math.min(420 * dt, wave.maxRange - wave.distance);
       wave.x += Math.cos(wave.angle) * length; wave.y += Math.sin(wave.angle) * length; wave.distance += length;
-      const candidates = this.grid.query(wave.x, wave.y, length + 55).filter(e => e.hp > 0 && e.spawn <= 0 && !wave.hit.includes(e.id));
+      const hitRadius = waveDimensions(wave, this.mastery).hitRadius;
+      const candidates = this.grid.query(wave.x, wave.y, length + 45 + hitRadius).filter(e => e.hp > 0 && e.spawn <= 0 && !wave.hit.includes(e.id));
       candidates.sort((a, b) => Math.hypot(a.x - ox, a.y - oy) - Math.hypot(b.x - ox, b.y - oy));
       for (const e of candidates) {
         if (wave.hit.length >= wave.pierce) break;
         const tAlong = Math.max(0, Math.min(1, ((e.x - ox) * (wave.x - ox) + (e.y - oy) * (wave.y - oy)) / Math.max(.001, length * length)));
-        if (Math.hypot(e.x - ox - (wave.x - ox) * tAlong, e.y - oy - (wave.y - oy) * tAlong) < e.radius + 10) {
+        if (Math.hypot(e.x - ox - (wave.x - ox) * tAlong, e.y - oy - (wave.y - oy) * tAlong) < e.radius + hitRadius) {
           wave.hit.push(e.id); this.hitEnemy(e, wave.damage, wave.angle, 'wave');
         }
       }
@@ -705,6 +713,7 @@ function validateRun(value: unknown, legacy = false): boolean {
   if (s.orbs.some(o => o.dropTimer !== undefined && (!finite(o.dropTimer) || o.dropTimer < 0 || o.dropTimer > XP_DROP_TIME + .001) || !finite(o.value) || o.value <= 0 || !['xp', 'heal'].includes(o.kind))) return false;
   if (s.bullets.some(b => !finite(b.vx) || !finite(b.vy) || !finite(b.life) || b.kind !== undefined && !['orb', 'spine'].includes(b.kind) || b.damage !== undefined && (!finite(b.damage) || b.damage <= 0 || b.damage > 30))) return false;
   if (s.waves.some(w => !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
+  if (s.waves.some(w => w.radius !== undefined && (!finite(w.radius) || w.radius <= 0 || w.radius > 252) || w.hitRadius !== undefined && (!finite(w.hitRadius) || w.hitRadius <= 0 || w.hitRadius > 60))) return false;
   if (s.shocks.some(shock => !finite(shock.radius) || !finite(shock.gap))) return false;
   if (s.swing && (!finite(s.swing.id) || !finite(s.swing.age) || !finite(s.swing.angle) || !Number.isInteger(s.swing.tier) || s.swing.tier < 0 || s.swing.tier >= TIERS.length || typeof s.swing.resolved !== 'boolean' || ['windup', 'strike', 'recovery'].some(k => !finite(s.swing![k as keyof Swing]) || Number(s.swing![k as keyof Swing]) <= 0 || Number(s.swing![k as keyof Swing]) > 1))) return false;
   if (!Array.isArray(s.recentKills) || s.recentKills.some(t => !finite(t))) return false;

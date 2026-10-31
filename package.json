@@ -19,7 +19,8 @@
     "test:weight": "node tests/blade-weight.mjs",
     "test:passives": "node tests/blade-passives.mjs",
     "test:relics": "node tests/blade-relics.mjs",
-    "test:reconstruction": "node tests/blade-reconstruction.mjs"
+    "test:reconstruction": "node tests/blade-reconstruction.mjs",
+    "test:passive-size": "node tests/blade-passive-size.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

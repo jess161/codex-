@@ -52,18 +52,18 @@ export function passiveForTier(tier: number, mastery = 0) {
   switch (TIERS[tier].id) {
     case 'scrap': description = `每击杀 5 名敌人，近战伤害 +${pct(r.scrapBonus)}，最多 ${r.scrapCap} 层；本局保留，熟练后可继续叠层。`; break;
     case 'dark-dagger': description = `瞬步后 ${num(r.daggerTime)} 秒内，下一次命中的近战伤害 +${pct(r.daggerBonus)}；近战对甲壳额外伤害 +${pct(r.armorBonus)}。`; break;
-    case 'well-moon': description = `每 ${r.moonCycle} 次有效近战，放出 ${r.moonCount} 道金月刀气；各造成 ${pct(r.moonDamage)} 近战伤害，射程 ${r.moonRange}、穿透 ${r.moonPierce} 人。`; break;
+    case 'well-moon': description = `每 ${r.moonCycle} 次有效近战，放出 ${r.moonCount} 道金月刀气；各造成 ${pct(r.moonDamage)} 近战伤害，基础射程 ${r.moonRange}、穿透 ${r.moonPierce} 人；刀气体型和射程随刀身成长。`; break;
     case 'deer-cutter': description = `近战留下 ${num(r.huntTime)} 秒逐鹿印，对已标记目标伤害 +${pct(r.huntBonus)}；击杀返还 ${num(r.huntRefund)} 秒瞬步冷却，间隔 0.6 秒。`; break;
-    case 'full-moon': description = `每 ${r.ringCycle} 次有效近战，爆发半径为刀长 ${pct(r.ringRadius)} 的月轮，对周围敌人造成 ${pct(r.ringDamage)} 近战伤害并击退。`; break;
+    case 'full-moon': description = `每 ${r.ringCycle} 次有效近战，爆发基础半径为刀长 ${pct(r.ringRadius)} 的月轮，并随刀宽扩大，对周围敌人造成 ${pct(r.ringDamage)} 近战伤害并击退。`; break;
     case 'dragon-slayer': description = `近战触发狮吼，击退并眩晕普通怪 ${num(r.roarStun)} 秒；精英与首领减速 ${pct(r.roarSlow)} 持续 1.2 秒。冷却 ${num(r.roarCooldown)} 秒。${r.roarDamage ? `狮吼另造成 ${pct(r.roarDamage)} 范围伤害。` : ''}`; break;
     case 'snow-drinker': description = `近战与刀气叠加寒意，每层减速 ${pct(r.chillSlow)}、持续 ${num(r.chillTime)} 秒；${r.freezeStacks} 层冻结普通怪 ${num(r.freezeTime)} 秒，每目标间隔 4 秒。精英与首领最多减速 15%，不冻结。`; break;
     case 'wado': description = `连续 ${num(r.guardSafe)} 秒未受伤，凝成一次护刃，抵挡下一次伤害；破碎后冷却 ${num(r.guardCooldown)} 秒。${r.guardCounter ? `破碎时向身周回斩，造成 ${pct(r.guardCounter)} 近战伤害。` : ''}`; break;
     case 'shusui': description = `同一目标每承受 ${r.dragonCycle} 次近战，追加 ${pct(r.dragonBonus)} 近战伤害；对精英与首领，追加伤害翻倍。`; break;
     case 'enma': description = `每第 ${r.enmaCycle} 次有效近战伤害 +${pct(r.enmaBonus)}；生命高于 35% 时耗 ${r.enmaCost} 生命，改为 +${pct(r.enmaPaidBonus)}，本斩击杀则返还消耗。`; break;
-    case 'ryujin': description = `近战与刀气附加 ${num(r.burnTime)} 秒灼烧，每秒造成 ${pct(r.burnTickDamage * 2)} 近战伤害；燃烧死亡会引燃周围 ${r.burnSpread} 范围内的敌人，灼烧不叠层。`; break;
-    case 'tensa': description = `瞬步结束斩出 ${pct(r.getsugaDamage)} 伤害月牙，射程 ${r.getsugaRange}、穿透 ${r.getsugaPierce} 人；随后 ${num(r.hasteTime)} 秒移速 +${pct(r.hasteBonus)}、攻击间隔 −${pct(r.hasteBonus)}。`; break;
+    case 'ryujin': description = `近战与刀气附加 ${num(r.burnTime)} 秒灼烧，每秒造成 ${pct(r.burnTickDamage * 2)} 近战伤害；死亡传火的基础半径为 ${r.burnSpread}，随刀身尺寸扩大，灼烧不叠层。`; break;
+    case 'tensa': description = `瞬步结束斩出 ${pct(r.getsugaDamage)} 伤害月牙，基础射程 ${r.getsugaRange}、穿透 ${r.getsugaPierce} 人，月牙体型和射程随刀身成长；随后 ${num(r.hasteTime)} 秒移速 +${pct(r.hasteBonus)}、攻击间隔 −${pct(r.hasteBonus)}。`; break;
   }
-  return { ...base, description };
+  return { ...base, description: `${description} 被动特效随刀身尺寸放大。` };
 }
 export function passiveGrowth(tier: number, mastery: number) {
   const r = passiveRules(mastery);
@@ -78,7 +78,7 @@ export function passiveGrowth(tier: number, mastery: number) {
     `凝刃 ${num(r.guardSafe)}s${r.guardCounter ? ' · 护刃破碎触发回斩' : ` · 冷却 ${num(r.guardCooldown)}s`}`,
     `${r.dragonCycle} 击斩龙 · 追加 ${pct(r.dragonBonus)}，对强敌翻倍`,
     `${r.enmaCycle} 斩爆发 · 耗血 ${r.enmaCost} · 增伤 ${pct(r.enmaPaidBonus)}`,
-    `灼烧 ${num(r.burnTime)}s · 传火半径 ${r.burnSpread}`,
+    `灼烧 ${num(r.burnTime)}s · 基础传火半径 ${r.burnSpread}，随刀身成长`,
     `月牙 ${pct(r.getsugaDamage)} · 穿透 ${r.getsugaPierce} · 疾行 ${num(r.hasteTime)}s`,
   ][tier];
 }

@@ -1,0 +1,117 @@
+{
+  "feature": "Blade passive size follows blade length and width",
+  "verified_at": "2026-10-31T16:50:35.263194+08:00",
+  "base_commit": "5bc56044cf66fc228b5feff3b56065a58e94e09a",
+  "size_rules": {
+    "projectile_size": "sqrt(lengthScale * widthScale), maximum 6",
+    "projectile_travel": "base range * sqrt(lengthScale), maximum 1400",
+    "area_width": "existing length-based radius * fourth root of widthScale, maximum radius 600",
+    "fire_spread": "base radius * projectile size, maximum 600",
+    "wave_geometry": "Captured when released; the same saved size drives rendering and collisions; old v6 waves without these optional fields use their original dimensions.",
+    "buff_visuals": "Guard rings and hit/status feedback scale with blade dimensions; single-target statuses remain single-target."
+  },
+  "build": "npm run build passed, including TypeScript and standalone builds",
+  "unit": {
+    "files": 11,
+    "passed": 191,
+    "new_cases": 30,
+    "native_campaigns": 12
+  },
+  "browser": {
+    "passed": 48,
+    "size_checks": [
+      "a native Space dash releases the initial-size getsuga with matching draw commands",
+      "ruler: size upgrade still offers exactly three distinct passive items",
+      "choosing a size item pauses all existing skill projectiles without changing their geometry",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "already released getsuga retains its exact radius, hit width and range after size choices",
+      "native item choices enlarge the next getsuga visually and mechanically",
+      "WebGL renders the larger skill through the same graphics path",
+      "browser reload preserves grown skill dimensions and collected size items",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "ringRadius: the enlarged area event and rendered outer boundary use the same radius",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "roarRadius: the enlarged area event and rendered outer boundary use the same radius",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "burnSpread: the enlarged area event and rendered outer boundary use the same radius",
+      "ruler: size upgrade still offers exactly three distinct passive items",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "real phone card taps and the dash button enlarge the visible getsuga",
+      "DPR3 phone Canvas stays sharp and has no page overflow with enlarged passives",
+      "reduced motion and lite mode preserve the projectile size and damage geometry",
+      "desktop WebGL, phone Canvas, choices, reload and accessibility have no runtime errors"
+    ],
+    "passive_regression_checks": [
+      "all twelve blades have distinct passives with a story connection and rules",
+      "百炼初锋: the HUD identifies the current passive",
+      "袖里藏锋: the HUD identifies the current passive",
+      "井中八法: the HUD identifies the current passive",
+      "逐鹿留痕: the HUD identifies the current passive",
+      "魔刀归圆: the HUD identifies the current passive",
+      "狮吼震岳: the HUD identifies the current passive",
+      "寒魄凝霜: the HUD identifies the current passive",
+      "不负约定: the HUD identifies the current passive",
+      "斩龙遗志: the HUD identifies the current passive",
+      "霸气索取: the HUD identifies the current passive",
+      "万象焚尽: the HUD identifies the current passive",
+      "月牙天冲: the HUD identifies the current passive",
+      "the HUD displays actual eight-form charge progress",
+      "reload preserves passive charge and combat RNG",
+      "the next real hit releases all three golden waves",
+      "the circular moon passive reaches enemies behind the hero",
+      "three hits visibly freeze an ordinary target",
+      "clicking a passive opens its own archive card and freezes the whole battle",
+      "six safe seconds create a visible, ready guard",
+      "an actual projectile consumes the guard without losing HP",
+      "a fire kill spreads a real burning status to a target outside the melee sector",
+      "burning deals damage through the normal combat path",
+      "the real dash key releases a getsuga wave and enables the temporary speed burst",
+      "phone mastery preserves the blade passive while offering three collectible items",
+      "the phone HUD passive button stays within the playfield edge",
+      "long passive descriptions remain scrollable on a narrow phone",
+      "all passive effects and interfaces run without browser errors"
+    ],
+    "errors": [],
+    "metrics": {
+      "small": {
+        "id": 4,
+        "x": 8.572527594031472e-16,
+        "y": -154.00000000000003,
+        "angle": -1.5707963267948966,
+        "distance": 14,
+        "maxRange": 380,
+        "damage": 32,
+        "pierce": 12,
+        "hit": [],
+        "tier": 11,
+        "kind": "getsuga",
+        "radius": 30,
+        "hitRadius": 10
+      },
+      "large": {
+        "id": 5,
+        "x": 8.572527594031472e-16,
+        "y": -294.00000000000006,
+        "angle": -1.5707963267948966,
+        "distance": 14,
+        "maxRange": 438.23737859749025,
+        "damage": 45,
+        "pierce": 12,
+        "hit": [],
+        "tier": 11,
+        "kind": "getsuga",
+        "radius": 42.724992685780535,
+        "hitRadius": 14.24166422859351
+      }
+    },
+    "fixtures": "Exact offers and stationary enemies are declared fixtures; choices, Space, touch dash, native skill resolution, saves and reloads use real game paths. Renderer method traces record actual Phaser draw radii. No physical-device FPS claim."
+  },
+  "artifact": {
+    "bytes": 10062353,
+    "sha256": "d78edba291446690247554516ae290f084fc159cd7522dac4d0af35d8dde274a"
+  },
+  "limitations": [
+    "Phone tests emulate a 390x844 DPR3 touch device; not physical-device performance measurements.",
+    "Existing skill cooldowns, damage coefficients, target resistances and effect-count limits are retained."
+  ]
+}

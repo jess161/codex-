@@ -9,12 +9,13 @@ import { BladeDrag, dragOpacity, frictionProfile } from './blade-drag';
 import { bladeBackGeometry } from './blade-back';
 import { BLADE_COLORS } from './blade-art';
 import { bladePresentation, cameraImpulse, squashResponse } from './feedback';
+import { waveDimensions } from './passive-size';
 import type { BladeId } from './passives';
 
 interface Particle { x: number; y: number; vx: number; vy: number; age: number; life: number; color: number; size: number }
 interface DamageLabel { object: Phaser.GameObjects.Text; age: number; life: number; startY: number }
 interface RelicFX { x: number; y: number; toX: number; toY: number; item: 'thunder' | 'shield'; age: number }
-interface PassiveFX { skill: BladeId; x: number; y: number; age: number; radius: number; detail?: 'ready' | 'break' }
+interface PassiveFX { skill: BladeId; x: number; y: number; age: number; radius: number; scale: number; detail?: 'ready' | 'break' }
 export class BattleScene extends Phaser.Scene {
   run?: BladeRun;
   activeRun = false;
@@ -123,7 +124,7 @@ export class BattleScene extends Phaser.Scene {
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, age: 0 });
-      if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, detail: event.detail });
+      if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, scale: event.size ?? 1, detail: event.detail });
       if (direct || event.type === 'kill' || event.type === 'dash') {
         const count = event.type === 'kill' ? (this.simplified ? 3 : 8) : event.type === 'dash' ? 10 : 3;
         const cap = this.simplified ? 100 : 280;
@@ -289,8 +290,9 @@ export class BattleScene extends Phaser.Scene {
     this.hero.setTexture(this.heroColor ? `hero-color-${this.heroColor}` : 'hero').setPosition(hx, hy).setDisplaySize(46 * (1 + .07 * strain), 46 * (1 - .08 * strain)).setRotation(lean).setAlpha(s.invincible > 0 && Math.sin(this.clock * 28) > 0 ? .55 : 1);
     this.drawEffort(hx, hy, lean, strain);
     if (s.passive.shield && run.bladeId === 'wado') {
-      g.lineStyle(5, 0x8acbb8, .16).strokeCircle(hx, hy, 28);
-      g.lineStyle(1.6, 0x6ab9a3, .8).strokeCircle(hx, hy, 27).lineStyle(1, 0xf4fff4, .9).strokeCircle(hx, hy, 24);
+      const radius = run.passiveSize.guardRadius;
+      g.lineStyle(5, 0x8acbb8, .16).strokeCircle(hx, hy, radius);
+      g.lineStyle(1.6, 0x6ab9a3, .8).strokeCircle(hx, hy, radius - 1).lineStyle(1, 0xf4fff4, .9).strokeCircle(hx, hy, radius - 4);
     }
     if (s.passive.haste > 0 && moving) g.lineStyle(7, 0xcd6c91, .22).lineBetween(hx, hy, hx - s.direction.x * 48, hy - s.direction.y * 48);
     if (s.dashTime > 0) {
@@ -342,11 +344,11 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const wave of s.waves) {
       const color = TIERS[wave.tier].hex;
-      const radius = (wave.kind === 'getsuga' ? 30 : wave.kind === 'moon' ? 23 : 18) + run.mastery * 3;
-      g.beginPath().lineStyle(wave.kind === 'getsuga' ? 12 : 7, color, .16).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
-      if (wave.kind === 'getsuga') g.beginPath().lineStyle(7, 0x3b2c48, .9).arc(wave.x, wave.y, radius - 2, wave.angle - 1.05, wave.angle + 1.05).strokePath();
-      g.beginPath().lineStyle(2.5, color, .95).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
-      g.beginPath().lineStyle(1.2, 0xffffff, 1).arc(wave.x, wave.y, radius - 1, wave.angle - 1.1, wave.angle + 1.1).strokePath();
+      const shape = waveDimensions(wave, run.mastery), radius = shape.radius, stroke = Math.sqrt(shape.scale);
+      g.beginPath().lineStyle((wave.kind === 'getsuga' ? 12 : 7) * stroke, color, .16).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
+      if (wave.kind === 'getsuga') g.beginPath().lineStyle(7 * stroke, 0x3b2c48, .9).arc(wave.x, wave.y, radius - 2 * stroke, wave.angle - 1.05, wave.angle + 1.05).strokePath();
+      g.beginPath().lineStyle(2.5 * stroke, color, .95).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
+      g.beginPath().lineStyle(1.2 * stroke, 0xffffff, 1).arc(wave.x, wave.y, radius - stroke, wave.angle - 1.1, wave.angle + 1.1).strokePath();
     }
     if (s.relicState.shield) {
       g.fillStyle(0x82cee8, .08).fillCircle(s.player.x, s.player.y, 26);
@@ -374,12 +376,13 @@ export class BattleScene extends Phaser.Scene {
       effect.age += fxDt;
       const progress = Math.min(1, effect.age / .5), alpha = 1 - progress;
       const color = TIERS.find(tier => tier.id === effect.skill)!.hex;
-      const r = effect.radius * (this.reducedMotion ? .9 : .45 + progress * .55);
-      g.lineStyle(effect.skill === 'dragon-slayer' ? 3 : 1.8, color, alpha * .8).strokeCircle(effect.x, effect.y, r);
-      if (effect.skill === 'full-moon' || effect.skill === 'wado' || effect.skill === 'dragon-slayer') g.lineStyle(1, 0xfff5cc, alpha * .8).strokeCircle(effect.x, effect.y, r * .82);
+      const r = effect.radius * (this.reducedMotion ? 1 : .45 + progress * .55), stroke = Math.sqrt(effect.scale);
+      g.lineStyle((effect.skill === 'dragon-slayer' ? 3 : 1.8) * stroke, color, alpha * .8).strokeCircle(effect.x, effect.y, r);
+      if (effect.skill === 'full-moon' || effect.skill === 'wado' || effect.skill === 'dragon-slayer') g.lineStyle(stroke, 0xfff5cc, alpha * .8).strokeCircle(effect.x, effect.y, r * .82);
+      if (['full-moon', 'dragon-slayer', 'ryujin'].includes(effect.skill) || effect.skill === 'wado' && effect.detail === 'break') g.lineStyle(1, color, alpha * .18).strokeCircle(effect.x, effect.y, effect.radius);
       if (!this.reducedMotion && !this.simplified) for (let i = 0; i < 6; i++) {
         const a = i * Math.PI / 3, x = effect.x + Math.cos(a) * r, y = effect.y + Math.sin(a) * r;
-        g.fillStyle(color, alpha * .7).fillTriangle(x - 2, y + 3, x + 2, y + 3, x, y - 4);
+        g.fillStyle(color, alpha * .7).fillTriangle(x - 2 * stroke, y + 3 * stroke, x + 2 * stroke, y + 3 * stroke, x, y - 4 * stroke);
       }
     }
     this.passiveFx = this.passiveFx.filter(effect => effect.age < .5);
