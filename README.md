@@ -1,11 +1,9 @@
 # 刃之进化 · 手机网页试玩
 
-打开 https://jess161.github.io/codex-/?v=222b466 即可在手机浏览器游玩。
+手机或电脑打开 https://jess161.github.io/codex-/?v=f7ba6dd 即可游玩。
 
-此分支保存已测试的独立网页包；源码位于 `reconstruct/latest-from-conversation`，本版源码提交 `222b466bf29cc8c6c2c53a74104fdf3defa40dc6`。
+本版为十二把武器加入独立主动技，手机点“绝招”、电脑按 Q，自动朝附近敌人释放，不耗蓝、不占道具格。原故事被动、瞬步、五格三十件道具、六品质、食物、刀身尺寸联动与独立经验球继续生效。
 
-本次：六组三十件道具、普通至混沌六种品质、最多五种道具／每件五级、跳过升级选择、三种随机回血食物，配套透明图标。保留刀具尺寸联动、20 级后难度、独立经验球及既有玩法。
+源码分支：`reconstruct/latest-from-conversation`；提交：`f7ba6dd4a7903cc64f54ea716a2e10f45e8c5b9d`。技能目录见源码的 `docs/gdd/blade-evolution-active-v0.9.md`，验证见 `docs/blade-active-verification.json`。278 项自动测试和 155 项不同浏览器检查通过；主动套件也在实际单文件包上复测。
 
-239 项自动测试（含十二把刀完整对局）及 139 项浏览器检查通过。旧存档超过五件时由玩家选择保留五件，已获得的经验和生命上限保留。详细设计与验证记录见源码分支 `docs/gdd/blade-evolution-builds-v0.8.md` 和 `docs/blade-builds-verification.json`。
-
-本网页为纯静态、内嵌素材的单文件游戏；无需后端。构建大小与 SHA-256 记录在 `version.json`。
+此分支仅保存已经测试的静态单文件游戏及版本清单，不需要后端。`version.json` 记录源码、大小及 SHA-256，便于核对。

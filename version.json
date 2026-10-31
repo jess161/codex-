@@ -1,14 +1,16 @@
 {
   "title": "Blade Evolution mobile preview",
-  "source_commit": "222b466bf29cc8c6c2c53a74104fdf3defa40dc6",
-  "created_at": "2026-10-31T19:44:52.789046+08:00",
-  "feature": "five-slot-builds-six-rarities-healing-food",
-  "artifact_sha256": "9a76f206c6017699c64d99bf77437ba59fa326b20db1d663dc23d0897ba535ed",
-  "bytes": 12251720,
-  "unit_tests_passed": 239,
-  "browser_checks_passed": 139,
+  "source_commit": "f7ba6dd4a7903cc64f54ea716a2e10f45e8c5b9d",
+  "created_at": "2026-10-31T21:28:53.133151+08:00",
+  "feature": "twelve-independent-manual-weapon-skills",
+  "artifact_sha256": "3bd953925bb4b1ef6e81186d5bb03e549596c65e80a136248e88698c5bc90dbd",
+  "bytes": 12268840,
+  "unit_tests_passed": 278,
+  "browser_checks_passed": 155,
   "item_count": 30,
   "item_slots": 5,
   "item_max_rank": 5,
+  "active_skill_count": 12,
+  "active_key": "Q",
   "save_version": 7
 }
