@@ -71,21 +71,14 @@ describe('blade size, handling and paced growth', () => {
     attachSwing(r, 'strike'); expect(swingMoveFactor(r.stats, r.state.swing)).toBeGreaterThan(swingMoveFactor(before, r.state.swing));
     r.state.perks.stride = 2; expect(r.stats.moveSpeed).toBeGreaterThan(before.moveSpeed); expect(r.stats.acceleration).toBeGreaterThan(before.acceleration);
   });
-  it('offers exactly three distinct passive collectibles with deterministic random draws', () => {
-    for (let seed = 1; seed <= 30; seed++) {
-      const a = new BladeRun(seed), b = new BladeRun(seed);
-      for (const r of [a, b]) { r.state.enemies = []; r.grantXp(xpNext(1)); r.step(1 / 60, idle); }
-      expect(a.state.choices).toHaveLength(3); expect(new Set(a.state.choices).size).toBe(3);
-      expect(a.state.choices).toEqual(b.state.choices); expect(a.state.rng).toBe(b.state.rng);
-    }
+  it('levels deterministically without drawing offers or equipment',()=>{
+    for(let seed=1;seed<=30;seed++){const a=new BladeRun(seed),b=new BladeRun(seed);const rng=a.state.rng;for(const r of [a,b]){r.state.enemies=[];r.grantXp(xpNext(1));r.step(1/60,idle);}expect(a.state.level).toBe(2);expect(a.state.choices).toEqual([]);expect(a.state.relics).toEqual(b.state.relics);expect(a.state.rng).toBe(rng);expect(a.state.rng).toBe(b.state.rng);}
   });
-  it('practice gates advancement without losing XP, and ordinary waiting does not reroll choices', () => {
-    const r = run(); r.state.level = 5; r.grantXp(10000); r.state.time = MIN_FORM_TIME - .5; const xp = r.state.xp;
-    step(r, .4); expect(r.state.level).toBe(5); expect(r.state.xp).toBe(xp);
-    step(r, .2); expect(r.state.mode).toBe('evolving'); expect(r.state.level).toBe(6);
-    step(r, .6); const snapshot = r.snapshot(); step(r, 20);
-    expect(r.snapshot()).toEqual(snapshot); expect(r.state.totalXp).toBe(10000);
+
+  it('banks practice-gated XP while the world keeps advancing',()=>{
+    const r=run();r.state.spawnBudget=-100000;r.state.eliteIndex=4;r.state.level=5;r.grantXp(10000);r.state.time=MIN_FORM_TIME-.5;const xp=r.state.xp;step(r,.4);expect(r.state.level).toBe(5);expect(r.state.xp).toBe(xp);step(r,.2);expect(r.state.mode).toBe('playing');expect(r.state.level).toBe(11);const time=r.state.time,rng=r.state.rng;step(r,10);expect(r.state.time).toBeGreaterThan(time);expect(r.state.choices).toEqual([]);expect(r.state.rng).toBe(rng);expect(r.state.totalXp).toBe(10000);
   });
+
   it('saves and restores size, motion, practice time and partially completed heavy swings', () => {
     const r = run(); makeHeavy(r); r.state.time = 29; r.state.formStartedAt = 7; r.state.velocity = { x: 50, y: -20 }; attachSwing(r, 'windup');
     const snapshot = r.snapshot(); expect(validSnapshot(snapshot)).toBe(true);
@@ -100,7 +93,7 @@ describe('blade size, handling and paced growth', () => {
     const perks = Object.fromEntries(['sharp', 'quick', 'range', 'magnet', 'force', 'vital', 'heal'].map(k => [k, 0]));
     const old = { ...current, version: 2, level: 9, xp: 15, totalXp: 500, time: 111, perks, velocity: undefined, formStartedAt: undefined };
     const restored = restoreSnapshot(old)!;
-    expect(restored.version).toBe(7); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
+    expect(restored.version).toBe(8); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
     for (const key of ['long', 'broad', 'giant', 'hollow', 'grip', 'stride'] as PerkId[]) expect(restored.perks[key]).toBe(0);
     expect(restoreSnapshot({ ...old, bossStarted: true, time: 420 })!.time).toBe(600);
     const maxed = equipmentStats(30, Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>);

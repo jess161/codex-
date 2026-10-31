@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { BladeRun, restoreSnapshot, validSnapshot } from '../src/blade/simulation';
-import { MASTERIES, MIN_FORM_TIME, PERKS, TIERS, TIER_LEVELS, encounterDensity, freshPerks, xpNext, type PerkId } from '../src/blade/config';
+import { GAME_DURATION, MASTERIES, MIN_FORM_TIME, PERKS, TIERS, TIER_LEVELS, encounterDensity, freshPerks, xpNext, type PerkId } from '../src/blade/config';
 import { equipmentStats } from '../src/blade/equipment';
 import { passiveForTier, passiveRules } from '../src/blade/passives';
 
@@ -30,23 +30,18 @@ describe('parallel blade routes and exaggerated forging', () => {
     expect(intervals[5]).toBeGreaterThan(intervals[1]); expect(damage[5]).toBeGreaterThan(damage[11]);
     expect(new BladeRun(71, undefined, 99).tier).toBe(0);
   });
-  it('requires active practice only at mastery boundaries and banks XP without changing blades', () => {
-    const r = isolated(9, 5); r.grantXp(500); expect(r.state.level).toBe(5); expect(r.holdingXp).toBe(true);
-    r.state.time = MIN_FORM_TIME - .1; step(r, .05); expect(r.state.pending).toHaveLength(0);
-    step(r, .1); expect(r.state.level).toBe(6); expect(r.state.pending).toEqual([6]); expect(r.state.forgeAwakening).toBe(true);
-    expect(r.tier).toBe(9); expect(r.state.totalXp).toBe(500); expect(r.state.xp).toBe(500 - xpNext(5));
+  it('banks XP at mastery boundaries without interrupting movement or changing blades',()=>{
+    const r=isolated(9,5);r.grantXp(500);expect(r.state.level).toBe(5);r.state.time=MIN_FORM_TIME-.1;step(r,.05);expect(r.state.level).toBe(5);step(r,.1);
+    expect(r.state.level).toBe(11);expect(r.state.mode).toBe('playing');expect(r.state.pending).toEqual([]);expect(r.state.choices).toEqual([]);expect(r.tier).toBe(9);expect(r.state.totalXp).toBe(500);
+    expect(r.state.xp).toBe(500-Array.from({length:6},(_,i)=>xpNext(i+5)).reduce((a,b)=>a+b,0));
   });
-  it('replaces directed forging with only the offered passive items and enforces item caps', () => {
-    const r = isolated(6);
-    for (let level = 2; level <= 5; level++) {
-      r.state.level = level; r.state.pending = [level]; r.state.mode = 'relic'; r.state.choices = ['stone', 'feather', 'ruler'];
-      expect(r.chooseRelic('anvil')).toBe(false); expect(r.chooseRelic('ruler')).toBe(true);
-    }
-    expect(r.state.relics.ruler).toBe(4); expect(r.state.perks.long).toBe(0);
-    r.state.level = 6; r.state.pending = [6]; r.state.mode = 'relic'; r.state.choices = ['stone', 'feather', 'anvil'];
-    expect(r.chooseRelic('ruler')).toBe(false); expect(r.chooseRelic('toString' as never)).toBe(false);
-    expect(r.chooseRelic('anvil')).toBe(true); expect(r.state.relics.anvil).toBe(1);
+
+  it('upgrades collected equipment without allocating any old forge stacks',()=>{
+    const r=isolated(6);for(let i=0;i<5;i++){const d=r.addRelicDrop('ruler',0,0)!;d.spawn=0;expect(r.pickupRelic(d.id)).toBe(true);}
+    expect(r.state.relics.ruler).toBe(5);expect(r.availableRelics).not.toContain('ruler');expect(r.state.perks.long).toBe(0);expect(r.state.pending).toEqual([]);
+    const d=r.addRelicDrop('anvil',0,0)!;d.spawn=0;r.pickupRelic(d.id);expect(r.state.relics.anvil).toBe(1);
   });
+
   it('retains positive, usable handling at all new caps with accurate physical dimensions', () => {
     const perks = Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>;
     for (let blade = 0; blade < TIERS.length; blade++) {
@@ -95,23 +90,21 @@ describe('parallel blade routes and exaggerated forging', () => {
     expect(enma.state.hp).toBe(98); expect(enma.state.passive.hits).toBe(0);
   });
   it('endgame density rises to 10.8 spawns per second and respects each rendering budget', () => {
-    expect(encounterDensity(0)).toEqual({ rate: .9, cap: 100 }); expect(encounterDensity(600)).toEqual({ rate: 10.8, cap: 280 });
-    expect(encounterDensity(590).rate).toBeGreaterThan(encounterDensity(300).rate * 3);
+    expect(encounterDensity(0)).toEqual({ rate: .9, cap: 100 }); expect(encounterDensity(GAME_DURATION)).toEqual({ rate: 10.8, cap: 280 });
+    expect(encounterDensity(GAME_DURATION-10).rate).toBeGreaterThan(encounterDensity(GAME_DURATION*.5).rate * 3);
     for (const lite of [false, true]) {
-      const r = isolated(0); r.simplified = lite; r.state.time = 599; r.state.spawnBudget = 1000;
+      const r = isolated(0); r.simplified = lite; r.state.time = GAME_DURATION-1; r.state.spawnBudget = 1000;
       const cap = encounterDensity(599, lite).cap;
       for (let i = 0; i < cap; i++) r.spawnEnemy('blob', 1000 + i * 35, 1000);
       r.step(1 / 60, idle); expect(r.state.enemies.length).toBeLessThanOrEqual(cap);
       expect(validSnapshot(r.snapshot())).toBe(true);
     }
   });
-  it('round-trips high forge stacks, blade identity, statuses and the pending choice without rerolling', () => {
-    const r = isolated(10, 28); Object.assign(r.state.perks, { long: 9, broad: 8, giant: 7, hollow: 9, grip: 6 });
-    r.state.mode = 'relic'; r.state.pending = [28]; r.state.choices = ['anvil', 'feather', 'stone']; r.state.forgeAwakening = true;
-    const e = target(r); e.burnTime = 4; e.burnDamage = 17;
-    const saved = r.snapshot(); expect(validSnapshot(saved)).toBe(true); expect(restoreSnapshot(saved)).toEqual(saved);
-    expect(validSnapshot({ ...saved, blade: 12 })).toBe(false); expect(validSnapshot({ ...saved, passive: { ...saved.passive, tier: 9 } })).toBe(false);
+  it('round-trips high legacy forge stacks, blade identity, statuses and ground loot without rerolling',()=>{
+    const r=isolated(4,20);r.state.perks.long=12;r.state.perks.broad=10;r.state.time=180;const e=target(r);e.burnTime=1;e.burnDamage=4;r.addRelicDrop('phoenix',800,400);
+    const snapshot=r.snapshot();expect(validSnapshot(snapshot)).toBe(true);expect(restoreSnapshot(snapshot)).toEqual(snapshot);expect(new BladeRun(1,restoreSnapshot(snapshot)!).stats).toEqual(r.stats);
   });
+
   it('migrates a v4 story-passive save into the same blade and retains its saved charges', () => {
     const r = isolated(2, 5); r.state.time = 60; r.state.passive.hits = 7; r.state.perks.long = 3;
     const legacy = { ...r.snapshot(), version: 4 } as Record<string, unknown>; delete legacy.blade; delete legacy.forgeAwakening;

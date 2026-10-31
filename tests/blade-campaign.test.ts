@@ -7,29 +7,21 @@ import { GAME_DURATION, MIN_FORM_TIME, TIERS, xpToLevel } from '../src/blade/con
 it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full campaign with parallel blade %i · %s', async (blade) => {
   await new Promise(resolve => setTimeout(resolve, 0));
   const seed = blade + 1, r = new BladeRun(seed, undefined, blade);
-  let forgeChoices = 0; const formTimes: number[] = [];
+  let lastMastery=0; const formTimes: number[] = [];
   for (let tick = 0; tick < 45000; tick++) {
-    const s = r.state;
-    if (s.mode === 'relic') {
-      // Commit to a legal five-item build; skip offers outside it to reserve space.
-      const preference = blade===6 ? ['stone','ruler','venom','magnet','heart'] : s.hp < s.maxHp*.65
-        ? ['heart','magnet','ruler','stone','feather']
-        : ['magnet','ruler','stone','heart','feather'];
-      const choice = s.choices.map((perk,index)=>({index,rank:preference.indexOf(perk)})).filter(c=>c.rank>=0).sort((a,b)=>a.rank-b.rank)[0];
-      if(s.forgeAwakening)formTimes.push(s.time+s.bossTime);
-      if(choice)r.chooseRelic(choice.index);else r.skipRelic();forgeChoices++;continue;
-    }
+    const s = r.state;if(r.mastery!==lastMastery){lastMastery=r.mastery;formTimes.push(s.time+s.bossTime);}
     if (s.mode === 'won' || s.mode === 'dead') break;
     const distance = (p: { x: number; y: number }) => Math.hypot(p.x - s.player.x, p.y - s.player.y);
     const enemies = s.enemies.filter(e => e.spawn <= 0 && e.hp > 0).sort((a, b) => distance(a) - distance(b));
     const orbs = s.orbs.filter(o=>o.kind==='xp'||s.hp<s.maxHp-5).sort((a, b) => distance(a) - distance(b));
-    const target = orbs.find(o => o.kind === 'heal' && s.hp < s.maxHp*.65) ?? (s.bossStarted ? enemies.find(e=>e.kind==='boss') : undefined) ?? orbs.find(o=>o.kind==='heal'&&s.hp<s.maxHp-10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
+    const loot=[...s.relicDrops].sort((a,b)=>distance(a)-distance(b)).find(d=>distance(d)<700);
+    const target = orbs.find(o=>o.kind==='heal'&&s.hp<s.maxHp*.65) ?? (s.bossStarted?undefined:loot) ?? (s.bossStarted ? enemies.find(e=>e.kind==='boss') : undefined) ?? orbs.find(o=>o.kind==='heal'&&s.hp<s.maxHp-10) ?? orbs[0] ?? enemies[0] ?? { x: 0, y: -160 };
     let dx = target.x - s.player.x, dy = target.y - s.player.y;
     const norm = Math.hypot(dx, dy) || 1; dx /= norm; dy /= norm;
     let dash = false;
     const attackRange = r.stats.range;
     for (const e of enemies) {
-      const ex = s.player.x - e.x, ey = s.player.y - e.y, d = Math.hypot(ex, ey) || 1, safe = Math.min(attackRange + e.radius - 8, 165) * 1.36;
+      const ex = s.player.x - e.x, ey = s.player.y - e.y, d = Math.hypot(ex, ey) || 1, safe = Math.min(attackRange + e.radius - 14, 165) * (s.hp<s.maxHp*.6?1.2:1.04);
       if (d < safe) { const force = (safe - d) / safe * 3.8; dx += ex / d * force; dy += ey / d * force; }
       if (e.action === 'windup' && (e.kind === 'elite' || e.kind === 'boss')) {
         const cross = Math.abs((s.player.x - e.x) * Math.sin(e.angle) - (s.player.y - e.y) * Math.cos(e.angle));
@@ -57,11 +49,12 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   }
   expect(r.state.mode, JSON.stringify({ seed, time: r.state.time, hp: r.state.hp, maxHp:r.state.maxHp, level: r.state.level, bossTime: r.state.bossTime, failure:r.state.failure, relics:r.state.relics, equipment:r.stats })).toBe('won'); expect(r.state.time).toBe(GAME_DURATION);
   // Winning does not require max level in the slower mode; collecting well can reach every form.
-  expect(r.state.level).toBeGreaterThanOrEqual(20); expect(forgeChoices).toBe(r.state.level - 1); expect(r.tier).toBe(blade);
-  if (blade === 0) { expect(r.state.level).toBe(30); expect(forgeChoices).toBe(29); }
-  expect(r.state.bossTime).toBeLessThan(90); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
+  expect(r.state.level).toBeGreaterThanOrEqual(20); expect(r.state.pending).toEqual([]);expect(r.state.choices).toEqual([]); expect(r.tier).toBe(blade);
+  if (blade === 0) { expect(r.state.level).toBe(30);  }
+  expect(r.state.bossTime).toBeLessThan(r.bossDuration); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
   expect(r.state.enemies.length).toBeLessThanOrEqual(280);
-  expect(r.active.casts).toBeGreaterThan(10);
+  expect(r.active.casts).toBeGreaterThan(10);expect(r.state.relicLoot.picked).toBeGreaterThanOrEqual(5);
   expect(formTimes[0]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01);
   formTimes.slice(1).forEach((time, i) => expect(time - formTimes[i]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01));
+  if((globalThis as unknown as {process?:{env?:Record<string,string>}}).process?.env?.BLADE_CAMPAIGN_METRICS)console.info('CAMPAIGN_METRICS '+JSON.stringify({blade:TIERS[blade].name,time:r.state.time+r.state.bossTime,level:r.state.level,kills:r.state.kills,dropped:r.state.relicLoot.totalDropped,picked:r.state.relicLoot.picked,owned:r.relicOrder.length,highestRank:Math.max(...Object.values(r.state.relics)),casts:r.active.casts,mode:r.state.mode}));
 }, 30000);

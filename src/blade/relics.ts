@@ -6,7 +6,8 @@ export type RelicId = typeof RELIC_IDS[number];
 export type RelicGroup = 'forge' | 'wind' | 'arcane' | 'spirit' | 'hunt' | 'chaos';
 export type RelicInventory = Record<RelicId, number>;
 export const RELIC_CAP = 5;
-export const RELIC_SLOTS = 5;
+// Only used to validate historical v7 inventories before migration.
+export const LEGACY_RELIC_SLOTS = 5;
 export const RARITIES = {
   common:{name:'普通',color:'#6d8196',tint:'#edf2f7',weight:45},
   rare:{name:'稀有',color:'#268caa',tint:'#e4f7ff',weight:28},
@@ -52,8 +53,7 @@ export function relicGroups(items: RelicInventory): Record<RelicGroup, number> {
 }
 export const ownedRelics = (items: RelicInventory) => RELIC_IDS.filter(id=>items[id]>0);
 export function eligibleRelics(items:RelicInventory,level:number,range:number) {
-  const full=ownedRelics(items).length>=RELIC_SLOTS;
-  return RELIC_IDS.filter(id=>items[id]<RELIC_CAP&&(!full||items[id]>0)&&(id!=='star'||level<30)&&(id!=='ruler'||range<419.999));
+  return RELIC_IDS.filter(id=>items[id]<RELIC_CAP&&(id!=='star'||level<30)&&(id!=='ruler'||range<419.999));
 }
 export function weightedRelic(pool:readonly RelicId[],roll:number,level:number):RelicId {
   const progress=Math.max(0,Math.min(1,(level-1)/29));

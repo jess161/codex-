@@ -82,7 +82,7 @@ export class BladeApp {
       if (settings.simplified) {
         const r = this.run, s = r.state, special = s.enemies.filter(e => e.kind === 'boss' || e.kind === 'elite');
         const normal = s.enemies.filter(e => e.kind !== 'boss' && e.kind !== 'elite').sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y));
-        s.enemies = [...special, ...normal.slice(0, Math.max(0, encounterDensity(s.time, true, s.level).cap - special.length))]; s.bullets = s.bullets.slice(0, 24);
+        s.enemies = [...special, ...normal.slice(0, Math.max(0, encounterDensity(s.time, true, s.level,r.duration).cap - special.length))]; s.bullets = s.bullets.slice(0, 24);
       }
     }
   }
@@ -112,8 +112,6 @@ export class BladeApp {
       }
       if (key === 'f') { this.action('fullscreen'); return; }
       if (this.panel !== 'none' || !this.run) return;
-      if (this.run.state.mode === 'relic' && /^[1-3]$/.test(key)) { if (!event.repeat) this.action('relic', this.run.state.choices[Number(key) - 1]); return; }
-      if(this.run.state.mode==='relic' && key==='0'){event.preventDefault();if(!event.repeat)this.action('relic-skip');return;}
       if(key==='q'){event.preventDefault();if(!event.repeat)this.action('active');return;}
       if (key === 'c') { this.action('power'); return; }
       if (key === 'i') { this.action('relics'); return; }
@@ -224,12 +222,6 @@ export class BladeApp {
     }
     if(action==='active'){if(this.panel==='none'&&this.run?.state.mode==='playing'&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
     if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
-    if(action==='relic-trim-toggle' && this.panel==='none' && isRelicId(value)){this.ui.toggleTrim(value);return;}
-    if(action==='relic-trim-confirm' && this.panel==='none' && this.run?.trimRelics([...this.ui.trimSelected])){this.clearInputs();this.audio.choose();this.save();this.ui.render(true);return;}
-    if(action==='relic-skip' && this.panel==='none' && this.run?.skipRelic()){this.clearInputs();this.save();this.ui.render(true);return;}
-    if (action === 'relic' && this.panel === 'none' && this.run && isRelicId(value) && this.run.chooseRelic(value)) {
-      this.clearInputs(); this.audio.choose(); this.save(); this.ui.render(true);
-    }
   }
   setSetting(key: string, value: boolean) {
     if (!['sound', 'monsterSound', 'simplified', 'motion', 'shake', 'hitPause', 'haptics'].includes(key)) return;
@@ -261,11 +253,12 @@ export class BladeApp {
       }
       if(event.type==='active'&&event.activePhase==='cast'){this.audio.active(event.tier??this.run.tier);this.scene.impact(1.8);}
       if (event.type === 'blast') this.audio.explode();
+      if(event.type==='item-pickup'&&event.relicId){this.audio.choose();this.ui.showRelicPickup(event.relicId,event.rank??1,event.lootKind==='overflow');this.save();}
       if (event.type === 'pickup') this.audio.pickup();
       if (event.type === 'passive') this.audio.passive(event.tier ?? this.run.tier);
       if (event.type === 'hurt') this.audio.hurt();
       if (event.type === 'dash') this.audio.dash();
-      if (event.type === 'evolve') { this.audio.evolve(this.run.mastery); this.clearInputs(); this.storage.data.meta.maxTier = Math.max(this.storage.data.meta.maxTier, this.run.mastery); this.save(); }
+      if (event.type === 'evolve') { this.audio.evolve(this.run.mastery); this.storage.data.meta.maxTier = Math.max(this.storage.data.meta.maxTier, this.run.mastery); this.save(); }
       if (event.type === 'boss') { this.audio.boss(); this.clearInputs(); this.save(); }
       if (event.type === 'win') this.audio.win();
     }
@@ -313,7 +306,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:{name:this.run!.activeInfo.name,...this.run!.active}, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:{name:this.run!.activeInfo.name,...this.run!.active}, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

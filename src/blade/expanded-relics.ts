@@ -12,7 +12,7 @@ export const NEW_RELICS = {
   leech: {name:'心滴坠',group:'hunt',rarity:'legendary',effect:'击杀恢复 0.4 生命，冷却 0.5 秒',note:'每级恢复量再加 0.4；自爆怪自行引爆不触发。'},
   comet: {name:'彗星徽',group:'hunt',rarity:'legendary',effect:'每 4 次有效挥砍放出三道星刃',note:'初始各 35% 刀伤，每级再加 15%；扇形覆盖，适合远程清群。'},
   execution: {name:'终结月镰',group:'hunt',rarity:'epic',effect:'直击残血敌人伤害 +12%',note:'每级再加 12%；普通怪生命低于 20% 生效，强敌低于 10% 时以一半增幅生效。'},
-  crown: {name:'万象王冠',group:'chaos',rarity:'mythic',effect:'每个已用道具格提供 2.5% 伤害',note:'每级继续增加，五格满配时每级提供 12.5% 伤害。'},
+  crown: {name:'万象王冠',group:'chaos',rarity:'mythic',effect:'每种已获得道具提供 2.5% 伤害',note:'每级继续增加；收集的道具种类越多，伤害提升越高。'},
   redmoon: {name:'赤月契约',group:'chaos',rarity:'chaos',effect:'伤害 +25%，治疗效果 −12%',note:'每级同时增加收益和代价；满级伤害 +125%，治疗减少 60%。'},
   blackhole: {name:'吞星核',group:'chaos',rarity:'chaos',effect:'每 8 次有效挥砍触发引力脉冲',note:'吸引附近普通怪并造成 15% 刀伤/级；精英受拉拽减弱，首领不受拉拽。'},
   mirror: {name:'逆光镜',group:'chaos',rarity:'mythic',effect:'减伤 3%，受伤或挡击时释放反击波',note:'每级减伤再加 3%，反击波造成 35% 刀伤/级；护盾挡击也能触发。'},
@@ -34,7 +34,7 @@ export function expandedRelicDetail(id: keyof typeof NEW_RELICS, rank: number) {
     case 'leech': return `击杀恢复 ${(rank*.4).toFixed(1)} 生命，冷却 0.5s`;
     case 'comet': return `每 4 次有效挥砍放出三道 ${Math.round((.20+.15*rank)*100)}% 伤害星刃`;
     case 'execution': return `对残血目标伤害 +${rank*12}%，强敌以一半增幅生效`;
-    case 'crown': return `每个已用道具格提供 ${(rank*2.5).toFixed(1)}% 伤害`;
+    case 'crown': return `每种已获得道具提供 ${(rank*2.5).toFixed(1)}% 伤害`;
     case 'redmoon': return `伤害 +${rank*25}%，治疗效果 −${rank*12}%`;
     case 'blackhole': return `每 8 次有效挥砍，引力脉冲造成 ${rank*15}% 刀伤`;
     case 'mirror': return `减伤 ${rank*3}%，挡击或受伤反击 ${rank*35}% 刀伤`;

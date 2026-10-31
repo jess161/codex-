@@ -10,11 +10,7 @@ function run(blade: number) {
   r.state.enemies = []; r.state.spawnBudget = -100000; r.state.attackTimer = 100000; r.state.invincible = 1000;
   return r;
 }
-function award(r: BladeRun, item: RelicId) {
-  const s = r.state; s.level++; s.pending = [s.level]; s.mode = 'relic';
-  s.choices = [item, ...r.availableRelics.filter(id => id !== item).slice(0, 2)];
-  expect(r.chooseRelic(item)).toBe(true);
-}
+function award(r:BladeRun,item:RelicId){r.state.level++;const d=r.addRelicDrop(item,r.state.player.x,r.state.player.y)!;d.spawn=0;expect(r.pickupRelic(d.id)).toBe(true);}
 function target(r: BladeRun, x: number, y = 0, kind: Enemy['kind'] = 'brood', hp = 10000) {
   const e = r.spawnEnemy(kind, x, y); e.hp = e.maxHp = hp; e.speed = 0; e.cooldown = 10000; return e;
 }
@@ -64,8 +60,8 @@ describe('passives follow blade dimensions', () => {
     const r = run(11), wave = getsuga(r); const shape = waveDimensions(wave, r.mastery), range = wave.maxRange;
     award(r, 'ruler'); award(r, 'anvil');
     expect(waveDimensions(wave, r.mastery)).toEqual(shape); expect(wave.maxRange).toBe(range);
-    r.state.mode = 'relic'; r.state.level++; r.state.pending = [r.state.level]; r.state.choices = ['stone','ruler','anvil'];
-    const saved = r.snapshot(); step(r, 30); expect(r.snapshot()).toEqual(saved);
+    r.state.mode = 'boss-intro'; r.state.transition=1;
+    const saved = r.snapshot(); step(r,30);expect(r.state.waves).toEqual(saved.waves);expect(r.state.time).toBe(saved.time);expect(r.state.transition).toBeLessThan(saved.transition);
     expect(validSnapshot(saved)).toBe(true); const restored = new BladeRun(1, restoreSnapshot(saved)!);
     expect(restored.state.waves).toEqual(saved.waves); expect(waveDimensions(restored.state.waves[0], restored.mastery)).toEqual(shape);
   });

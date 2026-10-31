@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { drawActiveFields, drawActiveBurst } from './active-art';
 import { ASSETS } from './assets';
+import { RELICS,RARITIES } from './relics';
 import { ENEMIES, TIERS } from './config';
 import { BladeRun, type RunEvent } from './simulation';
 import { GROUND_MAX_DENSITY, GROUND_TILE_SIZE, groundDensity, groundInfo, groundPattern, type GroundId } from './grounds';
@@ -210,6 +211,14 @@ export class BattleScene extends Phaser.Scene {
       this.groundHazards.fillStyle(color,(h.kind==='poison'?.18:.24)*fade).fillCircle(h.x,h.y,h.radius);
       this.groundHazards.lineStyle(2,color,.7*fade).strokeCircle(h.x,h.y,h.radius);
       if(h.kind==='poison') for(let i=0;i<3;i++) this.groundHazards.lineStyle(1.5,0xc1dc84,.65*fade).strokeCircle(h.x+(i-1)*20,h.y+(i%2?12:-8),9);
+    }
+    for(const d of s.relicDrops){
+      if(Math.abs(d.x-s.player.x)>run.view.width/2+48||Math.abs(d.y-s.player.y)>run.view.height/2+48)continue;
+      const rarity=RELICS[d.relic].rarity,color=parseInt(RARITIES[rarity].color.slice(1),16),alpha=d.spawn>0?.5:1;
+      this.shadows.fillStyle(color,.12*alpha).fillCircle(d.x,d.y,23).lineStyle(1.8,color,.85*alpha).strokeCircle(d.x,d.y,23);
+      this.sprite(`relic-drop-${d.id}`,`relic-${d.relic}`,d.x,d.y-(this.reducedMotion?0:Math.sin(this.clock*2+d.id)*1.5),40,9).setAlpha(alpha);
+      if(['legendary','mythic','chaos'].includes(rarity))this.shadows.lineStyle(1,color,.4).strokeCircle(d.x,d.y,27);
+      if(d.group)for(let i=0;i<3;i++)this.shadows.fillStyle(color,.8).fillCircle(d.x-5+i*5,d.y+29,1.4);
     }
     for (const orb of s.orbs) {
       if (Math.abs(orb.x - s.player.x) > run.view.width / 2 + 40 || Math.abs(orb.y - s.player.y) > run.view.height / 2 + 40) continue;

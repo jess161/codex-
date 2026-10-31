@@ -70,19 +70,19 @@ try {
   await page.setViewportSize({ width: 844, height: 390 }); await page.waitForTimeout(100); const rotated = await position(); await advance(150);
   check('orientation changes cancel the old gesture safely', near(rotated, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
   const landscape = await position();
-  assert.equal(await page.evaluate(()=>document.elementFromPoint(680,260)?.closest('[data-action]')?.getAttribute('data-action')??null),null,'landscape movement fixture must avoid the five-slot HUD');
+  assert.equal(await page.evaluate(()=>document.elementFromPoint(680,260)?.closest('[data-action]')?.getAttribute('data-action')??null),null,'landscape movement fixture must avoid the combat buttons');
   await send('touchStart', [point(680, 260)]); await send('touchMove', [point(640, 260)]); await advance(160);
   check('anywhere dragging also works in landscape', (await position()).x < landscape.x - 25); await page.screenshot({ path: `${output}/02-floating-landscape.png` }); await send('touchEnd');
   await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(100);
   const evolvingFinger = point(245, 450);
   await send('touchStart', [point(285, 450)]); await send('touchMove', [evolvingFinger]); await advance(100);
-  // Fixture skips XP waiting; the pause, selection, pointer capture and resume paths are real.
-  await page.evaluate(() => { const r = window.__BLADE__.run; r.state.time = Math.max(r.state.time, r.state.formStartedAt + 75); r.grantXp(Math.max(0, 19 - r.state.totalXp)); }); await advance(700);
-  check('an evolution clears the floating gesture before item selection', await page.locator('.relic-card').count() === 3 && await page.locator('#touch-joystick').isHidden());
-  const choice = await center(page.locator('.relic-card').nth(1));
-  await send('touchStart', [evolvingFinger, choice]); await send('touchEnd', [choice]);
-  const forged = await position(); await send('touchMove', [point(265, 460)]); await advance(180);
-  check('a held finger cannot continue walking after choosing a item card', near(forged, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
+  // The fixture removes XP waiting; mastery, pointer capture and physical pickup use real paths.
+  const beforeMastery=await position();
+  await page.evaluate(() => { const r=window.__BLADE__.run;r.state.time=Math.max(r.state.time,r.state.formStartedAt+r.practiceTime);r.grantXp(10000); }); await advance(700);
+  check('mastery advances without a choice menu and preserves the floating gesture', (await position()).x<beforeMastery.x-25&&await page.locator('#touch-joystick').isVisible()&&await page.evaluate(()=>__BLADE__.run.state.level>=6&&__BLADE__.run.state.mode==='playing')&&await page.locator('.relic-card').count()===0);
+  await page.evaluate(()=>{const r=__BLADE__.run,d=r.addRelicDrop('ruler',r.state.player.x,r.state.player.y);d.spawn=0;});
+  const beforePickup=await position();await advance(180);
+  check('physical item pickup keeps the original movement finger active', (await position()).x<beforePickup.x-25&&await page.locator('#touch-joystick').isVisible()&&await page.locator('.relic-chip[data-relic="ruler"]').count()===1);await send('touchEnd');
   await page.getByRole('button', { name: '暂停', exact: true }).tap();
   await page.getByRole('button', { name: '保存并返回首页', exact: true }).tap(); await page.waitForTimeout(100);
   check('a completed touch cannot click through into the next menu', await page.evaluate(() => window.__BLADE__.panel === 'title' && window.__BLADE__.run === undefined) && await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());

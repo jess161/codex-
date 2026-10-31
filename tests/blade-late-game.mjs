@@ -12,14 +12,13 @@ try{
   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:3,isMobile:true,hasTouch:true});page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base+(base.includes('?')?'&':'?')+'qa=1');await page.locator('#boot-status').waitFor({state:'hidden'});
   await page.getByRole('button',{name:'开始试炼',exact:true}).tap();await page.getByRole('button',{name:'持刀出发',exact:true}).tap();await isolate(page);
-  const baseline=await page.evaluate(()=>{const a=__BLADE__,s=a.run.state;s.enemies=[];s.level=20;s.time=300;s.eliteIndex=2;const e=a.run.spawnEnemy('armor',300,0);a.ui.render(true);return {id:e.id,hp:e.hp,maxHp:e.maxHp,speed:e.speed,density:JSON.parse(a.text()).density};});
+  const baseline=await page.evaluate(()=>{const a=__BLADE__,s=a.run.state;s.enemies=[];s.level=20;s.time=300;s.eliteIndex=4;const e=a.run.spawnEnemy('armor',300,0);a.ui.render(true);return {id:e.id,hp:e.hp,maxHp:e.maxHp,speed:e.speed,density:JSON.parse(a.text()).density};});
   check('level 20 still uses the normal trial label and original difficulty',await page.locator('#stage-label').textContent()==='生存试炼'&&!(await page.locator('#stage-label').getAttribute('class')??'').includes('high-pressure'));
   await page.evaluate(()=>{const r=__BLADE__.run;for(let i=0;i<1000&&r.state.level===20;i++)r.grantXp(1);});await frame(page,10);
-  check('native XP crossing level 20 still opens exactly three real item choices',await page.evaluate(()=>__BLADE__.run.state.level===21&&__BLADE__.run.state.mode==='relic')&&await page.locator('.relic-card').count()===3);
-  const frozen=await page.evaluate(()=>JSON.stringify(__BLADE__.run.snapshot()));await frame(page,120);
-  check('the difficulty transition cannot advance enemies, timers or RNG during a choice',await page.evaluate(s=>JSON.stringify(__BLADE__.run.snapshot())===s,frozen));
-  await page.locator('.relic-card').first().tap();
-  check('a native phone item selection resumes the new high-pressure trial',await page.locator('#stage-label').textContent()==='高压试炼'&&await page.evaluate(()=>__BLADE__.run.state.mode==='playing'));
+  check('native XP crossing level 20 continues combat without an item menu',await page.evaluate(()=>__BLADE__.run.state.level===21&&__BLADE__.run.state.mode==='playing')&&await page.locator('.relic-card').count()===0);
+  const beforeTime=await page.evaluate(()=>__BLADE__.run.state.time);await frame(page,120);
+  check('the difficulty transition keeps the combat clock running',await page.evaluate(t=>__BLADE__.run.state.time>t+1.9,beforeTime));
+  check('the uninterrupted phone run displays the new high-pressure trial',await page.locator('#stage-label').textContent()==='高压试炼'&&await page.evaluate(()=>__BLADE__.run.state.mode==='playing'));
   check('the high-pressure label remains visible and within the phone viewport',await page.locator('#stage-label').evaluate(e=>{const r=e.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth&&r.top>=0&&r.bottom<=innerHeight;})&&await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   const grown=await page.evaluate(()=>{const a=__BLADE__,s=a.run.state;s.time=300;s.level=30;const e=a.run.spawnEnemy('armor',-300,0);for(let i=0;i<5000;i++)a.run.addOrb(2000+i,2000+i%10,1,'xp');a.ui.render(true);return {id:e.id,hp:e.hp,maxHp:e.maxHp,speed:e.speed,density:JSON.parse(a.text()).density};});metrics.level20=baseline;metrics.level30=grown;
   check('new level 30 enemies have 60 percent more health and 8 percent more chase speed',Math.abs(grown.maxHp/baseline.maxHp-1.6)<.00001&&Math.abs(grown.speed/baseline.speed-1.08)<.00001);
@@ -31,9 +30,11 @@ try{
   check('the harder mode and browser reload retain 5000 individually scattered XP drops',await page.evaluate(()=>{const o=__BLADE__.run.state.orbs;return o.length===5000&&o.every((v,i)=>v.x===2000+i&&v.y===2000+i%10);}));
   await page.getByRole('button',{name:'暂停',exact:true}).tap();await page.getByRole('button',{name:'游戏设置',exact:true}).tap();await page.locator('[data-setting="simplified"]').check();await page.getByRole('button',{name:'完成',exact:true}).tap();await page.getByRole('button',{name:'继续试炼',exact:true}).tap();
   check('lite mode preserves existing enemy strength and all scattered XP drops',await page.evaluate(({a,b})=>{const s=__BLADE__.run.state;return s.orbs.length===5000&&s.enemies.find(e=>e.id===a.id).maxHp===a.maxHp&&s.enemies.find(e=>e.id===b.id).maxHp===b.maxHp;},{a:baseline,b:grown}));
-  await page.evaluate(()=>{__BLADE__.run.state.time=599.99;});await frame(page);
-  check('the native boss transition uses 10800 HP at level 30 and displays the real boss bar',await page.evaluate(()=>{const s=__BLADE__.run.state;return s.mode==='boss-intro'&&s.enemies.find(e=>e.kind==='boss')?.maxHp===10800&&s.orbs.length===5000;})&&await page.locator('#stage-label').textContent()==='首领决战'&&await page.locator('#boss-health').isVisible());
+  await page.evaluate(()=>{__BLADE__.run.state.time=359.99;});await frame(page);
+  check('the native six-minute boss transition uses 5400 HP at level 30 and displays its bar',await page.evaluate(()=>{const s=__BLADE__.run.state;return s.mode==='boss-intro'&&s.enemies.find(e=>e.kind==='boss')?.maxHp===5400&&s.orbs.length===5000;})&&await page.locator('#stage-label').textContent()==='首领决战'&&await page.locator('#boss-health').isVisible());
   await page.screenshot({path:`${output}/02-phone-harder-boss.png`});
-  check('phone pressure, choices, saves and boss entry have no runtime errors',errors.length===0);
-  await fs.writeFile(`${output}/results.json`,JSON.stringify({passed:checks.length,checks,metrics,errors,fixtures:'A level-20/time-300 starting fixture is declared. Subsequent level-21 XP processing, three-choice tap, save/reload, lite switch and boss transition use native paths. Level 30 and 5000 distant drops are explicit fixtures. Phone is a 390x844 DPR3 touch emulation, not a physical-device performance measurement.'},null,2));
+  await page.evaluate(()=>{__BLADE__.run.state.bossTime=30;__BLADE__.ui.render(true);});
+  check('the short boss fight highlights its final fifteen seconds',await page.locator('.battle-clock').evaluate(e=>e.classList.contains('urgent')));
+  check('phone pressure, progression, saves and boss entry have no runtime errors',errors.length===0);
+  await fs.writeFile(`${output}/results.json`,JSON.stringify({passed:checks.length,checks,metrics,errors,fixtures:'A level-20/time-300 starting fixture is declared. Subsequent level-21 XP processing, save/reload, lite switch and boss transition use native paths. Level 30 and 5000 distant drops are explicit fixtures. Phone is a 390x844 DPR3 touch emulation, not a physical-device performance measurement.'},null,2));
 }catch(error){for(const c of browser.contexts())for(const p of c.pages())try{await p.screenshot({path:`${output}/failure.png`});}catch{}throw error;}finally{await browser.close();}

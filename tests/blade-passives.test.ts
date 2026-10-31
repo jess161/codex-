@@ -180,12 +180,12 @@ describe('story-inspired blade passives', () => {
     expect(copy.state.waves.filter(w => w.kind === 'getsuga')).toHaveLength(1); expect(copy.state.passive.tensaPending).toBe(false);
   });
   it('migrates the weight edition without changing XP, practice, dimensions, RNG or pending choices', () => {
-    const r = run(2); r.state.level = 5; r.state.time = 35; r.state.formStartedAt = 8; r.state.xp = 23; r.state.perks.long = 2;
+    const r = run(2); r.state.classicTiming=true; r.state.level = 5; r.state.time = 35; r.state.formStartedAt = 8; r.state.xp = 23; r.state.perks.long = 2;
     const legacy = { ...r.snapshot(), version: 3 } as Record<string, unknown>; delete legacy.passive;
     const oldEnemy = target(r); const bare = { ...oldEnemy } as Record<string, unknown>;
     for (const key of Object.keys(freshEnemyEffects())) delete bare[key];
     legacy.enemies = [bare]; const before = JSON.stringify(legacy), restored = restoreSnapshot(legacy)!;
-    expect(restored.version).toBe(7); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
+    expect(restored.version).toBe(8); expect(restored.xp).toBe(23); expect(restored.formStartedAt).toBe(8); expect(restored.rng).toBe(legacy.rng);
     expect(restored.passive).toEqual(freshPassive(2)); expect(restored.enemies[0].burnTime).toBe(0);
     expect(new BladeRun(0, restored).stats).toEqual(r.stats); expect(JSON.stringify(legacy)).toBe(before);
   });

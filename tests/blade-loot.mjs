@@ -1,0 +1,62 @@
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const base=process.env.GAME_URL??'http://127.0.0.1:4173/',out='test-results/blade/loot';await fs.mkdir(out,{recursive:true});
+const browser=await chromium.launch({executablePath:'/usr/bin/chromium',args:['--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+const checks=[],errors=[],metrics={};const check=(name,ok)=>{assert.ok(ok,name);checks.push(name);console.log('PASS',name);};
+const snap=p=>p.evaluate(()=>structuredClone(__BLADE__.run.state));
+async function isolate(p){await p.evaluate(()=>{const a=__BLADE__;a.scene.onFrame=undefined;a.run.state.enemies=[];a.run.state.spawnBudget=-100000;a.run.state.attackTimer=100000;a.run.state.eliteIndex=4;});}
+async function frame(p,n=1){await p.evaluate(n=>{const a=__BLADE__;for(let i=0;i<n;i++){a.frame(1/60);a.scene.update(0,1000/60);}a.ui.render(true);},n);}
+async function boot(p,webgl=false){await p.addInitScript(()=>{let app;Object.defineProperty(window,'__BLADE__',{configurable:true,get:()=>app,set:value=>{app=value;value.scene.onFrame=undefined;}});});p.on('pageerror',e=>errors.push(e.message));await p.goto(`${base}?qa=1${webgl?'&renderer=webgl':''}`);await p.locator('#boot-status').waitFor({state:'hidden'});await p.getByRole('button',{name:'开始试炼',exact:true}).click();await p.getByRole('button',{name:'持刀出发',exact:true}).click();await isolate(p);}
+const shot=(p,name)=>p.screenshot({path:`${out}/${name}.png`});
+try{
+ const p=await browser.newPage({viewport:{width:1280,height:900},deviceScaleFactor:2});await boot(p);
+ check('new run starts with no five-slot HUD or choice menu',await p.locator('#relic-slots,.relic-choice,.relic-trim').count()===0&&await p.locator('#relic-dock').isHidden());
+ check('new run advertises a six-minute survival clock',await p.locator('#clock-goal').textContent()==='/ 06:00');
+ await p.keyboard.down('d');await p.evaluate(()=>__BLADE__.run.grantXp(10000));await frame(p,4);const first=await snap(p);
+ check('ordinary XP levels grant growth while movement stays active',first.level===5&&first.mode==='playing'&&first.player.x>0&&first.maxHp===108&&first.choices.length===0);
+ await p.evaluate(()=>__BLADE__.run.state.time=44.99);await frame(p,8);const advanced=await snap(p);
+ check('mastery levels preserve movement and never open item selection',advanced.level===11&&advanced.player.x>first.player.x&&advanced.mode==='playing'&&await p.locator('.relic-choice').count()===0);await p.keyboard.up('d');
+ await p.evaluate(()=>{const a=__BLADE__;a.selectedBlade=0;a.start();});await isolate(p);
+ await p.evaluate(()=>{const r=__BLADE__.run;r.state.time=30;const e=r.spawnEnemy('blob',45,0);e.hp=1;e.speed=0;});await p.keyboard.press('q');await frame(p,30);const killed=await snap(p),drop=killed.relicDrops[0];
+ check('a real active-skill kill guarantees the opening item at its actual death location',killed.kills===1&&drop&&drop.x===45&&drop.y===0);
+ check('ground item uses the generated sharp relic texture',await p.evaluate(id=>__BLADE__.scene.textures.get(`relic-${id}`).getSourceImage().width===384,drop.relic));
+ check('nearby loot preview explains quality and effect without pausing',await p.locator('#drop-hint').isVisible()&&await p.locator('#drop-hint b').textContent()&&(await snap(p)).mode==='playing');await shot(p,'01-ground-item');
+ const floor=structuredClone(drop);await frame(p,60);check('experience can attract while the item itself remains at the original point',(await snap(p)).relicDrops[0].x===floor.x&&(await snap(p)).relicDrops[0].y===floor.y);
+ await p.keyboard.down('d');await frame(p,10);const picked=await snap(p);await frame(p,8);await p.keyboard.up('d');
+ check('walking onto an item equips it once and does not stop movement',picked.relics[drop.relic]===1&&picked.mode==='playing'&&(await snap(p)).player.x>picked.player.x);
+ check('the collected item appears in the bottom dock without empty placeholders',await p.locator('.relic-chip').count()===1&&await p.locator('#relic-dock').isVisible()&&await p.locator('.relic-slots,.empty').count()===0);
+ await p.evaluate(id=>{const r=__BLADE__.run;const d=r.addRelicDrop(id,r.state.player.x,r.state.player.y);d.spawn=0;},drop.relic);await frame(p);
+ check('a repeated item updates one dock icon to level two',await p.locator('.relic-chip').count()===1&&(await snap(p)).relics[drop.relic]===2&&await p.locator('.relic-chip small').textContent()==='2');
+ await p.evaluate(()=>{const r=__BLADE__.run;for(const id of Object.keys(r.state.relics)){if(!r.state.relics[id]){const d=r.addRelicDrop(id,r.state.player.x,r.state.player.y);d.spawn=0;}}});await frame(p);
+ check('all thirty types can be owned and displayed without a five-item limit',Object.values((await snap(p)).relics).filter(n=>n>0).length===30&&await p.locator('.relic-chip').count()===30);
+ check('dock icons retain full source resolution and quality information',await p.locator('.relic-chip').evaluateAll(nodes=>nodes.every(b=>b.getAttribute('aria-label')&&b.querySelector('img').complete&&b.querySelector('img').naturalWidth===384)));
+ await p.evaluate(()=>{const r=__BLADE__.run;while(r.state.relics.stone<5){const d=r.addRelicDrop('stone',r.state.player.x,r.state.player.y);d.spawn=0;r.pickupRelic(d.id);}__BLADE__.ui.render(true);});
+ check('maxed item has one star badge and no longer belongs to the drop pool',await p.locator('[data-relic="stone"] small').textContent()==='★'&&await p.evaluate(()=>!__BLADE__.run.availableRelics.includes('stone')));
+ await p.evaluate(()=>{const r=__BLADE__.run;for(let i=0;i<5000;i++)r.addOrb(2000+i,1800+i%5,1,'xp');r.addRelicDrop('phoenix',1900,1300);__BLADE__.save();});const saved=await snap(p);
+ await p.reload();await p.locator('#boot-status').waitFor({state:'hidden'});await p.getByRole('button',{name:'继续试炼',exact:true}).click();await isolate(p);const restored=await snap(p);
+ check('reload preserves every owned rank, floor item and all 5000 scattered XP drops',JSON.stringify(restored.relics)===JSON.stringify(saved.relics)&&JSON.stringify(restored.relicDrops)===JSON.stringify(saved.relicDrops)&&JSON.stringify(restored.orbs)===JSON.stringify(saved.orbs));
+ check('reload restores exact food/combat/item RNG states without a reroll',restored.rng===saved.rng&&restored.lootRng===saved.lootRng&&restored.relicLoot.rng===saved.relicLoot.rng);
+ await p.locator('.relic-bag').click();check('intentional inventory access still shows the full thirty-item catalogue',await p.locator('.relic-owned.collected').count()===30&&await p.locator('.relic-family').count()===6);await p.keyboard.press('Escape');await shot(p,'02-thirty-item-dock');await p.close();
+ const phone=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:3,isMobile:true,hasTouch:true});await boot(phone,true);
+ const cdp=await phone.context().newCDPSession(phone),point=(x,y,id=1)=>({x,y,id}),send=(type,touchPoints=[])=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints});
+ await phone.evaluate(()=>{const r=__BLADE__.run;const d=r.addRelicDrop('ruler',20,0);d.spawn=0;});await send('touchStart',[point(55,470)]);const moving=point(95,470);await send('touchMove',[moving]);await frame(phone,7);const movingPickup=await snap(phone);await frame(phone,10);
+ check('native touch keeps walking through an automatic item pickup',movingPickup.relics.ruler===1&&(await snap(phone)).player.x>movingPickup.player.x&&await phone.locator('#touch-joystick').isVisible());
+ const ab=await phone.locator('#active-button').boundingBox(),skill=point(ab.x+ab.width/2,ab.y+ab.height/2,2);await send('touchStart',[moving,skill]);await frame(phone,3);check('second-finger active skill still works after the dock moves controls upward',(await snap(phone)).active.casts===1&&await phone.locator('#touch-joystick').isVisible());await send('touchEnd',[skill]);await send('touchEnd');
+ await phone.evaluate(()=>{const r=__BLADE__.run;for(const id of Object.keys(r.state.relics))if(!r.state.relics[id]){const d=r.addRelicDrop(id,r.state.player.x,r.state.player.y);d.spawn=0;}});await frame(phone);await shot(phone,'03-phone-bottom-items');
+ check('phone displays thirty collected icons in one horizontally scrollable bottom strip',await phone.locator('.relic-chip').count()===30&&await phone.locator('#relic-strip').evaluate(el=>el.scrollWidth>el.clientWidth&&getComputedStyle(el).overflowX==='auto'));
+ const strip=await phone.locator('#relic-strip').boundingBox(),oldScroll=await phone.locator('#relic-strip').evaluate(el=>el.scrollLeft),beforeScroll=(await snap(phone)).player;
+ await send('touchStart',[point(strip.x+25,strip.y+20)]);await send('touchMove',[point(strip.x+140,strip.y+20)]);await send('touchEnd');await phone.waitForTimeout(150);
+ check('swiping the dock scrolls its contents without moving the hero or opening a menu',await phone.locator('#relic-strip').evaluate(el=>el.scrollLeft)<oldScroll&&JSON.stringify((await snap(phone)).player)===JSON.stringify(beforeScroll)&&await phone.evaluate(()=>__BLADE__.panel==='none'));
+ for(const size of [{width:320,height:568},{width:740,height:360}]){await phone.setViewportSize(size);await frame(phone);const dock=await phone.locator('#relic-dock').boundingBox(),a=await phone.locator('#active-button').boundingBox(),d=await phone.locator('#dash-button').boundingBox();check(`${size.width}x${size.height}: dock fits width and never covers the two combat buttons`,dock.x>=0&&dock.x+dock.width<=size.width&&dock.y+dock.height<=size.height&&dock.y>=a.y+a.height&&dock.y>=d.y+d.height&&a.width>=44&&d.width>=44);check(`${size.width}x${size.height}: the page has no horizontal overflow`,await phone.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));}
+ await phone.setViewportSize({width:390,height:844});
+ // Load a real v7-shaped overload/pending-choice fixture through the normal storage path.
+ await phone.evaluate(()=>{const a=__BLADE__;a.selectedBlade=0;a.start();const s=a.run.snapshot();delete s.relicLoot;delete s.relicDrops;delete s.classicTiming;s.version=7;s.level=15;s.hp=70;s.maxHp=130;s.totalXp=200;s.mode='relic-trim';s.relicResume='relic';s.pending=[15];s.choices=['stone','ruler','heart'];for(const id of Object.keys(s.relics))s.relics[id]=0;for(const id of ['stone','ruler','anvil','feather','bell','hourglass','ember','crystal','thunder','heart','magnet','star'])s.relics[id]=1;s.relics.heart=2;s.relicState.heartPeak=2;s.relicState.shield=true;s.eliteIndex=0;s.spawnBudget=-100000;a.run=undefined;a.scene.activeRun=false;a.storage.data.version=7;a.storage.data.run=s;a.storage.write();});
+ await phone.reload();await phone.locator('#boot-status').waitFor({state:'hidden'});await phone.getByRole('button',{name:'继续试炼',exact:true}).tap();await isolate(phone);const old=await snap(phone);
+ check('an old overloaded save keeps all twelve items without opening the obsolete trim screen',old.mode==='playing'&&await phone.locator('.relic-chip').count()===12&&await phone.locator('.relic-choice,.relic-trim').count()===0);
+ check('old progress keeps its HP, XP, full old duration and all three ground alternatives',old.hp===70&&old.maxHp===130&&old.totalXp===200&&old.classicTiming&&old.relicDrops.length===3&&await phone.locator('#clock-goal').textContent()==='/ 10:00');
+ const offer=old.relicDrops[0];await phone.evaluate(p=>{__BLADE__.run.state.player={x:p.x,y:p.y};},offer);await frame(phone);const claimed=await snap(phone);
+ check('walking to one legacy alternative claims exactly one and removes only its alternatives',claimed.relics.stone===2&&claimed.relicDrops.length===0&&claimed.relicLoot.picked===1&&claimed.rng===old.rng);await shot(phone,'04-phone-legacy-reward');
+ check('Canvas, WebGL and all touch/reload scenarios have no runtime errors',errors.length===0);metrics.owned=30;metrics.oldSaveItems=12;metrics.shortRoundSeconds=405;
+ await fs.writeFile(`${out}/results.json`,JSON.stringify({passed:checks.length,checks,errors,metrics,artifact:base,scope:'Native XP, active kill, movement, physical pickup, touchscreen multi-touch, scrolling, pause and storage. Deterministic fixtures isolate collected items and old saves. Phone emulation is not a physical-device performance measurement.'},null,2));
+}catch(error){for(const c of browser.contexts())for(const p of c.pages())try{await p.screenshot({path:`${out}/failure-${p.viewportSize()?.width}.png`});}catch{}throw error;}finally{await browser.close();}

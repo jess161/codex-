@@ -26,7 +26,7 @@ describe('independent manual weapon skills',()=>{
   const r=run(1);target(r,0,80);r.step(1/60,{x:1,y:0,dash:false,active:true});expect(r.active.casts).toBe(1);expect(r.state.aim).toBeCloseTo(Math.PI/2);step(r,60);expect(r.active.casts).toBe(1);
  });
  it('lets cooldown expire in play and freezes cooldown, burst queues and fields during selection',()=>{
-  const r=run(1);target(r);r.activateSkill();r.grantXp(xpNext(1));step(r,20);expect(r.state.mode).toBe('relic');const before=r.snapshot();step(r,600);expect(r.snapshot()).toEqual(before);r.skipRelic();step(r,601);expect(r.active.cooldown).toBe(0);expect(r.activateSkill()).toBe(true);
+  const r=run(1);target(r);r.activateSkill();r.grantXp(xpNext(1));step(r,20);expect(r.state.mode).toBe('playing');expect(r.active.pending).toEqual([]);step(r,601);expect(r.active.cooldown).toBe(0);expect(r.activateSkill()).toBe(true);
  });
  it('strengthens newly released geometry with length and width and captures already released strikes',()=>{
   const r=run(1);r.activateSkill();const old=structuredClone(r.active.pending),small=old[0].radius;r.state.relics.ruler=5;r.state.relics.anvil=5;expect(r.active.pending).toEqual(old);

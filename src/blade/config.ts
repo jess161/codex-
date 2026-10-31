@@ -1,11 +1,12 @@
-export const GAME_DURATION = 600;
-export const BOSS_DURATION = 90;
+export const GAME_DURATION = 360;
+export const BOSS_DURATION = 45;
+export const CLASSIC_TIMING = {game:600,boss:90,practice:75} as const;
 export const SAVE_KEY = 'blade-evolution-save-v1';
 export const FIXED_STEP = 1 / 60;
 export const MAX_LEVEL = 30;
 export const XP_DROP_TIME = .22;
 export const EVOLUTION_HEAL = 4;
-export const MIN_FORM_TIME = 75;
+export const MIN_FORM_TIME = 45;
 export const ELITE_INTERVAL = GAME_DURATION / 5;
 // Mastery belongs to the wielder. Blade indices identify parallel loadouts, never ranks.
 export const TIER_LEVELS = [1, 6, 12, 20, 28];
@@ -97,7 +98,8 @@ export const ACHIEVEMENTS = [
 ];
 export const tierForLevel = (level: number) => TIER_LEVELS.reduce((tier, threshold, index) => level >= threshold ? index : tier, 0);
 export const legacyXpNext = (level: number) => 10 + 3 * level + 5 * Math.floor(level / 5);
-export const xpNext = (level: number) => Math.ceil(legacyXpNext(level) * 1.4);
+export const classicXpNext = (level: number) => Math.ceil(legacyXpNext(level) * 1.4);
+export const xpNext = (level: number) => legacyXpNext(level);
 export const xpToLevel = (level: number) => Array.from({ length: Math.max(0, Math.min(MAX_LEVEL, level) - 1) }, (_, i) => xpNext(i + 1)).reduce((sum, xp) => sum + xp, 0);
 export const formatTime = (seconds: number) => `${Math.floor(Math.max(0, seconds) / 60).toString().padStart(2, '0')}:${Math.floor(Math.max(0, seconds) % 60).toString().padStart(2, '0')}`;
 export function angleDelta(a: number, b: number) { return Math.atan2(Math.sin(a - b), Math.cos(a - b)); }
@@ -113,8 +115,8 @@ export function lateGameDifficulty(level: number) {
     bossHealth: 1 + .35 * progress, speed: 1 + .08 * progress, spawnRate: 1 + .25 * progress };
 }
 
-export function encounterDensity(time: number, simplified = false, level = 1) {
-  const progress = Math.max(0, Math.min(1, time / GAME_DURATION));
+export function encounterDensity(time: number, simplified = false, level = 1, duration = GAME_DURATION) {
+  const progress = Math.max(0, Math.min(1, time / duration));
   const surge = Math.max(0, (progress - .4) / .6);
   return { rate: (.9 + 3.0 * progress + 6.9 * surge * surge) * lateGameDifficulty(level).spawnRate, cap: Math.floor((simplified ? 72 : 100) + (simplified ? 108 : 180) * surge) };
 }

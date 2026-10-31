@@ -5,11 +5,7 @@ import { RELIC_IDS, RELICS, RELIC_GROUPS, relicGroups, freshRelics, type RelicId
 const idle = { x: 0, y: 0, dash: false };
 const run = (blade = 0) => { const r = new BladeRun(34, undefined, blade); r.state.enemies = []; r.state.spawnBudget = -100000; r.state.attackTimer = 10000; return r; };
 const step = (r: BladeRun, n = 1) => { for (let i = 0; i < n; i++) r.step(1 / 60, idle); };
-const award = (r: BladeRun, id: RelicId) => {
-  r.state.level++; r.state.pending = [r.state.level]; r.state.mode = 'relic';
-  r.state.choices = [id, ...r.availableRelics.filter(k => k !== id).slice(0, 2)];
-  expect(r.chooseRelic(id)).toBe(true);
-};
+const award=(r:BladeRun,id:RelicId)=>{r.state.level++;const d=r.addRelicDrop(id,r.state.player.x,r.state.player.y)!;d.spawn=0;expect(r.pickupRelic(d.id)).toBe(true);};
 const target = (r: BladeRun, x = 42, y = 0, kind: 'armor' | 'boss' = 'armor') => {
   const e = r.spawnEnemy(kind, x, y); e.hp = e.maxHp = 10000; e.speed = 0; e.cooldown = 1000; return e;
 };
@@ -24,32 +20,6 @@ describe('passive item choices and progression', () => {
     expect(RELIC_IDS).toHaveLength(30);
     for (const group of Object.keys(RELIC_GROUPS)) expect(RELIC_IDS.filter(id => RELICS[id].group === group)).toHaveLength(5);
     expect(relicGroups(freshRelics())).toEqual({ forge: 0, wind: 0, arcane: 0, spirit: 0, hunt:0, chaos:0 });
-  });
-  it('allows only one offered item and rejects legacy forge IDs, invalid indices and repeat selection', () => {
-    const r = run(); r.state.level = 2; r.state.mode = 'relic'; r.state.pending = [2]; r.state.choices = ['stone', 'ruler', 'anvil'];
-    const before = r.snapshot();
-    for (const bad of ['star', 'sharp', 'toString', 3, -1, NaN, .5] as (RelicId | number)[]) expect(r.chooseRelic(bad)).toBe(false);
-    expect(r.snapshot()).toEqual(before); expect(r.chooseRelic(0)).toBe(true); expect(r.state.relics.stone).toBe(1);
-    expect(r.state.choices).toEqual([]); expect(r.state.pending).toEqual([]); expect(r.chooseRelic('stone')).toBe(false);
-    expect(r.state.perks.sharp).toBe(0);
-  });
-  it('offers up to three unique eligible items for all 29 real upgrade steps across varied seeds', () => {
-    for (let seed = 1; seed <= 40; seed++) {
-      const r = new BladeRun(seed); r.state.enemies = []; r.state.attackTimer = 10000; r.state.spawnBudget = -100000; r.grantXp(1000000);
-      let picks = 0;
-      for (let ticks = 0; ticks < 2000 && (r.state.level < 30 || r.state.pending.length); ticks++) {
-        if (r.holdingXp) r.state.time = r.state.formStartedAt + MIN_FORM_TIME;
-        step(r);
-        if (r.state.mode === 'relic') {
-          expect(r.state.choices).toHaveLength(Math.min(3,r.availableRelics.length)); expect(new Set(r.state.choices).size).toBe(r.state.choices.length);
-          expect(r.state.choices.every(id => r.availableRelics.includes(id))).toBe(true);
-          expect(validSnapshot(r.snapshot())).toBe(true);
-          expect(r.state.choices.length?r.chooseRelic(picks % r.state.choices.length):r.skipRelic()).toBe(true); picks++;
-        }
-      }
-      expect(picks).toBe(29); expect(Object.values(r.state.relics).reduce((a, b) => a + b, 0)+r.state.skipped).toBe(29);
-      expect(Object.values(r.state.relics).every(rank => rank <= 5)).toBe(true);
-    }
   });
   it('removes max-rank items, the capped ruler and endgame XP candy from the pool', () => {
     const r = run(); for (let i = 0; i < 5; i++) award(r, 'stone'); expect(r.availableRelics).not.toContain('stone');
@@ -78,7 +48,7 @@ describe('passive item choices and progression', () => {
     r.state.hp = 50; r.addOrb(0, 0, 10, 'heal'); step(r,14); expect(r.state.hp).toBe(62);
   });
   it('applies the healing group to the native boss-entry recovery as well as pickups and upgrades', () => {
-    const r = run(); award(r, 'heart'); award(r, 'magnet'); r.state.hp = 50; r.state.time = 599.99;
+    const r = run(); award(r, 'heart'); award(r, 'magnet'); r.state.hp = 50; r.state.time = r.duration-.01;
     step(r); expect(r.state.mode).toBe('boss-intro'); expect(r.state.hp).toBe(68);
   });
   it('credits XP candy exactly once on pickup and never reapplies it on restore', () => {
@@ -87,11 +57,7 @@ describe('passive item choices and progression', () => {
     const restored = new BladeRun(1, restoreSnapshot(r.snapshot())!); step(restored);
     expect(restored.state.totalXp).toBeCloseTo(10.6); expect(restored.state.orbs).toHaveLength(0);
   });
-  it('freezes choice screens including HP, RNG, status counters, shield cooldown and world time', () => {
-    const r = run(); award(r, 'heart'); award(r, 'magnet'); award(r, 'star');
-    r.state.invincible = 0; r.damagePlayer(20, 'test'); r.grantXp(xpNext(r.state.level)); step(r, 12);
-    expect(r.state.mode).toBe('relic'); const before = r.snapshot(); step(r, 200); expect(r.snapshot()).toEqual(before);
-  });
+
 });
 
 describe('item combat and group combinations', () => {
@@ -138,33 +104,6 @@ describe('item combat and group combinations', () => {
 });
 
 describe('save compatibility and validation', () => {
-  it('persists the exact three choices, all levels, shield and charge without consuming RNG', () => {
-    const r = run(); for (const id of ['heart', 'magnet', 'star', 'thunder'] as RelicId[]) award(r, id);
-    r.state.relicState.lightning = 2; r.state.invincible = 0; r.damagePlayer(10, 'test');
-    r.grantXp(xpNext(r.state.level)); step(r, 12); const before = r.snapshot();
-    expect(validSnapshot(before)).toBe(true); expect(restoreSnapshot(before)).toEqual(before);
-    const copy = new BladeRun(0, restoreSnapshot(before)!); expect(copy.random()).toBe(r.random());
-  });
-  it('migrates an old forge screen once, preserving stats, XP, HP, entities and RNG', () => {
-    const r = run(2); r.state.level = 20; r.state.time = 300; r.state.perks.long = 8; r.state.perks.hollow = 5; target(r);
-    const { relics: _items, relicState: _state, ...rest } = r.snapshot();
-    const legacy = { ...rest, version: 5, mode: 'forge', pending: [20], choices: ['long', 'range', 'sharp'] };
-    const before = JSON.stringify(legacy), copy = restoreSnapshot(legacy)!;
-    expect(copy.version).toBe(7); expect(copy.mode).toBe('relic'); expect(new Set(copy.choices).size).toBe(3);
-    expect(copy.perks).toEqual(legacy.perks); expect(copy.relics).toEqual(freshRelics()); expect(copy.enemies).toEqual(legacy.enemies);
-    expect(copy.rng).toBe(legacy.rng); expect(copy.hp).toBe(legacy.hp); expect(copy.totalXp).toBe(legacy.totalXp);
-    expect(new BladeRun(0, copy).stats).toEqual(r.stats); expect(JSON.stringify(legacy)).toBe(before);
-    expect(restoreSnapshot(copy)).toEqual(copy); expect(validSnapshot(copy)).toBe(true);
-  });
-  it('rejects duplicate, capped, unknown or corrupted choices and malformed inventory state', () => {
-    const r = run(); r.grantXp(xpNext(1)); step(r, 12); const save = r.snapshot();
-    for (const broken of [
-      { ...save, choices: ['stone', 'stone', 'anvil'] }, { ...save, choices: ['sharp', 'ruler', 'anvil'] },
-      { ...save, relics: { ...save.relics, stone: 5 } }, { ...save, relics: { ...save.relics, stone: 1.5 } },
-      { ...save, relics: { ...save.relics, unknown: 1 } }, { ...save, relicState: { ...save.relicState, lightning: NaN } },
-      { ...save, relicState: { ...save.relicState, shield: true } }, { ...save, relicState: { ...save.relicState, shieldCooldown: 21 } },
-    ]) expect(restoreSnapshot(broken)).toBeNull();
-  });
   it('keeps native blade passives and resets every item for a fresh run', () => {
     const r = run(6); award(r, 'crystal'); expect(r.bladeId).toBe('snow-drinker'); expect(r.passiveInfo.name).toBe('寒魄凝霜');
     const fresh = new BladeRun(3, undefined, 6); expect(fresh.state.relics).toEqual(freshRelics()); expect(fresh.state.relicState.shield).toBe(false);

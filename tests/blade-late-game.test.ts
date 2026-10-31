@@ -5,7 +5,7 @@ const idle = { x: 0, y: 0, dash: false };
 function run(level: number, time = 300) {
   const r = new BladeRun(717); const s = r.state;
   s.level = level; s.time = time; s.enemies = []; s.spawnBudget = -100000; s.attackTimer = 100000; s.invincible = 1000;
-  s.eliteIndex = Math.min(4, Math.floor(time / 120)); return r;
+  s.eliteIndex = Math.min(4, Math.floor(time / (r.duration/5))); return r;
 }
 function step(r: BladeRun, n = 1) { for (let i = 0; i < n; i++) r.step(1 / 60, idle); }
 
@@ -35,13 +35,13 @@ describe('difficulty after level twenty', () => {
   it('strengthens all four elite waves on their original schedule', () => {
     const r=run(30);
     for (const [index,hp] of [420,1000,1800,2800].entries()) {
-      r.state.eliteIndex=index+1;expect(r.spawnEnemy('elite',300,0).maxHp).toBeCloseTo(hp*1.45);
+      r.state.eliteIndex=index+1;expect(r.spawnEnemy('elite',300,0).maxHp).toBeCloseTo(hp*1.45*.65);
     }
   });
   it('starts the native boss battle with the new level-based HP while preserving scattered XP', () => {
     const low=run(20,599.99), high=run(30,599.99);
     for (const r of [low,high]) {r.addOrb(900,900,3,'xp');step(r);expect(r.state.mode).toBe('boss-intro');expect(r.state.orbs[0]).toMatchObject({x:900,y:900,value:3});}
-    expect(low.state.enemies[0].maxHp).toBe(8000);expect(high.state.enemies[0].maxHp).toBe(10800);
+    expect(low.state.enemies[0].maxHp).toBe(4000);expect(high.state.enemies[0].maxHp).toBe(5400);
     expect(high.state.bossTime).toBe(0);expect(high.state.totalXp).toBe(0);
   });
   it('increases the real native spawn rate at the same survival time', () => {
@@ -68,12 +68,10 @@ describe('difficulty after level twenty', () => {
     const restored=new BladeRun(1,restoreSnapshot(saved)!);expect(restored.state.enemies).toEqual(saved.enemies);
     step(restored);expect(restored.state.enemies.map(e=>e.maxHp)).toEqual(saved.enemies.map(e=>e.maxHp));
   });
-  it('crosses level twenty through native XP and freezes pressure during the three-choice screen', () => {
-    const r=run(20);r.grantXp(xpNext(20));expect(r.state.level).toBe(21);step(r,10);
-    expect(r.state.mode).toBe('relic');expect(r.state.choices).toHaveLength(3);
-    const saved=r.snapshot();step(r,120);expect(r.snapshot()).toEqual(saved);
-    expect(r.chooseRelic(0)).toBe(true);expect(lateGameDifficulty(r.state.level).enemyHealth).toBeCloseTo(1.06);
+  it('crosses level twenty through XP without a choice interruption',()=>{
+    const r=run(20);r.grantXp(xpNext(20));expect(r.state.level).toBe(21);const start=r.state.time;r.step(1/60,{x:1,y:0,dash:false});expect(r.state.mode).toBe('playing');expect(r.state.choices).toEqual([]);expect(r.state.time).toBeGreaterThan(start);expect(r.state.player.x).toBeGreaterThan(0);expect(lateGameDifficulty(r.state.level).enemyHealth).toBeCloseTo(1.06);
   });
+
   it.each([['poison',160,.85],['bomber',60,1.1],['stalker',110,.8]] as const)('keeps the %s warning window intact after level twenty', (kind,distance,windup) => {
     const r=run(30),e=r.spawnEnemy(kind,distance,0);e.cooldown=0;step(r);
     expect(e.action).toBe('windup');expect(e.timer).toBe(windup);
