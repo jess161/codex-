@@ -1,10 +1,10 @@
 {
   "title": "Blade Evolution mobile preview",
-  "source_commit": "e3558f8a0a7d6b2ae784546f3ee74761565eee1a",
-  "created_at": "2026-10-31T16:53:27.458372+08:00",
-  "feature": "passive-size-follows-blade",
-  "artifact_sha256": "d78edba291446690247554516ae290f084fc159cd7522dac4d0af35d8dde274a",
-  "bytes": 10062353,
-  "unit_tests_passed": 191,
-  "browser_checks_passed": 48
+  "source_commit": "c027188681c8d91faaa2610bcfff51ccb8e671b4",
+  "created_at": "2026-10-31T17:17:15.251051+08:00",
+  "feature": "passive-size-and-late-game-pressure",
+  "artifact_sha256": "1d7da2863694a5930b6a1409171c763ffa3e376ff6fdae9fbc0514893f66d545",
+  "bytes": 10062844,
+  "unit_tests_passed": 213,
+  "browser_checks_passed": 33
 }
