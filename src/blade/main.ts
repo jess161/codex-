@@ -247,6 +247,8 @@ export class BladeApp {
       if (settings.haptics && impact.index>=2) navigator.vibrate?.(impact.index===3 ? 12:8);
     }
     for (const event of this.run.events) {
+      if(event.type==='shot')this.audio.arrow(event.tier??this.run.tier);
+      if(event.type==='bow-blast')this.audio.explode();
       if (event.type === 'slash') this.audio.slash(event.tier ?? 0, this.run.stats.mass);
       if (event.type === 'hit') {
         if (event.enemyKind) this.audio.enemyHurt(event.enemyKind, event.lethal, event.source);

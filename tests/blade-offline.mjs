@@ -29,8 +29,8 @@ try {
   await page.getByRole('button', { name: '返回', exact: true }).click();
   await page.keyboard.press('Escape'); await page.getByRole('button', { name: '保存并返回首页', exact: true }).click();
   check('offline play saves a valid resumable local run', await page.getByRole('button', { name: '继续试炼', exact: true }).isVisible());
-  await page.getByRole('button', { name: '刀型图鉴', exact: true }).click();
-  check('the complete codex renders without remote assets', await page.locator('.codex-card img').evaluateAll(images => images.length === 12 && images.every(i => i.complete && i.naturalWidth > 0)));
+  await page.getByRole('button', { name: '武器图鉴', exact: true }).click();
+  check('the complete codex renders without remote assets', await page.locator('.codex-card img').evaluateAll(images => images.length === 15 && images.every(i => i.complete && i.naturalWidth > 0)));
   await page.getByRole('button', { name: '返回', exact: true }).click();
   await page.context().setOffline(false); await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' });
   await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.waitForTimeout(200);

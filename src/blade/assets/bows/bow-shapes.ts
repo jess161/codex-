@@ -1,0 +1,2 @@
+// Authored vector silhouettes; regenerate with node scripts/create-bow-assets.mjs.
+export const BOW_LIMB_PATH="M200 52 C224 98 372 117 345 224 Q330 244 330 256 Q330 268 345 288 C372 395 224 414 200 460 L180 445 C217 384 300 371 298 294 L292 276 Q284 256 292 236 L298 218 C300 141 217 128 180 67 Z";

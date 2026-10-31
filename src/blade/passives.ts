@@ -1,3 +1,4 @@
+import { isBow } from './bows';
 import { TIERS } from './config';
 
 export type BladeId = typeof TIERS[number]['id'];
@@ -14,6 +15,9 @@ export const PASSIVES: Record<BladeId, { name: string; story: string; descriptio
   enma: { name: '霸气索取', story: '取意于阎魔引出持有者霸气、考验驾驭者。', description: '每第 4 次有效近战伤害 +100%；生命高于 35% 时耗 4 生命，改为 +150%，本斩击杀则返还消耗。' },
   ryujin: { name: '万象焚尽', story: '取意于山本元柳斋重国斩魄刀的烈焰。', description: '近战与刀气附加 3 秒灼烧，每秒造成 30% 近战伤害；燃烧的敌人死亡后，引燃周围 80 范围内的敌人。灼烧不叠层。' },
   tensa: { name: '月牙天冲', story: '取意于黑崎一护的黑色月牙与卍解速度。', description: '瞬步结束斩出 180% 伤害月牙，射程 380、穿透 12 人；随后 2 秒移速 +15%、攻击间隔 −15%。' },
+  'wind-bow': {name:'顺风连矢',story:'追风旅人的连箭，沿同一条风路破阵。',description:'自动发射穿透箭，每第四次射击追加两支风箭，各造成 45% 普攻伤害。'},
+  'frost-bow': {name:'凝霜',story:'让月光凝成寒意，把怪潮留在身后。',description:'三箭散射附加寒意，三次不同轮次的命中冻结普通怪 0.65 秒；精英与首领只减速。'},
+  'ember-bow': {name:'余烬',story:'流星散去之后，余火仍在燃烧。',description:'重箭命中爆炸，爆炸对周围敌人造成 65% 普攻伤害，并附加 2 秒灼烧。'},
 };
 
 export interface PassiveState {
@@ -62,12 +66,18 @@ export function passiveForTier(tier: number, mastery = 0) {
     case 'shusui': description = `同一目标每承受 ${r.dragonCycle} 次近战，追加 ${pct(r.dragonBonus)} 近战伤害；对精英与首领，追加伤害翻倍。`; break;
     case 'enma': description = `每第 ${r.enmaCycle} 次有效近战伤害 +${pct(r.enmaBonus)}；生命高于 35% 时耗 ${r.enmaCost} 生命，改为 +${pct(r.enmaPaidBonus)}，本斩击杀则返还消耗。`; break;
     case 'ryujin': description = `近战与刀气附加 ${num(r.burnTime)} 秒灼烧，每秒造成 ${pct(r.burnTickDamage * 2)} 近战伤害；死亡传火的基础半径为 ${r.burnSpread}，随刀身尺寸扩大，灼烧不叠层。`; break;
+    case 'wind-bow': description = `每第四次射击追加两支风箭，各造成 ${pct(.45+.05*mastery)} 普攻伤害；普攻穿透 ${2+Math.floor(mastery/2)} 名敌人。`; break;
+    case 'frost-bow': description = `三箭散射附加 ${num(1.5+.2*mastery)} 秒寒意，减速 ${pct(.2+.02*mastery)}；三次不同轮次的命中冻结普通怪 ${num(.65+.1*mastery)} 秒，每目标间隔 4 秒。精英与首领最多减速 15%，不冻结。`; break;
+    case 'ember-bow': description = `重箭命中爆炸，周围目标受到 65% 普攻伤害；直击与爆炸附加 ${num(2+.15*mastery)} 秒灼烧，每秒造成 15% 箭矢伤害，同次直击不重复结算爆炸。`; break;
     case 'tensa': description = `瞬步结束斩出 ${pct(r.getsugaDamage)} 伤害月牙，基础射程 ${r.getsugaRange}、穿透 ${r.getsugaPierce} 人，月牙体型和射程随刀身成长；随后 ${num(r.hasteTime)} 秒移速 +${pct(r.hasteBonus)}、攻击间隔 −${pct(r.hasteBonus)}。`; break;
   }
-  return { ...base, description: `${description} 被动特效随刀身尺寸放大。` };
+  return { ...base, description: `${description} ${isBow(tier)?'射程与箭体覆盖随道具成长。':'被动特效随刀身尺寸放大。'}` };
 }
 export function passiveGrowth(tier: number, mastery: number) {
   const r = passiveRules(mastery);
+  if(tier===12)return `连矢 ${pct(.45+.05*mastery)} · 穿透 ${2+Math.floor(mastery/2)} 人`;
+  if(tier===13)return `寒意 ${num(1.5+.2*mastery)}s · 冻结 ${num(.65+.1*mastery)}s`;
+  if(tier===14)return `余烬 ${num(2+.15*mastery)}s · 爆炸范围成长`;
   return [
     `磨刃上限 ${r.scrapCap} 层 · 每层 +${pct(r.scrapBonus)}`,
     `藏锋 +${pct(r.daggerBonus)} · 窗口 ${num(r.daggerTime)}s`,
@@ -97,6 +107,9 @@ export function passiveProgress(id: BladeId, p: PassiveState, dashCooldown: numb
     case 'shusui': return `同一目标 ${r.dragonCycle} 击 · 斩龙`;
     case 'enma': return `霸气蓄势 ${p.hits}/${r.enmaCycle}`;
     case 'ryujin': return `灼烧 ${num(r.burnTime)} 秒 · 死亡传火`;
+    case 'wind-bow': return '每四次射击 · 顺风连矢';
+    case 'frost-bow': return '三轮凝霜 · 冻结普通怪';
+    case 'ember-bow': return '爆炸清群 · 余烬灼烧';
     case 'tensa': return p.haste > 0 ? `卍解疾行 ${p.haste.toFixed(1)}s` : dashCooldown > 0 ? `月牙冷却 ${dashCooldown.toFixed(1)}s` : '瞬步就绪 · 月牙随行';
   }
 }

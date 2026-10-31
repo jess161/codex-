@@ -1,3 +1,4 @@
+import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type ArcheryState,type BowHost} from './bows';
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
 import { THREATS, type Hazard } from './threats';
@@ -25,12 +26,12 @@ export interface RunState {
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
-  passive: PassiveState; active?:ActiveState;
+  passive: PassiveState; active?:ActiveState; archery?:ArcheryState;
   aim: number; targetId: number; attackTimer: number; attackCount: number; swing: Swing | null;
   hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' };
+export type RunEvent = { type: 'shot' | 'bow-blast' | 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' };
 export interface MoveInput { x: number; y: number; dash: boolean; active?:boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
@@ -73,6 +74,7 @@ export class BladeRun {
       kills: 0, eliteKills: 0, bestCleave: 0, bossHits: 0, recentKills: [], maxCombo: 0, failure: '',
     };
     this.state.active ??= freshActive();
+    if(isBow(this.state.blade))this.state.archery??=freshArchery();
     if (!snapshot) for (let i = 0; i < 3; i++) {
       const angle = -Math.PI / 2 + (i - 1) * 1.05;
       this.spawnEnemy('blob', Math.cos(angle) * (175 + i * 12), Math.sin(angle) * (175 + i * 12), .65);
@@ -115,14 +117,30 @@ export class BladeRun {
     }
     return stats;
   }
+  get isRanged(){return isBow(this.tier);}
+  get archery(){return this.state.archery??=freshArchery();}
+  private targetOnScreen(e:Enemy){return !this.isRanged||(Math.abs(e.x-this.state.player.x)<=this.view.width/2+e.radius&&Math.abs(e.y-this.state.player.y)<=this.view.height/2+e.radius);}
+  private bowHost():BowHost {
+    const s=this.state;
+    return {archery:this.archery,player:s.player,stats:this.stats,mastery:this.mastery,index:this.tier,scope:s.relics.scope,elemental:this.elementalBonus*(relicGroups(s.relics).arcane>=2?1.2:1),enemies:s.enemies,
+      nextId:()=>s.nextId++,live:()=>s.mode==='playing',hit:(e,d,a,source)=>{this.hitEnemy(e,d,a,source);},strike:e=>{this.relicStrike(e);},
+      emit:(type,p,radius)=>this.events.push({type,x:p.x,y:p.y,radius,tier:this.tier})};
+  }
   activateSkill() {
     const s=this.state,a=this.active;
     if(s.mode!=='playing'||a.cooldown>.000001)return false;
     const reach=Math.max(260,Math.hypot(this.view.width,this.view.height)/2);
-    const nearby=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&Math.hypot(e.x-s.player.x,e.y-s.player.y)<=reach)
+    const nearby=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&this.targetOnScreen(e)&&Math.hypot(e.x-s.player.x,e.y-s.player.y)<=reach)
       .sort((x,y)=>Math.hypot(x.x-s.player.x,x.y-s.player.y)-Math.hypot(y.x-s.player.x,y.y-s.player.y)||x.id-y.id);
-    const target=(this.bladeId==='shusui'?nearby.find(e=>e.kind==='boss'||e.kind==='elite'):undefined)??nearby[0];
+    const target=(this.bladeId==='shusui'||this.isRanged?nearby.find(e=>e.kind==='boss'||e.kind==='elite'):undefined)??nearby[0];
     const angle=target?Math.atan2(target.y-s.player.y,target.x-s.player.x):s.aim;
+    if(this.isRanged){
+      a.cooldown=this.activeInfo.cooldown;a.casts++;
+      const tx=target?.x??s.player.x+Math.cos(angle)*this.stats.range,ty=target?.y??s.player.y+Math.sin(angle)*this.stats.range;
+      s.aim=angle;activateBow(this.bowHost(),angle,{x:tx,y:ty});
+      this.events.push({type:'active',activePhase:'cast',skill:this.bladeId,x:s.player.x,y:s.player.y,angle,tier:this.tier});
+      stepArchery(this.bowHost(),0);return true;
+    }
     const plan=activePlan(this.bladeId,this.mastery,this.stats.damage,this.passiveSize.meleeRadius,angle);
     a.cooldown=this.activeInfo.cooldown;a.casts++;a.buff=plan.buff;a.pending=plan.pulses;a.fields=plan.fields;
     const tx=target?.x??s.player.x+Math.cos(angle)*120,ty=target?.y??s.player.y+Math.sin(angle)*120;
@@ -469,8 +487,7 @@ export class BladeRun {
     this.events.push({ type: 'hit', x: e.x, y: e.y, amount, elite: e.kind === 'elite' || e.kind === 'boss', enemyKind: e.kind, enemyId:e.id, lethal: e.hp <= 0, source, critical });
     if (e.hp > 0) return false;
     this.events.push({ type: 'kill', enemyKind:e.kind, enemyId:e.id, source, x: e.x, y: e.y, tier: this.tier, elite: e.kind === 'elite' || e.kind === 'boss' });
-    if(s.active!==undefined&&!validActive(s.active))return false;
-  const p = s.passive;
+    const p = s.passive;
     if (this.bladeId === 'scrap') {
       p.kills++;
       const stacks = Math.min(this.rules.scrapCap, Math.floor(p.kills / 5));
@@ -646,7 +663,7 @@ export class BladeRun {
     if (e.freeze > 0 || e.stun > 0) {
       e.x += e.knockX * dt; e.y += e.knockY * dt; e.knockX *= Math.exp(-16 * dt); e.knockY *= Math.exp(-16 * dt); return;
     }
-    const slow = Math.max(e.slowTime > 0 ? e.slow : 0, e.chill > 0 ? Math.min(e.kind === 'boss' || e.kind === 'elite' ? .15 : .65, e.chillStacks * this.rules.chillSlow) : 0);
+    const slow = Math.max(e.slowTime > 0 ? e.slow : 0, e.chill > 0 ? Math.min(e.kind === 'boss' || e.kind === 'elite' ? .15 : .65, (this.bladeId==='frost-bow'?.2+.02*this.mastery:e.chillStacks * this.rules.chillSlow)) : 0);
     const moveFactor = 1 - slow;
     const dx = s.player.x - e.x, dy = s.player.y - e.y, d = Math.hypot(dx, dy) || 1;
     e.cooldown -= dt;
@@ -781,10 +798,15 @@ export class BladeRun {
     s.attackTimer -= dt;
     if (s.swing) {
       s.swing.age += dt;
-      if(s.swing.age >= s.swing.windup && s.swing.age-dt < s.swing.windup) this.events.push({type:'slash',x:s.player.x,y:s.player.y,tier:this.tier});
+      if(!this.isRanged && s.swing.age >= s.swing.windup && s.swing.age-dt < s.swing.windup) this.events.push({type:'slash',x:s.player.x,y:s.player.y,tier:this.tier});
       if (s.swing.age >= s.swing.windup + s.swing.strike * .45 && !s.swing.resolved) {
         s.swing.resolved = true;
-        const cleave = this.resolveMelee(s.swing.angle);
+        let cleave=0;
+        if(this.isRanged){
+          const target=s.enemies.find(e=>e.id===s.targetId&&e.hp>0&&e.spawn<=0&&this.targetOnScreen(e)&&Math.hypot(e.x-s.player.x,e.y-s.player.y)<=stats.range+e.radius);
+          if(target)s.swing.angle=Math.atan2(target.y-s.player.y,target.x-s.player.x);
+          s.aim=s.swing.angle;shootBow(this.bowHost(),s.aim);
+        }else cleave=this.resolveMelee(s.swing.angle);
         s.bestCleave = Math.max(s.bestCleave, cleave);
         s.attackCount++;
         if (stats.waveEvery && s.attackCount % stats.waveEvery === 0) this.createWave(s.swing.angle, Math.round(stats.damage * .6), stats.waveRange, stats.pierce);
@@ -792,7 +814,7 @@ export class BladeRun {
       if (s.swing.age > s.swing.windup + s.swing.strike + s.swing.recovery) s.swing = null;
     }
     if (s.attackTimer <= 0 && !s.swing) {
-      const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
+      const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && this.targetOnScreen(e) && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
       targets.sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y));
       let target = targets[0]; const existing = targets.find(e => e.id === s.targetId);
       if (existing && target && Math.hypot(existing.x - s.player.x, existing.y - s.player.y) < Math.hypot(target.x - s.player.x, target.y - s.player.y) * 1.25) target = existing;
@@ -801,6 +823,8 @@ export class BladeRun {
         s.swing = { id: s.nextId++, angle: s.aim, age: 0, resolved: false, tier: this.tier, windup: stats.windup, strike: stats.strike, recovery: stats.recovery };
       }
     }
+    if(this.isRanged)stepArchery(this.bowHost(),dt);
+    if(s.mode!=='playing')return;
     for (const wave of s.waves) {
       if(wave.returning)wave.angle=Math.atan2(s.player.y-wave.y,s.player.x-wave.x);
       const ox = wave.x, oy = wave.y, length = Math.min(420 * dt, wave.returning?Math.hypot(s.player.x-wave.x,s.player.y-wave.y):wave.maxRange - wave.distance);
@@ -872,7 +896,7 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (!value || typeof value !== 'object') return false;
   const s = value as RunState;
   const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  if (s.version !== (legacy || 8) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= TIERS.length || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
+  if (s.version !== (legacy || 8) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
   if (!s.player || !finite(s.player.x) || !finite(s.player.y) || !s.direction || !finite(s.direction.x) || !finite(s.direction.y)) return false;
   if (!s.velocity || !finite(s.velocity.x) || !finite(s.velocity.y) || Math.hypot(s.velocity.x, s.velocity.y) > 1000) return false;
   for (const key of ['time', 'bossTime', 'hp', 'maxHp', 'level', 'xp', 'totalXp', 'formStartedAt', 'rng', 'seed', 'nextId', 'targetId', 'attackTimer', 'attackCount', 'dashTime', 'dashCooldown', 'invincible', 'aim', 'eliteIndex', 'spawnBudget', 'evolutionTime', 'transition', 'kills', 'eliteKills', 'bestCleave', 'bossHits', 'maxCombo'] as const) if (!finite(s[key])) return false;
@@ -881,6 +905,7 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (s.formStartedAt < 0 || s.formStartedAt > s.time + s.bossTime + .001 || s.xp < 0 || s.totalXp < 0) return false;
   if (!s.perks || !Object.keys(PERKS).every(k => Number.isInteger(s.perks[k as PerkId]) && s.perks[k as PerkId] >= 0 && s.perks[k as PerkId] <= PERKS[k as PerkId].cap)) return false;
   if(s.active!==undefined&&!validActive(s.active))return false;
+  if(s.archery!==undefined&&!validArchery(s.archery))return false;
   const p = s.passive;
   if (!p || ['tier', 'hits', 'kills', 'stacks', 'empowered', 'cooldown', 'safeTime', 'haste'].some(k => !finite(p[k as keyof PassiveState]) || Number(p[k as keyof PassiveState]) < 0)) return false;
   if (p.tier !== s.blade || !Number.isInteger(p.hits) || p.hits > 7 || !Number.isInteger(p.kills) || !Number.isInteger(p.stacks) || p.stacks > 7 || p.empowered > 5.001 || p.cooldown > 12.001 || p.safeTime > 6.001 || p.haste > 3.001 || typeof p.shield !== 'boolean' || typeof p.tensaPending !== 'boolean') return false;
@@ -916,7 +941,7 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   const enemyNumbers = ['hp', 'maxHp', 'radius', 'damage', 'speed', 'xp', 'hit', 'spawn', 'age', 'cooldown', 'timer', 'angle', 'move', 'targetX', 'targetY', 'knockX', 'knockY'] as const;
   if (s.enemies.some(e => !Object.hasOwn(ENEMIES, e.kind) || enemyNumbers.some(k => !finite(e[k])) || !['idle', 'windup', 'charge', 'recover'].includes(e.action))) return false;
   const effectKeys = (Object.keys(freshEnemyEffects()) as (keyof EnemyEffects)[]).filter(k=>!legacy||!k.startsWith('poison'));
-  if (s.enemies.some(e => effectKeys.some(k => !finite(e[k]) || e[k] < 0) || !Number.isInteger(e.chillStacks) || e.chillStacks > 3 || !Number.isInteger(e.dragonHits) || e.dragonHits > 2 || e.slow > 1 || e.burnTime > 4.001 || e.burnTick > .501 || e.hunt > 6.001 || e.chill > 3.001 || e.freeze > 1.401 || e.freezeCooldown > 4.001 || e.stun > 1.201 || e.slowTime > 1.201)) return false;
+  if (s.enemies.some(e => effectKeys.some(k => !finite(e[k]) || e[k] < 0) || !Number.isInteger(e.chillStacks) || e.chillStacks > 3 || !Number.isInteger(e.dragonHits) || e.dragonHits > 2 || e.slow > 1 || e.burnTime > 4.001 || e.burnTick > .501 || e.hunt > 6.001 || e.chill > 3.001 || e.freeze > 1.401 || e.freezeCooldown > 4.001 || e.stun > 1.201 || e.slowTime > (s.blade===13?2.301:1.201))) return false;
   if(!legacy && s.enemies.some(e=>e.poisonTime>2.501||e.poisonTick>.501))return false;
   if (s.hazards !== undefined && (!Array.isArray(s.hazards) || s.hazards.length > 12 || s.hazards.some(h => !h || !['poison', 'blast'].includes(h.kind) || ['id','x','y','radius','age','duration','damage'].some(k => !finite(h[k as keyof Hazard])) || h.radius <= 0 || h.radius > 80 || h.age < 0 || h.age > h.duration || h.duration <= 0 || h.duration > 3.201 || h.damage < 0 || h.damage > 18))) return false;
   if (s.enemies.some(e => e.reveal !== undefined && (!finite(e.reveal) || e.reveal < 0 || e.reveal > .851))) return false;

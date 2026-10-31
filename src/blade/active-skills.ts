@@ -13,6 +13,9 @@ export const ACTIVE_SKILLS: Record<BladeId, {name:string;cooldown:number;descrip
   enma:{name:'夺魄斩',cooldown:14,description:'向前斩出夺魄刀弧，命中敌人恢复生命，最多恢复生命上限的 20%。'},
   ryujin:{name:'熔火地带',cooldown:14,description:'在怪群脚下留下 4 秒熔火地带，持续伤害进入其中的敌人。'},
   tensa:{name:'时隙·卍解',cooldown:14,description:'进入 3 秒时隙，普通怪与敌方弹丸变慢，强敌轻度变慢；自身移动与挥刀加快。'},
+  'wind-bow':{name:'疾风骤雨',cooldown:12,description:'朝附近敌人连续射出三轮扇形箭阵，共九支穿透风箭，移动中也可释放。'},
+  'frost-bow':{name:'寒星箭雨',cooldown:14,description:'在目标脚下落下持续 2.4 秒的冰箭雨，伤害并减速怪群；精英与首领不冻结。'},
+  'ember-bow':{name:'陨火贯星',cooldown:16,description:'发射巨型焰星箭，穿透怪群后在目标处引爆；沿途与爆炸不会重复结算完整伤害。'},
 };
 export const ACTIVE_PULSE_KINDS = ['steel','thrust','hunt','moon','draw','execution','soul'] as const;
 export type ActivePulseKind = typeof ACTIVE_PULSE_KINDS[number];

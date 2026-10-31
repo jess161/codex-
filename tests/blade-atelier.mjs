@@ -13,7 +13,7 @@ const ready = async page => { await page.locator('.blade-inspector[data-ready="t
 const advance = (page, ms) => page.evaluate(ms => window.advanceTime(ms), ms);
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } }); await boot(page);
-  await page.getByRole('button', { name: '刀型图鉴', exact: true }).click();
+  await page.getByRole('button', { name: '武器图鉴', exact: true }).click();
   check('all twelve archive blades expose rotation, and the bestiary explains fourteen creatures', await page.locator('.codex-art').count() === 12 && await page.locator('.monster-card').count() === 14 && await page.locator('.monster-card img').evaluateAll(imgs => imgs.every(i => i.complete && i.naturalWidth > 0)));
   await page.locator('.monster-archive').scrollIntoViewIfNeeded(); await shot(page, '01-creature-archive');
   await page.getByRole('button', { name: '旋转鉴赏雪饮狂刀', exact: true }).click(); await ready(page);
@@ -92,7 +92,7 @@ try {
   await page.reload({ waitUntil: 'networkidle' }); await page.locator('#boot-status').waitFor({ state: 'hidden' }); await page.getByRole('button', { name: '继续试炼', exact: true }).click(); await page.evaluate(() => { window.__BLADE__.scene.onFrame = undefined; });
   check('reload preserves all new creatures, projectile metadata and the sound preference', await page.evaluate(() => { const a = window.__BLADE__, s = a.run.state; return ['poison','bomber','stalker','charger', 'wisp', 'splitter', 'brood', 'spiker'].every(k => s.enemies.some(e => e.kind === k)) && s.bullets.some(b => b.kind === 'spine' && b.damage === 8) && !a.storage.data.settings.monsterSound; }));
   await page.close();
-  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); await boot(mobile); await mobile.getByRole('button', { name: '刀型图鉴', exact: true }).tap(); await mobile.getByRole('button', { name: '旋转鉴赏阎魔', exact: true }).tap(); await ready(mobile);
+  const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); await boot(mobile); await mobile.getByRole('button', { name: '武器图鉴', exact: true }).tap(); await mobile.getByRole('button', { name: '旋转鉴赏阎魔', exact: true }).tap(); await ready(mobile);
   const cdp = await mobile.context().newCDPSession(mobile), point = (x, y, id = 1) => ({ x, y, id });
   const send = (type, touchPoints = []) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints });
   const bounds = await mobile.locator('.inspector-surface').boundingBox(), x = bounds.x + bounds.width * .35, y = bounds.y + bounds.height * .55;
@@ -115,7 +115,7 @@ finally { await browser.close(); }
 if (!process.exitCode) {
   const fallbackBrowser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH ?? '/usr/bin/chromium', args: ['--no-sandbox', '--disable-dev-shm-usage', '--disable-webgl', '--disable-gpu'] });
   try {
-    const p = await fallbackBrowser.newPage({ viewport: { width: 1280, height: 800 } }); await boot(p); await p.getByRole('button', { name: '刀型图鉴', exact: true }).click(); await p.getByRole('button', { name: '旋转鉴赏井中月', exact: true }).click(); await ready(p);
+    const p = await fallbackBrowser.newPage({ viewport: { width: 1280, height: 800 } }); await boot(p); await p.getByRole('button', { name: '武器图鉴', exact: true }).click(); await p.getByRole('button', { name: '旋转鉴赏井中月', exact: true }).click(); await ready(p);
     check('devices without WebGL retain the flat inspection surface', await p.locator('.blade-inspector').getAttribute('data-mode') === 'flat');
     const surface = p.locator('.inspector-surface'), before = await p.locator('.inspector-flat').evaluate(el => el.style.transform); await surface.focus(); await p.keyboard.press('ArrowRight'); await p.waitForTimeout(80);
     check('fallback rotation changes visible artwork and zoom controls remain usable', await p.locator('.inspector-flat').evaluate(el => el.style.transform) !== before); await p.getByRole('button', { name: '放大刀具', exact: true }).click();

@@ -1,3 +1,4 @@
+import { drawArchery } from './bow-art';
 import Phaser from 'phaser';
 import { drawActiveFields, drawActiveBurst } from './active-art';
 import { ASSETS } from './assets';
@@ -93,7 +94,7 @@ export class BattleScene extends Phaser.Scene {
     this.hero = this.add.image(0, 0, 'hero').setDepth(27);
     this.expression = this.add.graphics().setDepth(28);
     this.hands = this.add.graphics().setDepth(29);
-    for (let i=1;i<=TIERS.length;i++) {
+    for (let i=1;i<=12;i++) {
       const texture = this.textures.get(`blade-${i}`);
       texture.add('body',0,264,0,868,512); texture.add('hilt',0,36,0,228,512);
     }
@@ -115,7 +116,7 @@ export class BattleScene extends Phaser.Scene {
   private sprite(id: string, texture: string, x: number, y: number, size: number, depth: number) {
     let sprite = this.liveSprites.get(id);
     if (!sprite) { sprite = this.spareSprites.pop() ?? this.add.image(x, y, texture); this.liveSprites.set(id, sprite); }
-    this.used.add(id); sprite.setTexture(texture).setVisible(true).setPosition(x, y).setDisplaySize(size, size).setRotation(0).setAlpha(1).clearTint().setDepth(depth);
+    this.used.add(id); sprite.setOrigin(.5).setTexture(texture).setVisible(true).setPosition(x, y).setDisplaySize(size, size).setRotation(0).setAlpha(1).clearTint().setDepth(depth);
     return sprite;
   }
   ingest(events: RunEvent[]) {
@@ -127,7 +128,7 @@ export class BattleScene extends Phaser.Scene {
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
-      if(event.type==='active'&&event.activePhase!=='heal'&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
+      if((event.type==='active'&&event.activePhase!=='heal'||event.type==='bow-blast')&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });
       if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, scale: event.size ?? 1, detail: event.detail });
       if (direct || event.type === 'kill' || event.type === 'dash') {
@@ -314,6 +315,7 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(9, 0x5dc9d6, .13).lineBetween(s.player.x, s.player.y, s.player.x - s.direction.x * 58, s.player.y - s.direction.y * 58);
       g.lineStyle(3, 0x54becc, .4).lineBetween(s.player.x, s.player.y, s.player.x - s.direction.x * 45, s.player.y - s.direction.y * 45);
     }
+    if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else{
     const speed=Math.hypot(s.velocity.x,s.velocity.y);
     const direction=moving?(s.dashTime>0?s.direction:{x:s.velocity.x/(speed||1),y:s.velocity.y/(speed||1)}):undefined;
     const rest=this.drag.pose(fxDt,direction,stats.mass,this.reducedMotion,{speed:s.dashTime>0?500:speed,range:stats.range});
@@ -356,6 +358,7 @@ export class BattleScene extends Phaser.Scene {
       const hand = this.hands;
       hand.lineStyle(3, 0x4c8cac, .9).lineBetween(hx + 5, hy + 8, bx, by);
       for (const offset of [-2, 5]) hand.fillStyle(0xedfaff, 1).fillCircle(bx + Math.cos(bladeAngle) * offset, by + Math.sin(bladeAngle) * offset, 3).lineStyle(1, 0x446981, 1).strokeCircle(bx + Math.cos(bladeAngle) * offset, by + Math.sin(bladeAngle) * offset, 3);
+    }
     }
     for (const wave of s.waves) {
       const color = TIERS[wave.tier].hex;

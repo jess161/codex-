@@ -94,6 +94,7 @@ export class BladeInspector {
     const t = TIERS[index], finish = BLADE_FINISHES[index];
     this.root.style.setProperty('--tier', t.color);
     this.root.querySelector('#inspector-title')!.textContent = t.name; this.root.querySelector('#inspector-source')!.textContent = `${t.source} · ${t.bearer}`;
+    this.root.querySelector('.inspector-materials span')?.replaceChildren(document.createTextNode(index>=12?'清晰弓臂':'清晰刀面'));
     this.root.querySelector('#inspector-finish')!.textContent = finish.title; this.root.querySelector('#inspector-craft')!.textContent = finish.note; this.root.querySelector('#inspector-lore')!.textContent = t.lore;
     (this.root.querySelector('#inspector-choice') as HTMLSelectElement).value = String(index);
     const image = this.root.querySelector<HTMLImageElement>('.inspector-flat')!; image.src = BLADE_ART[`blade-${index + 1}`]; image.alt = t.name;

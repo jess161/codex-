@@ -1,3 +1,4 @@
+import { isBow, BOW_PROFILES } from './bows';
 import { TIERS, freshPerks, tierForLevel, type PerkId } from './config';
 import { freshRelics, ownedRelics, relicGroups, type RelicInventory } from './relics';
 
@@ -13,11 +14,12 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const range = Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range) * (groups.forge >= 3 ? 1.1 : 1));
   const lengthScale = (range - 10) / (t.range - 10);
   const widthScale = (1 + .09 * mastery) * (1 + .35 * p.broad + .28 * p.giant);
-  const baseMass = (t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
+  const bow=isBow(blade)?BOW_PROFILES[blade-12]:undefined;
+  const baseMass = bow?bow.mass:(t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
   const mass = baseMass * (lengthScale * widthScale) ** .78 * .86 ** p.hollow;
   const load = Math.max(0, mass - 1), handling = .82 ** p.grip;
   const burden = clamp(load / 2.8, 0, 1) * handling;
-  const windup = .04 + Math.min(.16, load * .045) * handling;
+  const windup = (bow?.windup??.04) + Math.min(.16, load * .045) * handling;
   const strike = .10 + Math.min(.08, load * .022);
   const recovery = .10 + Math.min(.18, load * .05) * handling;
   return {
@@ -29,7 +31,7 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
     lengthScale, widthScale, mass, burden, windup, strike, recovery,
     moveSpeed: 210 * (1 + .07 * p.stride) * (1 - Math.min(.28, load * .065)),
     acceleration: 2800 * (1 + .2 * p.stride) / (1 + .6 * Math.min(12, load)),
-    waveEvery: mastery === 0 ? 0 : Math.max(3, 7 - mastery), waveRange: 150 + mastery * 45, pierce: 1 + mastery * 2,
+    waveEvery: bow || mastery === 0 ? 0 : Math.max(3, 7 - mastery), waveRange: 150 + mastery * 45, pierce: 1 + mastery * 2,
     critChance: .05 * items.fang + (groups.hunt >= 2 ? .08 : 0), critMultiplier: groups.hunt >= 2 ? 2 : 1.75,
     damageReduction: .03 * items.mirror,
     dashCooldown: Math.max(2.5, (groups.wind >= 3 ? 4.25 : 5) - .25 * items.boots),

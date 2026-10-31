@@ -15,7 +15,7 @@ const names = ['百炼初锋', '袖里藏锋', '井中八法', '逐鹿留痕', '
 
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } }); await boot(page);
-  await page.getByRole('button', { name: '刀型图鉴', exact: true }).click();
+  await page.getByRole('button', { name: '武器图鉴', exact: true }).click();
   check('all twelve blades have distinct passives with a story connection and rules', await page.locator('.codex-passive').evaluateAll(cards => cards.length === 12 && new Set(cards.map(c => c.querySelector('b').textContent)).size === 12 && cards.every(c => c.querySelector('p').textContent.length > 25 && c.querySelector('span').textContent.includes('取意'))));
   await shot(page, '01-archive'); await page.getByRole('button', { name: '返回', exact: true }).click();
 

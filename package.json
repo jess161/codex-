@@ -23,7 +23,8 @@
     "test:passive-size": "node tests/blade-passive-size.mjs",
     "test:late-game": "node tests/blade-late-game.mjs",
     "test:active": "node tests/blade-active.mjs",
-    "test:loot": "node tests/blade-loot.mjs"
+    "test:loot": "node tests/blade-loot.mjs",
+    "test:bows": "node tests/blade-bows.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",

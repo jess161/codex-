@@ -1,0 +1,26 @@
+{
+  "source": "Original vector artwork authored in scripts/create-bow-assets.mjs; no external image dependencies.",
+  "dimensions": [
+    512,
+    512
+  ],
+  "transparent": true,
+  "palette": "Candy colors, navy outlines, gold grips and crisp white highlights.",
+  "weapons": [
+    "疾风短弓",
+    "霜月长弓",
+    "焰星重弓"
+  ],
+  "files": [
+    "blade-13.svg",
+    "blade-14.svg",
+    "blade-15.svg",
+    "bow-limbs-13.svg",
+    "bow-limbs-14.svg",
+    "bow-limbs-15.svg"
+  ],
+  "runtime_pivot": [
+    320,
+    256
+  ]
+}

@@ -8,7 +8,7 @@ function target(r:BladeRun,x=45,y=0,kind:Enemy['kind']='armor'){const e=r.spawnE
 function step(r:BladeRun,n=1){for(let i=0;i<n;i++)r.step(1/60,idle);}
 describe('independent manual weapon skills',()=>{
  it('defines a different named, one-button skill for each of the twelve blades',()=>{
-  expect(new Set(Object.values(ACTIVE_SKILLS).map(s=>s.name)).size).toBe(12);
+  expect(new Set(Object.values(ACTIVE_SKILLS).map(s=>s.name)).size).toBe(TIERS.length);
   for(const t of TIERS){expect(ACTIVE_SKILLS[t.id].description.length).toBeGreaterThan(10);expect(ACTIVE_SKILLS[t.id].cooldown).toBeGreaterThanOrEqual(10);}
  });
  it.each(TIERS.map((_,i)=>i))('weapon %i never casts by itself and consumes one activation only on demand',blade=>{
