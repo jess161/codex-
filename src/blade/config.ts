@@ -106,8 +106,15 @@ export function sectorHits(dx: number, dy: number, radius: number, facing: numbe
   return distance <= range + radius && (distance <= radius || Math.abs(angleDelta(Math.atan2(dy, dx), facing)) <= arc * Math.PI / 360 + Math.asin(Math.min(1, radius / distance)));
 }
 
-export function encounterDensity(time: number, simplified = false) {
+export const LATE_GAME_LEVEL = 20;
+export function lateGameDifficulty(level: number) {
+  const progress = Math.max(0, Math.min(1, (level - LATE_GAME_LEVEL) / (MAX_LEVEL - LATE_GAME_LEVEL)));
+  return { progress, enemyHealth: 1 + .60 * progress, eliteHealth: 1 + .45 * progress,
+    bossHealth: 1 + .35 * progress, speed: 1 + .08 * progress, spawnRate: 1 + .25 * progress };
+}
+
+export function encounterDensity(time: number, simplified = false, level = 1) {
   const progress = Math.max(0, Math.min(1, time / GAME_DURATION));
   const surge = Math.max(0, (progress - .4) / .6);
-  return { rate: .9 + 3.0 * progress + 6.9 * surge * surge, cap: Math.floor((simplified ? 72 : 100) + (simplified ? 108 : 180) * surge) };
+  return { rate: (.9 + 3.0 * progress + 6.9 * surge * surge) * lateGameDifficulty(level).spawnRate, cap: Math.floor((simplified ? 72 : 100) + (simplified ? 108 : 180) * surge) };
 }

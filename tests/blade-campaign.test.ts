@@ -11,7 +11,11 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   for (let tick = 0; tick < 45000; tick++) {
     const s = r.state;
     if (s.mode === 'relic') {
-      const preference = ['magnet', 'star', 'stone', 'ruler', 'anvil', 'feather', 'hourglass', 'heart', 'thunder', 'crystal', 'ember', 'bell'];
+      // At higher pressure the bot must spend real offered upgrades on survival, too.
+      const survival = s.level > 20 && (s.relics.heart === 0 || s.hp < s.maxHp * .65);
+      const preference = survival
+        ? ['heart', 'bell', 'feather', 'hourglass', 'stone', 'ruler', 'anvil', 'thunder', 'crystal', 'ember', 'magnet', 'star']
+        : ['magnet', 'star', 'stone', 'ruler', 'anvil', 'feather', 'hourglass', 'heart', 'thunder', 'crystal', 'ember', 'bell'];
       const choice = s.choices.map((perk, index) => ({ index, rank: preference.indexOf(perk) })).sort((a, b) => a.rank - b.rank)[0];
       if (s.forgeAwakening) formTimes.push(s.time + s.bossTime); r.chooseRelic(choice.index); forgeChoices++; continue;
     }
@@ -49,7 +53,7 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
     const length = Math.hypot(dx, dy) || 1;
     r.step(1 / 60, { x: dx / length, y: dy / length, dash });
   }
-  expect(r.state.mode, JSON.stringify({ seed, time: r.state.time, hp: r.state.hp, level: r.state.level, bossTime: r.state.bossTime, perks: r.state.perks })).toBe('won'); expect(r.state.time).toBe(GAME_DURATION);
+  expect(r.state.mode, JSON.stringify({ seed, time: r.state.time, hp: r.state.hp, maxHp:r.state.maxHp, level: r.state.level, bossTime: r.state.bossTime, failure:r.state.failure, relics:r.state.relics, equipment:r.stats })).toBe('won'); expect(r.state.time).toBe(GAME_DURATION);
   // Winning does not require max level in the slower mode; collecting well can reach every form.
   expect(r.state.level).toBeGreaterThanOrEqual(20); expect(forgeChoices).toBe(r.state.level - 1); expect(r.tier).toBe(blade);
   if (blade === 0) { expect(r.state.level).toBe(30); expect(forgeChoices).toBe(29); }

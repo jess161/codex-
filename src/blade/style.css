@@ -82,3 +82,5 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 @media(max-height:690px) and (max-width:800px){.relic-choice{padding:16px 13px}.relic-choice-heading h2{font-size:19px}.relic-card{min-height:159px}.relic-card>p{font-size:10px}.relic-cards{gap:9px;margin-top:12px}}
 
 .power-value{display:block;text-align:center;font-size:64px;color:#377ea4;margin:20px 0}.power-axes{display:grid;gap:16px;margin:24px 0}.power-axes>div{display:flex;align-items:center;gap:12px}.power-axes span{width:72px}.power-axes small{display:block;font-size:10px;color:#758697}.power-axes meter{flex:1;height:12px}.power-panel>p{color:#61778b;font-size:13px;line-height:1.7}
+
+.battle-clock #stage-label.high-pressure{color:#c87354}

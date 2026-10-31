@@ -1,5 +1,5 @@
 import { THREATS, type Hazard } from './threats';
-import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
+import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { LEGACY_RELICS, RELIC_CAP, RELIC_IDS, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
 import { PASSIVE_SIZE_LIMITS, passiveSize, waveDimensions } from './passive-size';
@@ -109,9 +109,12 @@ export class BladeRun {
   }
   spawnEnemy(kind: EnemyKind, x: number, y: number, cue = 0) {
     const s = this.state, c = ENEMIES[kind], minute = s.time / 60;
+    const difficulty = lateGameDifficulty(s.level);
     let hp = c.hp * (kind === 'boss' || kind === 'elite' ? 1 : 1 + (kind === 'armor' ? .17 : .12) * minute + .025 * Math.max(0, minute - 4) ** 2);
     if (kind === 'elite') hp = [420, 1000, 1800, 2800][Math.max(0, Math.min(3, s.eliteIndex - 1))];
-    const e: Enemy = { id: s.nextId++, kind, x, y, hp, maxHp: hp, radius: c.radius, speed: c.speed, damage: c.damage, xp: c.xp, hit: 0, spawn: cue, age: 0, cooldown: 1.6 + this.random(), action: 'idle', timer: 0, angle: 0, move: 0, targetX: 0, targetY: 0, knockX: 0, knockY: 0, reveal: 0, ...freshEnemyEffects() };
+    // Apply level pressure once at birth. Existing enemies and restored saves keep their own stats.
+    hp *= kind === 'boss' ? difficulty.bossHealth : kind === 'elite' ? difficulty.eliteHealth : difficulty.enemyHealth;
+    const e: Enemy = { id: s.nextId++, kind, x, y, hp, maxHp: hp, radius: c.radius, speed: c.speed * difficulty.speed, damage: c.damage, xp: c.xp, hit: 0, spawn: cue, age: 0, cooldown: 1.6 + this.random(), action: 'idle', timer: 0, angle: 0, move: 0, targetX: 0, targetY: 0, knockX: 0, knockY: 0, reveal: 0, ...freshEnemyEffects() };
     s.enemies.push(e); return e;
   }
   grantXp(value: number) {
@@ -319,7 +322,7 @@ export class BladeRun {
     if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal'); }
     else s.kills++;
     if (e.kind === 'splitter') {
-      let slots = encounterDensity(s.time, this.simplified).cap - s.enemies.filter(other => other.hp > 0).length;
+      let slots = encounterDensity(s.time, this.simplified, s.level).cap - s.enemies.filter(other => other.hp > 0).length;
       for (const side of [-1, 1]) if (slots-- > 0) {
         const child = this.spawnEnemy('brood', e.x + Math.cos(angle + side * 1.1) * 24, e.y + Math.sin(angle + side * 1.1) * 24, .45);
         child.cooldown = 1;
@@ -582,7 +585,7 @@ export class BladeRun {
       s.player.x += s.velocity.x * dt; s.player.y += s.velocity.y * dt;
     }
     if (!s.bossStarted) {
-      const { cap, rate: intensity } = encounterDensity(s.time, this.simplified);
+      const { cap, rate: intensity } = encounterDensity(s.time, this.simplified, s.level);
       s.spawnBudget = Math.min(intensity * 3, s.spawnBudget + dt * intensity);
       while (s.spawnBudget >= 1 && s.enemies.length < cap) { s.spawnBudget--; this.spawnOutside(); }
       if (s.eliteIndex < 4 && s.time >= (s.eliteIndex + 1) * ELITE_INTERVAL) {

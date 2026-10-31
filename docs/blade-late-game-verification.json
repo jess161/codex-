@@ -1,0 +1,98 @@
+{
+  "feature": "Progressive difficulty after level 20",
+  "verified_at": "2026-10-31T17:16:17.895723+08:00",
+  "base_commit": "e3558f8",
+  "starts_at_level": 21,
+  "reaches_max_at_level": 30,
+  "max_increase_percent": {
+    "ordinary_enemy_health": 60,
+    "elite_health": 45,
+    "boss_health": 35,
+    "spawn_rate": 25,
+    "chase_speed": 8
+  },
+  "unchanged_rules": [
+    "Levels 1 through 20 keep existing time-based difficulty.",
+    "Standard/lite enemy caps remain at 280/180; bullet and hazard caps are retained.",
+    "Damage values, telegraph durations, charge speeds, invulnerability and control resistance retain their original rules.",
+    "Previously born enemies retain their stored stats during level-up and save/load.",
+    "XP drops remain separate, stationary outside pickup range, and fully preserved."
+  ],
+  "unit": {
+    "files_passed": 12,
+    "tests_passed": 213,
+    "new_pressure_cases": 22,
+    "native_campaigns_passed": 12,
+    "campaign_method": "Fixed seed per blade, legal movement/dash and offered-item selections only. After level 20 the bot prioritizes a first health item or survival upgrades when injured; no HP, XP, clock, damage or RNG overrides. Reachability proof, not a physical-device or human difficulty study."
+  },
+  "browser": {
+    "passed": 33,
+    "pressure_checks": [
+      "level 20 still uses the normal trial label and original difficulty",
+      "native XP crossing level 20 still opens exactly three real item choices",
+      "the difficulty transition cannot advance enemies, timers or RNG during a choice",
+      "a native phone item selection resumes the new high-pressure trial",
+      "the high-pressure label remains visible and within the phone viewport",
+      "new level 30 enemies have 60 percent more health and 8 percent more chase speed",
+      "the running game reports 25 percent more spawn pressure while retaining the enemy cap",
+      "level-up does not retrospectively strengthen an existing enemy",
+      "reload restores the same birth-time health instead of multiplying difficulty again",
+      "the harder mode and browser reload retain 5000 individually scattered XP drops",
+      "lite mode preserves existing enemy strength and all scattered XP drops",
+      "the native boss transition uses 10800 HP at level 30 and displays the real boss bar",
+      "phone pressure, choices, saves and boss entry have no runtime errors"
+    ],
+    "passive_size_regression_checks": [
+      "a native Space dash releases the initial-size getsuga with matching draw commands",
+      "ruler: size upgrade still offers exactly three distinct passive items",
+      "choosing a size item pauses all existing skill projectiles without changing their geometry",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "already released getsuga retains its exact radius, hit width and range after size choices",
+      "native item choices enlarge the next getsuga visually and mechanically",
+      "WebGL renders the larger skill through the same graphics path",
+      "browser reload preserves grown skill dimensions and collected size items",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "ringRadius: the enlarged area event and rendered outer boundary use the same radius",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "roarRadius: the enlarged area event and rendered outer boundary use the same radius",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "burnSpread: the enlarged area event and rendered outer boundary use the same radius",
+      "ruler: size upgrade still offers exactly three distinct passive items",
+      "anvil: size upgrade still offers exactly three distinct passive items",
+      "real phone card taps and the dash button enlarge the visible getsuga",
+      "DPR3 phone Canvas stays sharp and has no page overflow with enlarged passives",
+      "reduced motion and lite mode preserve the projectile size and damage geometry",
+      "desktop WebGL, phone Canvas, choices, reload and accessibility have no runtime errors"
+    ],
+    "errors": [],
+    "metrics": {
+      "level20": {
+        "id": 4,
+        "hp": 131.25,
+        "maxHp": 131.25,
+        "speed": 65,
+        "density": {
+          "rate": 2.5916666666666663,
+          "cap": 130
+        }
+      },
+      "level30": {
+        "id": 5,
+        "hp": 210,
+        "maxHp": 210,
+        "speed": 70.2,
+        "density": {
+          "rate": 3.239583333333333,
+          "cap": 130
+        }
+      }
+    },
+    "fixtures": "A level-20/time-300 starting fixture is declared. Subsequent level-21 XP processing, three-choice tap, save/reload, lite switch and boss transition use native paths. Level 30 and 5000 distant drops are explicit fixtures. Phone is a 390x844 DPR3 touch emulation, not a physical-device performance measurement."
+  },
+  "build": "npm run build passed, including TypeScript and standalone HTML.",
+  "artifact": {
+    "bytes": 10062844,
+    "sha256": "1d7da2863694a5930b6a1409171c763ffa3e376ff6fdae9fbc0514893f66d545"
+  },
+  "publication": "Local only. Publication remains pending explicit authorization after the earlier automatic approval rejection."
+}

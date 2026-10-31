@@ -1,4 +1,4 @@
-import { ACHIEVEMENTS, BLADE_CATALOGUE, BOSS_DURATION, ENEMY_INFO, GAME_DURATION, MAX_LEVEL, MASTERIES, MIN_FORM_TIME, TIERS, TIER_LEVELS, formatTime, xpNext } from './config';
+import { ACHIEVEMENTS, BLADE_CATALOGUE, BOSS_DURATION, ENEMY_INFO, GAME_DURATION, LATE_GAME_LEVEL, MAX_LEVEL, MASTERIES, MIN_FORM_TIME, TIERS, TIER_LEVELS, formatTime, xpNext } from './config';
 import { ASSETS } from './assets';
 import type { BladeApp } from './main';
 import { GROUNDS, groundPreview } from './grounds';
@@ -246,7 +246,8 @@ export class BladeUI {
     text('level-label', `Lv.${state.level}`); percent('xp-fill', state.level === MAX_LEVEL ? 1 : state.xp / xpNext(state.level));
     text('next-form', run.holdingXp ? `练刀 ${Math.ceil(run.formRemaining)}s · 经验已存` : state.level === MAX_LEVEL ? '极境 · 满级' : stage === MASTERIES.length - 1 ? '觉醒 · 极境之路' : `${MASTERIES[stage + 1]} Lv.${TIER_LEVELS[stage + 1]}`);
     text('clock', formatTime(state.bossStarted ? Math.ceil(BOSS_DURATION - state.bossTime) : state.time));
-    text('stage-label', state.bossStarted ? '首领决战' : '生存试炼'); text('clock-goal', state.bossStarted ? '倒计时' : `/ ${formatTime(GAME_DURATION)}`);
+    text('stage-label', state.bossStarted ? '首领决战' : state.level > LATE_GAME_LEVEL ? '高压试炼' : '生存试炼'); text('clock-goal', state.bossStarted ? '倒计时' : `/ ${formatTime(GAME_DURATION)}`);
+    document.getElementById('stage-label')!.classList.toggle('high-pressure', state.level > LATE_GAME_LEVEL);
     document.querySelector('.battle-clock')!.classList.toggle('urgent', state.bossStarted && state.bossTime >= 75);
     text('kill-count', String(state.kills)); text('combo-counter', state.recentKills.length >= 5 ? `${state.recentKills.length} 连斩` : '');
     const equipment = run.stats;
