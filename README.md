@@ -77,6 +77,8 @@ npm test
 npm run test:browser
 # 验证道具三选一、十二件美术、组合、存档、手机与 WebGL（预览端口 4173）：
 npm run test:relics
+# 验证重建版拖刀、经验球、特殊怪物、打击反馈、战斗力、DPR 和 WebGL（4173）：
+npm run test:reconstruction
 # 验证立体鉴赏、手机旋转缩放、怪物行为、受伤声和回退：
 npm run test:atelier
 # 验证十二种故事被动、状态特效、图鉴、蓄势读档与触控：
@@ -98,7 +100,7 @@ npm run test:offline
 
 `npm run build` 输出常规多页面部署目录，并额外生成两个独立的单文件离线游戏。默认使用 Phaser Canvas 渲染，不要求 WebGL；添加 `?renderer=webgl` 可选择 WebGL 路径。
 
-规则测试覆盖扇形多目标、刀气去重、五个掌握阶段、29 次道具选择、尺寸上限、比例减重、瞬步与惯性、故事被动强化、特殊敌人控制边界、掉落合并、怪潮容量、快照和首领。十二把刀各有一局固定种子的完整对局，仅使用正常移动、瞬步与道具选择，不修改生命、伤害、经验或时钟；验证同一把刀可成长通关，阶段练刀计时有效。这是自动化可达性验证，不代表真人难度测试。
+规则测试覆盖扇形多目标、刀气去重、五个掌握阶段、29 次道具选择、尺寸上限、比例减重、瞬步与惯性、故事被动强化、特殊敌人控制边界、五千颗独立经验球、怪潮容量、快照和首领。十二把刀各有一局固定种子的完整对局，仅使用正常移动、瞬步与道具选择，不修改生命、伤害、经验或时钟；验证同一把刀可成长通关，阶段练刀计时有效。这是自动化可达性验证，不代表真人难度测试。
 
 浏览器测试使用系统 `/usr/bin/chromium`（`CHROMIUM_PATH` 可覆盖），验证真实键鼠与双指触控、暂停、道具选择、读档、图鉴、重开和结束状态。经验进度、高密度竞技场和终局验证使用明确标注的测试场景，避免把大量等待时间计为测试。截图和报告位于 `test-results/blade/`。`GAME_URL` 可覆盖目标地址。
 
@@ -106,11 +108,15 @@ npm run test:offline
 
 ## 美术与结构
 
-角色、怪物、拾取和基础刀光沿用已批准的透明资产原图，原图保留在 `output/art/blade-evolution-v0.1/`。十二柄刀采用独立绘制、带工艺细节的透明矢量造型，统一 640×256 画布，并拆分运行时刀身和握柄，兼顾手机辨识度与离线打包。运行时通过旋转、残影、压缩、击退、粒子和刀光让静态精灵运动；资产并非额外绘制的逐帧角色动画。
+重建美术原图、裁切与锚点记录保留在 `art/reconstructed/`。圆润球形角色、十四种怪物和经验球使用统一的 512×512 无损 WebP 帧；十二把糖果色刀具使用 1280×512 无损图集，刀身与握柄共用一张贴图。刀背和鉴赏模型的轮廓从同一张贴图的透明边缘提取。运行时通过旋转、投影、受击压缩与粒子产生动作，不是逐帧动画。道具原图及图标保留在 `art/blade-relics/` 与 `src/blade/assets/relics/`。
 
 - `src/blade/config.ts`：十二种平行刀型、掌握阶段、作品介绍、怪物、旧锻造兼容数据、经验、命中规则和成就。
-- `src/blade/blade-art.ts`：十二柄刀的原创矢量造型，UI 和战场共用。
-- `src/blade/monster-art.ts`：五种新怪物的原创轮廓。
+- `src/blade/blade-art.ts`：十二柄糖果色刀具的共享贴图、配色与锚点。
+- `src/blade/monster-art.ts`：球形角色、十四种怪物与经验球的无损素材。
+- `src/blade/blade-drag.ts`、`blade-back.ts`：移动惯性、45° 投影、实际刀尖、刀痕与火花预算。
+- `src/blade/display.ts`、`grounds.ts`：设备像素密度、六种清晰地面与纹理缓存。
+- `src/blade/feedback.ts`、`power.ts`：命中反馈分档、可读战斗力。
+- `src/blade/threats.ts`：三种特殊怪物的参数与隐身显示规则。
 - `src/blade/inspector.ts`、`blade-model.ts`：自由旋转鉴赏、立体模型与资源释放。
 - `src/blade/monster-voices.ts`：八类怪物受击音色与本地合成。
 - `src/blade/passives.ts`：十二个被动、故事取意、状态与 HUD 进度。
@@ -122,10 +128,12 @@ npm run test:offline
 - `src/blade/ui.ts`、`style.css`：中文首页、HUD、道具选择、图鉴、设置与结算。
 - `src/blade/storage.ts`：永久数据与有效对局保存。
 - `src/blade/audio.ts`：程序合成音效。
-- `scripts/prepare-blade-assets.py`：从批准的资产图复现精灵裁切与刀柄锚点归一化，需要 Pillow。
+- `scripts/prepare-reconstructed-assets.py`：复现本次美术裁切、尺寸归一、透明轮廓和锚点，需要 Pillow；历史素材处理脚本保留。
 - `docs/gdd/blade-evolution-gdd-v0.1.md`：原始设计文档。
 - [十二阶名刀成长补充设计 v0.2](docs/gdd/blade-evolution-growth-v0.2.md)：历史版本与作品介绍。
 - [慢成长与尺寸负重设计 v0.3](docs/gdd/blade-evolution-growth-v0.3.md)：历史慢成长与动作设计。
 - [故事被动设计 v0.4](docs/gdd/blade-evolution-passives-v0.4.md)：故事取意与被动的初版规则。
 
-标准档敌人容量从 120 增到 280，弹丸 32、掉落 150、装饰粒子 280；轻量敌人从 80 增到 180，弹丸 24、掉落 100、粒子 100。掉落达到预算后合并而不丢失经验。华丽刀光短暂出现，危险弹丸和预警始终在其上层。实时设备性能和真人成长节奏仍需结合实际手机与玩家反馈继续调优。
+标准档敌人容量从 100 增到 280，弹丸 32、装饰粒子 280；轻量敌人从 72 增到 180，弹丸 24、粒子 100。经验球均不设数量上限，远离吸取范围时保持坐标，视野之外不创建精灵。刀痕标准/轻量最多 320/112 段，火花 40/14 个；地面危险区最多 12/8 个，其中毒气最多 6/4 个。危险弹丸和预警始终位于装饰效果之上。
+
+本次验收见 [重建版验收记录](docs/blade-reconstruction-verification.json)，提交和备份恢复方法见 [源码备份说明](docs/backup-and-restore.md)。

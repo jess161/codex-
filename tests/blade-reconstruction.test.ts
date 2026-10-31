@@ -58,7 +58,11 @@ describe('projected dragging blade and independent visual budget',()=>{
     const d=new BladeDrag();d.update(1/60,contact(0),false);d.update(1/60,contact(10),false);expect(d.marks.length).toBeGreaterThan(0);expect(d.sparks.length).toBeGreaterThan(0);
     const m=d.marks[0],alpha=dragOpacity(m);d.update(.1,contact(10),false);expect(dragOpacity(m)).toBeLessThan(alpha);const count=d.sparks.length;
     d.update(1/60,contact(10,{range:400,widthScale:5}),false);expect(d.sparks.length).toBeLessThanOrEqual(count);expect(d.marks[0].color).toBe(0x74b7ee);
-    expect(frictionProfile(420,8).sparkScale).toBeCloseTo(3.4);expect(frictionProfile(72,1)).toEqual(frictionProfile(72,1));
+    expect(frictionProfile(420,8).sparkScale).toBeCloseTo(3.4);
+    const light=new BladeDrag(),heavy=new BladeDrag(),wide=new BladeDrag();
+    for(const x of [0,10]) { light.update(1/60,contact(x),false);heavy.update(1/60,contact(x,{mass:10}),false);wide.update(1/60,contact(x,{widthScale:5,range:400}),false); }
+    expect(light.sparks.map(p=>p.size)).toEqual(heavy.sparks.map(p=>p.size));
+    expect(wide.sparks[0].size).toBeGreaterThan(light.sparks[0].size);
   });
   it('freezes marks and sparks during pause and respects reduced motion and lite limits',()=>{
     const d=new BladeDrag();for(let i=0;i<500;i++)d.update(1/60,contact(i*7),false);expect(d.marks.length).toBeLessThanOrEqual(320);expect(d.sparks.length).toBeLessThanOrEqual(40);
