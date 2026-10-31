@@ -1,9 +1,11 @@
 # 刃之进化 · 手机网页试玩
 
-手机或电脑打开 https://jess161.github.io/codex-/?v=f7ba6dd 即可游玩。
+手机或电脑打开 https://jess161.github.io/codex-/?v=61c90e9 即可游玩。
 
-本版为十二把武器加入独立主动技，手机点“绝招”、电脑按 Q，自动朝附近敌人释放，不耗蓝、不占道具格。原故事被动、瞬步、五格三十件道具、六品质、食物、刀身尺寸联动与独立经验球继续生效。
+打怪掉落道具，走近直接拾取；升级与进阶不中断移动。取消五种携带上限与固定空槽，底部只显示已获得道具图标，同类拾取升级、满级星标与停止掉落，可左右滑动查看。三十种道具、六品质、回血食物、十二种主动绝招、刀身尺寸联动与独立经验球保留。
 
-源码分支：`reconstruct/latest-from-conversation`；提交：`f7ba6dd4a7903cc64f54ea716a2e10f45e8c5b9d`。技能目录见源码的 `docs/gdd/blade-evolution-active-v0.9.md`，验证见 `docs/blade-active-verification.json`。278 项自动测试和 155 项不同浏览器检查通过；主动套件也在实际单文件包上复测。
+新局六分钟生存、最多四十五秒首领战。旧存档保留全部道具及原进度、时长，原待选奖励转为地面一组选一领取。
 
-此分支仅保存已经测试的静态单文件游戏及版本清单，不需要后端。`version.json` 记录源码、大小及 SHA-256，便于核对。
+源码分支：`reconstruct/latest-from-conversation`；提交：`61c90e9aaa70be69d8bdc62b6876e9d3e7ba5d87`。设计见源码 `docs/gdd/blade-evolution-loot-v1.0.md`，验证见 `docs/blade-loot-verification.json`。283 项规则测试（含十二种武器完整对局）及 179 项不同浏览器检查通过；掉落、后期难度与离线套件也在实际单文件包上验证。手机测试为模拟视口与触控。
+
+此分支仅保存已经测试的静态单文件游戏及版本清单。`version.json` 记录源码、大小及 SHA-256，便于核对线上版本。
