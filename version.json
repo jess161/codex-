@@ -1,0 +1,9 @@
+{
+  "title": "Blade Evolution mobile preview",
+  "source_commit": "5bc56044cf66fc228b5feff3b56065a58e94e09a",
+  "created_utc": "2026-10-31T01:33:44.992445+00:00",
+  "artifact_sha256": "cd357923a2108e3c14fb83492379b22806a5b4ef441bd09ea0cab97dbc984f94",
+  "bytes": 10060591,
+  "unit_tests_passed": 161,
+  "browser_checks_passed": 206
+}
