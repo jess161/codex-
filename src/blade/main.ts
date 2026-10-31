@@ -26,6 +26,7 @@ export class BladeApp {
   private keys = new Set<string>();
   private joystick = { x: 0, y: 0 };
   private dashQueued = false;
+  private activeQueued=false;
   private accumulator = 0;
   private hudClock = 0;
   private lastSaved = 0;
@@ -86,7 +87,7 @@ export class BladeApp {
     }
   }
   clearInputs() {
-    this.keys.clear(); this.dashQueued = false; this.releaseTouch();
+    this.keys.clear(); this.dashQueued = false; this.activeQueued=false; this.releaseTouch();
     if (this.run) this.run.state.velocity = { x: 0, y: 0 };
     this.accumulator = 0; this.hitStop = 0; this.scene.clearImpact();
   }
@@ -113,6 +114,7 @@ export class BladeApp {
       if (this.panel !== 'none' || !this.run) return;
       if (this.run.state.mode === 'relic' && /^[1-3]$/.test(key)) { if (!event.repeat) this.action('relic', this.run.state.choices[Number(key) - 1]); return; }
       if(this.run.state.mode==='relic' && key==='0'){event.preventDefault();if(!event.repeat)this.action('relic-skip');return;}
+      if(key==='q'){event.preventDefault();if(!event.repeat)this.action('active');return;}
       if (key === 'c') { this.action('power'); return; }
       if (key === 'i') { this.action('relics'); return; }
       if (this.run.state.mode !== 'playing') return;
@@ -156,6 +158,7 @@ export class BladeApp {
     };
     surface.addEventListener('pointerup', release); surface.addEventListener('pointercancel', release);
     surface.addEventListener('lostpointercapture', event => { if (event.target === surface) release(event); });
+    document.querySelector('#active-button')!.addEventListener('pointerdown',event=>{event.preventDefault();event.stopPropagation();this.action('active');});
     document.querySelector('#dash-button')!.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); if (this.panel === 'none' && this.run?.state.mode === 'playing') { this.dashQueued = true; this.audio.unlock(); } });
   }
   start(resume = false) {
@@ -219,6 +222,7 @@ export class BladeApp {
       if (action === 'save-title') this.save();
       this.run = undefined; this.scene.activeRun = false; this.scene.pausedRun = false; this.panel = 'title'; this.clearInputs(); this.ui.render(true); return;
     }
+    if(action==='active'){if(this.panel==='none'&&this.run?.state.mode==='playing'&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
     if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
     if(action==='relic-trim-toggle' && this.panel==='none' && isRelicId(value)){this.ui.toggleTrim(value);return;}
     if(action==='relic-trim-confirm' && this.panel==='none' && this.run?.trimRelics([...this.ui.trimSelected])){this.clearInputs();this.audio.choose();this.save();this.ui.render(true);return;}
@@ -235,14 +239,14 @@ export class BladeApp {
   private input(): MoveInput {
     const right = this.keys.has('d') || this.keys.has('arrowright'), left = this.keys.has('a') || this.keys.has('arrowleft');
     const up = this.keys.has('w') || this.keys.has('arrowup'), down = this.keys.has('s') || this.keys.has('arrowdown');
-    return { x: Number(right) - Number(left) + this.joystick.x, y: Number(down) - Number(up) + this.joystick.y, dash: this.dashQueued };
+    return { x: Number(right) - Number(left) + this.joystick.x, y: Number(down) - Number(up) + this.joystick.y, dash: this.dashQueued, active:this.activeQueued };
   }
   private tick() {
     if (!this.run || this.panel !== 'none') return;
     const modeBefore = this.run.state.mode;
-    this.run.step(FIXED_STEP, this.input()); this.dashQueued = false;
+    this.run.step(FIXED_STEP, this.input()); this.dashQueued = false; this.activeQueued=false;
     this.scene.ingest(this.run.events);
-    const contacts = this.run.events.filter(e=>e.type==='hit' && (e.source==='melee' || e.source==='wave'));
+    const contacts = this.run.events.filter(e=>e.type==='hit' && (e.source==='melee' || e.source==='wave' || e.source==='active'));
     if (contacts.length) {
       const impact = impactFeedback(Math.max(...contacts.map(e=>e.amount??0)),this.run.stats.mass,contacts.length,contacts.some(e=>e.elite));
       this.audio.hit(impact.index); this.scene.impact(impact.shake);
@@ -255,6 +259,7 @@ export class BladeApp {
       if (event.type === 'hit') {
         if (event.enemyKind) this.audio.enemyHurt(event.enemyKind, event.lethal, event.source);
       }
+      if(event.type==='active'&&event.activePhase==='cast'){this.audio.active(event.tier??this.run.tier);this.scene.impact(1.8);}
       if (event.type === 'blast') this.audio.explode();
       if (event.type === 'pickup') this.audio.pickup();
       if (event.type === 'passive') this.audio.passive(event.tier ?? this.run.tier);
@@ -308,7 +313,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:{name:this.run!.activeInfo.name,...this.run!.active}, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

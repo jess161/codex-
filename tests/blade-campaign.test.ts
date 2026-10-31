@@ -51,7 +51,9 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
     }
     if (enemies[0] && distance(enemies[0]) < enemies[0].radius + 20) dash = s.dashCooldown <= 0;
     const length = Math.hypot(dx, dy) || 1;
-    r.step(1 / 60, { x: dx / length, y: dy / length, dash });
+    // Use the same manual activation action as Q/touch; no timer or cooldown overrides.
+    const active = r.active.cooldown<=0 && !!enemies[0] && distance(enemies[0])<Math.max(160,r.stats.range*1.4);
+    r.step(1 / 60, { x: dx / length, y: dy / length, dash, active });
   }
   expect(r.state.mode, JSON.stringify({ seed, time: r.state.time, hp: r.state.hp, maxHp:r.state.maxHp, level: r.state.level, bossTime: r.state.bossTime, failure:r.state.failure, relics:r.state.relics, equipment:r.stats })).toBe('won'); expect(r.state.time).toBe(GAME_DURATION);
   // Winning does not require max level in the slower mode; collecting well can reach every form.
@@ -59,6 +61,7 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   if (blade === 0) { expect(r.state.level).toBe(30); expect(forgeChoices).toBe(29); }
   expect(r.state.bossTime).toBeLessThan(90); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
   expect(r.state.enemies.length).toBeLessThanOrEqual(280);
+  expect(r.active.casts).toBeGreaterThan(10);
   expect(formTimes[0]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01);
   formTimes.slice(1).forEach((time, i) => expect(time - formTimes[i]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01));
 }, 30000);

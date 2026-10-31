@@ -1,3 +1,4 @@
+import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
 import { THREATS, type Hazard } from './threats';
 import { BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { BASE_RELIC_IDS, LEGACY_RELICS, RELIC_CAP, RELIC_SLOTS, RELIC_IDS, RELICS, eligibleRelics, ownedRelics, weightedRelic, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
@@ -14,7 +15,7 @@ export interface Enemy extends Point, EnemyEffects {
 }
 export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal'; dropTimer?: number; food?:FoodId }
 export interface Bullet extends Point { id: number; vx: number; vy: number; life: number; kind?: 'orb' | 'spine'; damage?: number }
-export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga'; radius?: number; hitRadius?: number }
+export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga'; radius?: number; hitRadius?: number; source?:'active'; boomerang?:boolean; returning?:boolean }
 export interface Shock extends Point { id: number; radius: number; gap: number }
 export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
 export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'relic-trim' | 'won' | 'dead';
@@ -23,13 +24,13 @@ export interface RunState {
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
-  passive: PassiveState;
+  passive: PassiveState; active?:ActiveState;
   aim: number; targetId: number; attackTimer: number; attackCount: number; swing: Swing | null;
   hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast'; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' };
-export interface MoveInput { x: number; y: number; dash: boolean }
+export type RunEvent = { type: 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' };
+export interface MoveInput { x: number; y: number; dash: boolean; active?:boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
   rebuild(enemies: Enemy[]) {
@@ -65,11 +66,12 @@ export class BladeRun {
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
       player: { x: 0, y: 0 }, direction: { x: 0, y: -1 }, velocity: { x: 0, y: 0 }, hp: 100, maxHp: 100, invincible: .7, dashTime: 0, dashCooldown: 0,
       level: 1, xp: 0, totalXp: 0, formStartedAt: 0, perks: freshPerks(), pending: [], choices: [], evolutionTime: 0,
-      passive: freshPassive(blade),
+      passive: freshPassive(blade), active:freshActive(),
       aim: -Math.PI / 4, targetId: -1, attackTimer: .2, attackCount: 0, swing: null,
       hazards: [], enemies: [], orbs: [], bullets: [], waves: [], shocks: [],
       kills: 0, eliteKills: 0, bestCleave: 0, bossHits: 0, recentKills: [], maxCombo: 0, failure: '',
     };
+    this.state.active ??= freshActive();
     if (!snapshot) for (let i = 0; i < 3; i++) {
       const angle = -Math.PI / 2 + (i - 1) * 1.05;
       this.spawnEnemy('blob', Math.cos(angle) * (175 + i * 12), Math.sin(angle) * (175 + i * 12), .65);
@@ -84,6 +86,8 @@ export class BladeRun {
     return this.cachedRules;
   }
   get bladeId() { return TIERS[this.tier].id; }
+  get active() { return this.state.active!; }
+  get activeInfo() { return ACTIVE_SKILLS[this.bladeId]; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
   get passiveSize() { return passiveSize(this.stats, this.rules); }
   get stats() { return this.statsForRelics(this.state.relics); }
@@ -94,11 +98,91 @@ export class BladeRun {
       stats.moveSpeed *= 1 + .04 * items.overdrive;
       if (relicGroups(items).chaos >= 3) { stats.damage = Math.round(stats.damage * 1.25); stats.damageReduction += .08; }
     }
+    if(this.active.buff>0) {
+      if(this.bladeId==='scrap')stats.interval=Math.max(stats.windup+stats.strike+stats.recovery+.015,stats.interval*.75);
+      if(this.bladeId==='tensa'){stats.moveSpeed*=1.2;stats.interval=Math.max(stats.windup+stats.strike+stats.recovery+.015,stats.interval*.8);}
+    }
     if (this.bladeId === 'tensa' && this.state.passive.haste > 0) {
       stats.moveSpeed *= 1 + this.rules.hasteBonus;
       stats.interval = Math.max(stats.windup + stats.strike + stats.recovery + .015, stats.interval * (1 - this.rules.hasteBonus));
     }
     return stats;
+  }
+  activateSkill() {
+    const s=this.state,a=this.active;
+    if(s.mode!=='playing'||a.cooldown>.000001)return false;
+    const reach=Math.max(260,Math.hypot(this.view.width,this.view.height)/2);
+    const nearby=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&Math.hypot(e.x-s.player.x,e.y-s.player.y)<=reach)
+      .sort((x,y)=>Math.hypot(x.x-s.player.x,x.y-s.player.y)-Math.hypot(y.x-s.player.x,y.y-s.player.y)||x.id-y.id);
+    const target=(this.bladeId==='shusui'?nearby.find(e=>e.kind==='boss'||e.kind==='elite'):undefined)??nearby[0];
+    const angle=target?Math.atan2(target.y-s.player.y,target.x-s.player.x):s.aim;
+    const plan=activePlan(this.bladeId,this.mastery,this.stats.damage,this.passiveSize.meleeRadius,angle);
+    a.cooldown=this.activeInfo.cooldown;a.casts++;a.buff=plan.buff;a.pending=plan.pulses;a.fields=plan.fields;
+    const tx=target?.x??s.player.x+Math.cos(angle)*120,ty=target?.y??s.player.y+Math.sin(angle)*120;
+    for(const f of a.fields){f.x=tx;f.y=ty;}
+    if(plan.targeted)for(const p of a.pending){p.x=tx;p.y=ty;}
+    if(plan.chainDamage) {
+      const used=new Set<number>();let from:Point=s.player;
+      for(let i=0;i<6;i++){
+        const e=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&!used.has(e.id)&&Math.hypot(e.x-from.x,e.y-from.y)<=(i?190:reach))
+          .sort((x,y)=>Math.hypot(x.x-from.x,x.y-from.y)-Math.hypot(y.x-from.x,y.y-from.y)||x.id-y.id)[0];
+        if(!e)break;used.add(e.id);
+        a.pending.push({kind:'hunt',delay:i*.06,angle,radius:20,arc:360,damage:plan.chainDamage,targetId:e.id});from=e;
+      }
+    }
+    s.aim=angle;
+    this.events.push({type:'active',activePhase:'cast',pulseKind:plan.targeted?'execution':undefined,skill:this.bladeId,x:plan.targeted?tx:s.player.x,y:plan.targeted?ty:s.player.y,angle,tier:this.tier,radius:plan.pulses[0]?.radius??this.passiveSize.meleeRadius});
+    if(plan.clearBullets){const radius=(plan.pulses[0]?.radius??108)+30;s.bullets=s.bullets.filter(b=>Math.hypot(b.x-s.player.x,b.y-s.player.y)>radius);}
+    for(const wave of plan.waves)this.createWave(wave.angle,wave.damage,wave.range,wave.pierce,wave.kind,'active',wave.size,wave.boomerang);
+    this.grid.rebuild(s.enemies);this.updateActive(0);
+    if(plan.move&&s.mode==='playing'){s.player.x+=Math.cos(angle)*plan.move;s.player.y+=Math.sin(angle)*plan.move;s.velocity={x:0,y:0};s.invincible=Math.max(s.invincible,.45);}
+    return true;
+  }
+  private updateActive(dt:number) {
+    const s=this.state,a=this.active;
+    a.cooldown=Math.max(0,a.cooldown-dt);a.buff=Math.max(0,a.buff-dt);
+    const due:ActivePulse[]=[];
+    a.pending=a.pending.filter(p=>{p.delay=Math.max(0,p.delay-dt);if(p.delay<=.000001){due.push(p);return false;}return true;});
+    for(const p of due) {
+      if(s.mode!=='playing')break;
+      const tracked=p.targetId?s.enemies.find(e=>e.id===p.targetId&&e.hp>0&&e.spawn<=0):undefined;
+      if(p.targetId&&!tracked)continue;
+      const x=tracked?.x??p.x??s.player.x,y=tracked?.y??p.y??s.player.y;
+      this.events.push({type:'active',activePhase:'pulse',pulseKind:p.kind,skill:this.bladeId,x,y,toX:s.player.x,toY:s.player.y,radius:p.radius,angle:p.angle,arc:p.arc,tier:this.tier});
+      let hits=0;
+      for(const e of s.enemies) {
+        if(s.mode!=='playing')break;
+        if(e.hp<=0||e.spawn>0||p.targetId&&e.id!==p.targetId||!p.targetId&&!sectorHits(e.x-x,e.y-y,e.radius,p.angle,p.radius,p.arc))continue;
+        const damage=p.damage*(p.kind==='thrust'&&e.kind==='armor'?1.5:1)*(p.kind==='hunt'&&e.hunt>0?1+this.rules.huntBonus:1);
+        this.hitEnemy(e,Math.round(damage),Math.atan2(e.y-y,e.x-x),'active');hits++;
+      }
+      if(p.kind==='soul'&&hits){const healed=this.heal(s.maxHp*Math.min(.2,.02*hits));if(healed>0)this.events.push({type:'active',activePhase:'heal',skill:'enma',x:s.player.x,y:s.player.y,amount:healed});}
+    }
+    for(const f of a.fields) {
+      if(s.mode!=='playing')break;
+      const elapsed=Math.min(dt,f.life);f.life=Math.max(0,f.life-dt);f.tick-=elapsed;
+      while(f.tick<=.000001&&s.mode==='playing'){
+        f.tick+=.5;
+        const positions=f.kind==='mirror'?this.mirrorPositions(f):[f.kind==='spin'?s.player:f];
+        for(const origin of positions)for(const e of s.enemies){
+          if(s.mode!=='playing'||e.hp<=0||e.spawn>0)continue;
+          const dx=origin.x-e.x,dy=origin.y-e.y,d=Math.hypot(dx,dy);
+          const radius=f.kind==='mirror'?f.radius*.65:f.radius;
+          if(d>radius+e.radius)continue;
+          if(f.kind==='vortex'){
+            const pull=Math.max(0,Math.min(26,d-15))*(e.kind==='boss'?0:e.kind==='elite'?.25:1);
+            e.x+=dx/(d||1)*pull;e.y+=dy/(d||1)*pull;
+          }
+          this.hitEnemy(e,f.damage,Math.atan2(e.y-origin.y,e.x-origin.x),'active');
+        }
+      }
+    }
+    a.fields=a.fields.filter(f=>f.life>.000001);
+    if(a.fields.length)this.grid.rebuild(s.enemies);
+  }
+  mirrorPositions(f:NonNullable<RunState['active']>['fields'][number]) {
+    const a=(f.duration-f.life)*2.7,reach=Math.min(110,Math.max(48,f.radius*.55));
+    return [-1,1].map(side=>({x:this.state.player.x+Math.cos(a)*reach*side,y:this.state.player.y+Math.sin(a)*reach*.7*side}));
   }
   private syncPassive() {
     if (this.state.passive.tier === this.tier) return;
@@ -324,14 +408,14 @@ export class BladeRun {
     if (this.passiveFxCount++ >= 8) return;
     this.events.push({ type: 'passive', skill, x, y, radius, size: this.passiveSize.scale, detail, tier: this.tier });
   }
-  private createWave(angle: number, damage: number, maxRange: number, pierce: number, kind: Wave['kind'] = 'basic') {
+  private createWave(angle: number, damage: number, maxRange: number, pierce: number, kind: Wave['kind'] = 'basic', source?:'active', visualScale=1, boomerang=false) {
     const s = this.state;
     if (s.waves.length >= 32) return;
     // Freeze dimensions at release so a later upgrade cannot resize an airborne wave.
-    const size = this.passiveSize, shape = waveDimensions({ kind }, this.mastery, size.scale);
+    const size = this.passiveSize, shape = waveDimensions({ kind }, this.mastery, Math.min(6,size.scale*visualScale));
     s.waves.push({ id: s.nextId++, x: s.player.x, y: s.player.y, angle, distance: 0,
       maxRange: Math.min(PASSIVE_SIZE_LIMITS.travel, maxRange * size.travelScale * (1+.12*s.relics.scope)), damage, pierce:Math.min(24,pierce+s.relics.scope), hit: [], tier: this.tier, kind,
-      radius: shape.radius, hitRadius: shape.hitRadius });
+      radius: shape.radius, hitRadius: shape.hitRadius, ...(source?{source}:{}),...(boomerang?{boomerang:true,returning:false}:{}) });
   }
   private updatePassive(dt: number) {
     const p = this.state.passive;
@@ -348,8 +432,8 @@ export class BladeRun {
     if (e.burnTime <= 0) e.burnTick = .5;
     e.burnTime = this.rules.burnTime; e.burnDamage = Math.max(e.burnDamage, damage);
   }
-  private passiveHit(e: Enemy, source: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic') {
-    if (source !== 'melee' && source !== 'wave') return;
+  private passiveHit(e: Enemy, source: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active') {
+    if (source !== 'melee' && source !== 'wave' && source!=='active') return;
     const id = this.bladeId;
     if (id === 'deer-cutter' && source === 'melee') e.hunt = this.rules.huntTime;
     if (id === 'snow-drinker') {
@@ -360,9 +444,9 @@ export class BladeRun {
     }
     if (id === 'ryujin') this.ignite(e, Math.max(1, Math.round(this.stats.damage * this.rules.burnTickDamage * this.elementalBonus)));
   }
-  private hitEnemy(e: Enemy, amount: number, angle: number, source: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' = 'melee') {
+  private hitEnemy(e: Enemy, amount: number, angle: number, source: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' = 'melee') {
     if (e.hp <= 0 || e.spawn > 0) return false;
-    const direct=source==='melee'||source==='wave', items=this.state.relics;
+    const direct=source==='melee'||source==='wave'||source==='active', items=this.state.relics;
     let critical=false;
     if(direct){
       if(items.execution && e.hp/e.maxHp<(e.kind==='boss'||e.kind==='elite'?.1:.2))amount*=1+.12*items.execution*(e.kind==='boss'||e.kind==='elite'?.5:1);
@@ -370,9 +454,11 @@ export class BladeRun {
     }
     if (direct && relicGroups(items).arcane >= 3 && (e.poisonTime>0 || e.burnTime > 0 || e.slowTime > 0 || e.chill > 0 || e.freeze > 0 || e.stun > 0)) amount = Math.round(amount * 1.1);
     this.passiveHit(e, source);
-    if (source === 'melee' || source === 'wave') this.relicHit(e);
+    if (direct) this.relicHit(e);
     amount=Math.max(1,Math.round(amount));
-    const s = this.state; e.hp -= amount; e.hit = .15; e.reveal = .85;
+    const s = this.state;
+    if(source==='active'&&this.bladeId==='shusui'&&(e.kind==='boss'||e.kind==='elite'))amount=Math.round(amount*1.5);
+    e.hp -= amount; e.hit = .15; e.reveal = .85;
     const resistance = e.kind === 'boss' ? 0 : e.kind === 'elite' ? .25 : 1;
     if (source !== 'burn' && source !== 'poison' && source !== 'relic') {
       e.knockX += Math.cos(angle) * this.stats.knockback * 16 * resistance;
@@ -381,7 +467,8 @@ export class BladeRun {
     this.events.push({ type: 'hit', x: e.x, y: e.y, amount, elite: e.kind === 'elite' || e.kind === 'boss', enemyKind: e.kind, enemyId:e.id, lethal: e.hp <= 0, source, critical });
     if (e.hp > 0) return false;
     this.events.push({ type: 'kill', enemyKind:e.kind, enemyId:e.id, source, x: e.x, y: e.y, tier: this.tier, elite: e.kind === 'elite' || e.kind === 'boss' });
-    const p = s.passive;
+    if(s.active!==undefined&&!validActive(s.active))return false;
+  const p = s.passive;
     if (this.bladeId === 'scrap') {
       p.kills++;
       const stacks = Math.min(this.rules.scrapCap, Math.floor(p.kills / 5));
@@ -547,11 +634,11 @@ export class BladeRun {
     }
     s.hazards = s.hazards.filter(h => h.age < h.duration);
   }
-  private updateEnemy(e: Enemy, dt: number) {
+  private updateEnemy(e: Enemy, dt: number, effectsDt=dt) {
     const s = this.state;
     e.hit = Math.max(0, e.hit - dt); e.reveal = Math.max(0, (e.reveal ?? 0) - dt); e.age += dt;
     if (e.spawn > 0) { e.spawn = Math.max(0, e.spawn - dt); return; }
-    this.updateEnemyEffects(e, dt);
+    this.updateEnemyEffects(e, effectsDt);
     if (e.hp <= 0 || s.mode !== 'playing') return;
     if (e.freeze > 0 || e.stun > 0) {
       e.x += e.knockX * dt; e.y += e.knockY * dt; e.knockX *= Math.exp(-16 * dt); e.knockY *= Math.exp(-16 * dt); return;
@@ -645,7 +732,10 @@ export class BladeRun {
     this.processXp();
     if (s.pending.length) { this.startEvolution(); return; }
     s.invincible = Math.max(0, s.invincible - dt); s.dashCooldown = Math.max(0, s.dashCooldown - dt);
-    this.updatePassive(dt); this.updateRelics(dt);
+    this.updatePassive(dt); this.updateRelics(dt); this.updateActive(dt);
+    if(s.mode!=='playing')return;
+    if(input.active)this.activateSkill();
+    if(s.mode!=='playing')return;
     const stats = this.stats;
     const magnitude = Math.hypot(input.x, input.y);
     if (magnitude > .05 && s.dashTime <= 0) s.direction = { x: input.x / Math.max(1, magnitude), y: input.y / Math.max(1, magnitude) };
@@ -684,7 +774,7 @@ export class BladeRun {
       }
     }
     this.grid.rebuild(s.enemies);
-    for (const e of s.enemies) if (e.hp > 0 && s.mode === 'playing') { this.updatePoison(e,dt); if(e.hp>0)this.updateEnemy(e, dt); }
+    for (const e of s.enemies) if (e.hp > 0 && s.mode === 'playing') { this.updatePoison(e,dt); if(e.hp>0)this.updateEnemy(e, dt*(this.bladeId==='tensa'&&this.active.buff>0?(e.kind==='boss'||e.kind==='elite'?.7:.4):1),dt); }
     if (s.mode !== 'playing') return;
     this.grid.rebuild(s.enemies);
     s.attackTimer -= dt;
@@ -711,7 +801,8 @@ export class BladeRun {
       }
     }
     for (const wave of s.waves) {
-      const ox = wave.x, oy = wave.y, length = Math.min(420 * dt, wave.maxRange - wave.distance);
+      if(wave.returning)wave.angle=Math.atan2(s.player.y-wave.y,s.player.x-wave.x);
+      const ox = wave.x, oy = wave.y, length = Math.min(420 * dt, wave.returning?Math.hypot(s.player.x-wave.x,s.player.y-wave.y):wave.maxRange - wave.distance);
       wave.x += Math.cos(wave.angle) * length; wave.y += Math.sin(wave.angle) * length; wave.distance += length;
       const hitRadius = waveDimensions(wave, this.mastery).hitRadius;
       const candidates = this.grid.query(wave.x, wave.y, length + 45 + hitRadius).filter(e => e.hp > 0 && e.spawn <= 0 && !wave.hit.includes(e.id));
@@ -720,23 +811,30 @@ export class BladeRun {
         if (wave.hit.length >= wave.pierce) break;
         const tAlong = Math.max(0, Math.min(1, ((e.x - ox) * (wave.x - ox) + (e.y - oy) * (wave.y - oy)) / Math.max(.001, length * length)));
         if (Math.hypot(e.x - ox - (wave.x - ox) * tAlong, e.y - oy - (wave.y - oy) * tAlong) < e.radius + hitRadius) {
-          wave.hit.push(e.id); this.hitEnemy(e, wave.damage, wave.angle, 'wave');
+          wave.hit.push(e.id); this.hitEnemy(e, wave.damage, wave.angle, wave.source??'wave');
         }
       }
     }
-    s.waves = s.waves.filter(w => w.distance < w.maxRange && w.hit.length < w.pierce);
+    s.waves = s.waves.filter(w => {
+      if(w.boomerang){
+        if(!w.returning&&(w.distance>=w.maxRange||w.hit.length>=w.pierce)){w.returning=true;w.distance=0;w.hit=[];return true;}
+        if(w.returning)return Math.hypot(w.x-s.player.x,w.y-s.player.y)>18&&w.distance<w.maxRange*2&&w.hit.length<w.pierce;
+      }
+      return w.distance<w.maxRange&&w.hit.length<w.pierce;
+    });
+    const hostileDt=dt*(this.bladeId==='tensa'&&this.active.buff>0?.4:1);
     for (const b of s.bullets) {
-      b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+      b.x += b.vx * hostileDt; b.y += b.vy * hostileDt; b.life -= hostileDt;
       if (Math.hypot(b.x - s.player.x, b.y - s.player.y) < 22) { this.damagePlayer(b.damage ?? 12, b.kind === 'spine' ? '未能穿过针背刺团的尖刺间隙' : '未能躲过吐弹者的弹丸'); b.life = 0; }
     }
     s.bullets = s.bullets.filter(b => b.life > 0);
     for (const shock of s.shocks) {
-      shock.radius += 220 * dt;
+      shock.radius += 220 * hostileDt;
       const d = Math.hypot(s.player.x - shock.x, s.player.y - shock.y), a = Math.atan2(s.player.y - shock.y, s.player.x - shock.x);
       if (Math.abs(d - shock.radius) < 25 && Math.abs(angleDelta(a, shock.gap)) > 35 * Math.PI / 180) this.damagePlayer(20, '被暴君的震荡波击中');
     }
     s.shocks = s.shocks.filter(a => a.radius <= 240);
-    this.updateHazards(dt);
+    this.updateHazards(hostileDt);
     if (s.mode !== 'playing') return;
     let collected = false;
     for (const orb of s.orbs) {
@@ -780,6 +878,7 @@ function validateRun(value: unknown, legacy: 0|5|6 = 0): boolean {
   if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy===5 ? 190 : legacy===6 ? 250 : 265) || s.time < 0 || s.time > GAME_DURATION || s.bossTime < 0 || s.bossTime > BOSS_DURATION) return false;
   if (s.formStartedAt < 0 || s.formStartedAt > s.time + s.bossTime + .001 || s.xp < 0 || s.totalXp < 0) return false;
   if (!s.perks || !Object.keys(PERKS).every(k => Number.isInteger(s.perks[k as PerkId]) && s.perks[k as PerkId] >= 0 && s.perks[k as PerkId] <= PERKS[k as PerkId].cap)) return false;
+  if(s.active!==undefined&&!validActive(s.active))return false;
   const p = s.passive;
   if (!p || ['tier', 'hits', 'kills', 'stacks', 'empowered', 'cooldown', 'safeTime', 'haste'].some(k => !finite(p[k as keyof PassiveState]) || Number(p[k as keyof PassiveState]) < 0)) return false;
   if (p.tier !== s.blade || !Number.isInteger(p.hits) || p.hits > 7 || !Number.isInteger(p.kills) || !Number.isInteger(p.stacks) || p.stacks > 7 || p.empowered > 5.001 || p.cooldown > 12.001 || p.safeTime > 6.001 || p.haste > 3.001 || typeof p.shield !== 'boolean' || typeof p.tensaPending !== 'boolean') return false;
@@ -820,7 +919,7 @@ function validateRun(value: unknown, legacy: 0|5|6 = 0): boolean {
   if (s.enemies.some(e => e.reveal !== undefined && (!finite(e.reveal) || e.reveal < 0 || e.reveal > .851))) return false;
   if (s.orbs.some(o => o.dropTimer !== undefined && (!finite(o.dropTimer) || o.dropTimer < 0 || o.dropTimer > XP_DROP_TIME + .001) || !finite(o.value) || o.value <= 0 || !['xp', 'heal'].includes(o.kind)||o.food!==undefined&&(!isFoodId(o.food)||o.kind!=='heal'))) return false;
   if (s.bullets.some(b => !finite(b.vx) || !finite(b.vy) || !finite(b.life) || b.kind !== undefined && !['orb', 'spine'].includes(b.kind) || b.damage !== undefined && (!finite(b.damage) || b.damage <= 0 || b.damage > 30))) return false;
-  if (s.waves.some(w => !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
+  if (s.waves.some(w => w.source!==undefined&&w.source!=='active' || w.boomerang!==undefined&&typeof w.boomerang!=='boolean' || w.returning!==undefined&&(typeof w.returning!=='boolean'||!w.boomerang) || !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
   if (s.waves.some(w => w.radius !== undefined && (!finite(w.radius) || w.radius <= 0 || w.radius > 252) || w.hitRadius !== undefined && (!finite(w.hitRadius) || w.hitRadius <= 0 || w.hitRadius > 60))) return false;
   if (s.shocks.some(shock => !finite(shock.radius) || !finite(shock.gap))) return false;
   if (s.swing && (!finite(s.swing.id) || !finite(s.swing.age) || !finite(s.swing.angle) || !Number.isInteger(s.swing.tier) || s.swing.tier < 0 || s.swing.tier >= TIERS.length || typeof s.swing.resolved !== 'boolean' || ['windup', 'strike', 'recovery'].some(k => !finite(s.swing![k as keyof Swing]) || Number(s.swing![k as keyof Swing]) <= 0 || Number(s.swing![k as keyof Swing]) > 1))) return false;

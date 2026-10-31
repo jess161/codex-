@@ -14,7 +14,7 @@ try {
   await page.getByRole('button', { name: '开始试炼', exact: true }).tap();
   await page.getByRole('button', { name: '持刀出发', exact: true }).tap();
   // Isolate input behavior from damage while testing interruption and multi-touch.
-  await page.evaluate(() => { window.__BLADE__.run.state.enemies = []; window.__BLADE__.run.state.invincible = 1000; });
+  await page.evaluate(() => { const a=window.__BLADE__;a.scene.onFrame=undefined;a.run.state.enemies=[];a.run.state.invincible=1000;a.run.state.spawnBudget=-100000;a.run.state.attackTimer=100000; });
   const cdp = await page.context().newCDPSession(page);
   const point = (x, y, id = 1) => ({ x, y, id });
   const send = (type, points = []) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: points });
@@ -23,7 +23,8 @@ try {
   const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < .01;
   const center = async locator => { const r = await locator.boundingBox(); return point(r.x + r.width / 2, r.y + r.height / 2, 2); };
   check('no fixed joystick occupies the screen before touching', await page.locator('#touch-joystick').isHidden());
-  for (const [name, x, y] of [['upper-left', 60, 170], ['upper-right', 320, 200], ['center', 195, 425], ['lower-left', 35, 780], ['lower-right', 355, 585], ['top edge', 5, 6], ['right edge', 385, 410]]) {
+  for (const [name, x, y] of [['upper-left', 60, 170], ['upper-right', 320, 260], ['center', 195, 425], ['lower-left', 35, 780], ['lower-right', 355, 585], ['top edge', 5, 6], ['right edge', 385, 410]]) {
+    assert.equal(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.closest('[data-action]')?.getAttribute('data-action')??null,{x,y}),null,`${name}: movement fixture must avoid HUD buttons`);
     const before = await position(), dx = x > 300 ? -40 : 40;
     await send('touchStart', [point(x, y)]); await advance(80);
     assert.ok(near(before, await position()), 'touching without dragging should not walk or dash');
@@ -68,7 +69,9 @@ try {
   await send('touchStart', [point(100, 400)]); await send('touchMove', [point(140, 400)]); await advance(100);
   await page.setViewportSize({ width: 844, height: 390 }); await page.waitForTimeout(100); const rotated = await position(); await advance(150);
   check('orientation changes cancel the old gesture safely', near(rotated, await position()) && await page.locator('#touch-joystick').isHidden()); await send('touchEnd');
-  const landscape = await position(); await send('touchStart', [point(680, 200)]); await send('touchMove', [point(640, 200)]); await advance(160);
+  const landscape = await position();
+  assert.equal(await page.evaluate(()=>document.elementFromPoint(680,260)?.closest('[data-action]')?.getAttribute('data-action')??null),null,'landscape movement fixture must avoid the five-slot HUD');
+  await send('touchStart', [point(680, 260)]); await send('touchMove', [point(640, 260)]); await advance(160);
   check('anywhere dragging also works in landscape', (await position()).x < landscape.x - 25); await page.screenshot({ path: `${output}/02-floating-landscape.png` }); await send('touchEnd');
   await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(100);
   const evolvingFinger = point(245, 450);

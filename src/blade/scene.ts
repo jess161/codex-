@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { drawActiveFields, drawActiveBurst } from './active-art';
 import { ASSETS } from './assets';
 import { ENEMIES, TIERS } from './config';
 import { BladeRun, type RunEvent } from './simulation';
@@ -60,6 +61,7 @@ export class BattleScene extends Phaser.Scene {
   private used = new Set<string>();
   private particles: Particle[] = [];
   private passiveFx: PassiveFX[] = [];
+  private activeFx:{event:RunEvent;age:number}[]=[];
   private relicFx: RelicFX[] = [];
   private labels: DamageLabel[] = [];
   private spareLabels: Phaser.GameObjects.Text[] = [];
@@ -105,14 +107,14 @@ export class BattleScene extends Phaser.Scene {
     this.textures.create(key, canvas)!.add('__BASE', 0, 0, 0, canvas.width, canvas.height);
   }
   reset(run: BladeRun) {
-    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
+    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.activeFx=[]; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
     for (const label of this.labels) { label.object.setVisible(false); this.spareLabels.push(label.object); }
     this.labels = [];
   }
   private sprite(id: string, texture: string, x: number, y: number, size: number, depth: number) {
     let sprite = this.liveSprites.get(id);
     if (!sprite) { sprite = this.spareSprites.pop() ?? this.add.image(x, y, texture); this.liveSprites.set(id, sprite); }
-    this.used.add(id); sprite.setTexture(texture).setVisible(true).setPosition(x, y).setDisplaySize(size, size).setRotation(0).setAlpha(1).setDepth(depth);
+    this.used.add(id); sprite.setTexture(texture).setVisible(true).setPosition(x, y).setDisplaySize(size, size).setRotation(0).setAlpha(1).clearTint().setDepth(depth);
     return sprite;
   }
   ingest(events: RunEvent[]) {
@@ -120,9 +122,11 @@ export class BattleScene extends Phaser.Scene {
     if(kills.length>=3 && this.run) this.damageLabel(`一刀 ${kills.length}`,this.run.state.player.x,this.run.state.player.y-22);
     for (const event of events) {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
-      const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave');
+      const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
+      if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
+      if(event.type==='active'&&event.activePhase!=='heal'&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });
       if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, scale: event.size ?? 1, detail: event.detail });
       if (direct || event.type === 'kill' || event.type === 'dash') {
@@ -357,6 +361,9 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(1.6, 0x88cfe7, .75).strokeCircle(s.player.x, s.player.y, 26);
       g.beginPath().lineStyle(2.2, 0xffffff, .9).arc(s.player.x, s.player.y, 22, -2.6, -1.9).strokePath();
     }
+    drawActiveFields(g,run,this.reducedMotion,this.simplified,(...args)=>this.sprite(...args));
+    for(const effect of this.activeFx){effect.age+=fxDt;drawActiveBurst(g,effect.event,effect.age,this.reducedMotion,(...args)=>this.sprite(...args));}
+    this.activeFx=this.activeFx.filter(f=>f.age<.42);
     for (const effect of this.relicFx) {
       effect.age += fxDt; const alpha = Math.max(0, 1 - effect.age / .24);
       if (effect.item === 'shield') {

@@ -42,6 +42,11 @@ export class BladeAudio {
     if (weight > .7) this.tone(90 / (1 + weight * .12), .16, 'triangle', .08, 44);
   }
   hit(weight = 0) { const t = performance.now(); if (t - this.lastHit < 85) return; this.lastHit = t; this.tone(145 - weight * 15, .055 + weight * .015, 'triangle', .16, 55); if(weight > 1) this.tone(65,.1,'sine',.10,38); }
+  active(tier:number) {
+    const heavy=tier===5||tier===8,low=heavy?80:150+tier*12;
+    this.tone(low,.22,'triangle',.15,low*.45);
+    this.tone(low*3,.16,'sine',.08,low*1.4);
+  }
   enemyHurt(kind: EnemyKind, lethal = false, source = 'melee') {
     if (!this.enabled || !this.monsterEnabled || !this.context || !this.master || !this.noise || this.context.state !== 'running' || (source === 'burn' || source==='poison') && !lethal) return false;
     const now = performance.now(), voice = monsterVoice(kind, lethal);
