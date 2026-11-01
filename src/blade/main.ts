@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { GEAR, GEAR_CATEGORIES, isGearId } from './gear';
+import { GEAR_CATEGORIES, isGearId } from './gear';
 import './style.css';
 import { ACHIEVEMENTS, toBasicWeapon, isBasicWeapon, FIXED_STEP, MASTERIES, TIERS, TIER_LEVELS, encounterDensity } from './config';
 import { BladeRun, type MoveInput } from './simulation';
@@ -105,7 +105,7 @@ export class BladeApp {
     const movement = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright', ' '];
     window.addEventListener('keydown', event => {
       const key = event.key.toLowerCase();
-      if (key !== 'escape' && event.target instanceof HTMLElement && event.target.closest('select,input,textarea')) return;
+      if (key !== 'escape' && event.target instanceof HTMLElement && (event.target.closest('select,input,textarea') || this.ui.shopOpen && (key === ' ' || key === 'enter') && event.target.closest('button'))) return;
       if (movement.includes(key) || key === 'escape') event.preventDefault();
       if (event.repeat && (key === ' ' || key === 'escape')) return;
       if (key === 'b' && !event.repeat && this.panel === 'none') { this.action('shop'); return; }
@@ -181,10 +181,10 @@ export class BladeApp {
   }
   action(action: string, value?: string) {
     if (action === 'shop' && this.run && this.panel === 'none') { this.ui.toggleShop(); return; }
-    if (action === 'shop-category' && value && Object.hasOwn(GEAR_CATEGORIES, value)) {
-      this.ui.toggleShop(value as keyof typeof GEAR_CATEGORIES); return;
+    if (action === 'shop-category' && value && (value === 'all' || Object.hasOwn(GEAR_CATEGORIES, value))) {
+      this.ui.toggleShop(value as keyof typeof GEAR_CATEGORIES | 'all'); return;
     }
-    if (action === 'gear-detail' && isGearId(value) && this.panel === 'none') { this.ui.toggleShop(GEAR[value].category); return; }
+    if (action === 'gear-detail' && isGearId(value) && this.panel === 'none') { this.ui.selectGear(value); return; }
     if (action === 'sell-gear' && this.panel === 'none' && this.run && isGearId(value)) {
       if (this.run.sellGear(value)) {this.audio.choose();this.save();this.ui.render(true);}
       return;

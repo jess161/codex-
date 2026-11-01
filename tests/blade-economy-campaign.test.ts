@@ -1,8 +1,9 @@
+import {BUILDS} from './fixtures/blade-builds';
 import { it, expect } from 'vitest';
 import { BladeRun } from '../src/blade/simulation';
 import { BASIC_WEAPON_INDICES, TIERS, xpToLevel } from '../src/blade/config';
 
-import { BUILDS, GEAR_CAP, gearPrice, validEconomy, type GearId } from '../src/blade/gear';
+import {  GEAR_CAP, gearPrice, validEconomy, type GearId } from '../src/blade/gear';
 
 // An input-only bot completes the real campaign without changing HP, damage, XP or clocks.
 // This verifies reachability and deterministic long-run behavior, not human difficulty.

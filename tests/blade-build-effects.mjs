@@ -26,10 +26,10 @@ try{
   if(build==='burn')check('burn: persistent body aura and native pulse damage render',seen[build].includes('aura')&&await p.evaluate(()=>__BLADE__.run.state.enemies.some(e=>e.hp<e.maxHp)));
   if(build==='reflect')check('reflect: receiving damage emits the native reflection effect',seen[build].includes('reflect'));
   if(build==='critical')check('critical: dash charge emits its own native first-hit effect',seen[build].includes('surge'));
-  await p.locator('#shop-button').click();await p.selectOption('#build-choice',build);
-  check(`${build}: selected recipe visibly matches all six purchased identities`,await p.locator('.equipment-chip').count()===6&&await p.locator('.build-guide').textContent().then(t=>t.includes('6/6')));
+  await p.locator('#shop-button').click();
+  check(`${build}: six purchased identities appear in the free catalogue without a build preset`,await p.locator('.shop-item.owned').count()===6&&await p.locator('.shop-item').count()===14&&await p.locator('#build-choice,.build-guide').count()===0);
   await p.screenshot({path:`${out}/${build}.png`});await p.close();
  }
  check('all five builds render in WebGL without runtime errors',errors.length===0);
- await fs.writeFile(`${out}/results.json`,JSON.stringify({passed:checks.length,checks,errors,seen,artifact:base,scope:'Five native build paths and effect rendering. Stationary high-HP enemies, direct coin funding, low player HP and an initial received hit are explicit visual fixtures; ordinary attacks and item triggers then use the game loop.'},null,2));
+ await fs.writeFile(`${out}/results.json`,JSON.stringify({passed:checks.length,checks,errors,seen,artifact:base,scope:'Five sample equipment combinations and native effect rendering; no build selection in the game. Stationary high-HP enemies, direct coin funding, low player HP and an initial received hit are explicit visual fixtures; ordinary attacks and item triggers then use the game loop.'},null,2));
 }finally{await browser.close();}

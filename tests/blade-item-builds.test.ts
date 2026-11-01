@@ -1,7 +1,8 @@
+import {BUILDS} from './fixtures/blade-builds';
 import {describe,it,expect,vi} from 'vitest';
 import {BladeRun,restoreSnapshot,validSnapshot,type Enemy,type RunEvent} from '../src/blade/simulation';
 import {BASIC_WEAPON_INDICES} from '../src/blade/config';
-import {BUILDS,GEAR_IDS,GEAR_SLOTS,gearBlockReason,gearInvestment,gearSellPrice,freshEconomy,validEconomy,type GearId} from '../src/blade/gear';
+import {GEAR_IDS,GEAR_SLOTS,gearBlockReason,gearInvestment,gearSellPrice,freshEconomy,validEconomy,type GearId} from '../src/blade/gear';
 import {migrateEconomy} from '../src/blade/economy-migration';
 const idle={x:0,y:0,dash:false};
 const arena=(blade:number=15)=>{const r=new BladeRun(819,undefined,blade);r.state.enemies=[];r.state.spawnBudget=-1e6;r.state.eliteIndex=4;r.state.attackTimer=1e6;return r;};
@@ -12,7 +13,7 @@ function step(r:BladeRun,n:number) {const events:RunEvent[]=[];for(let i=0;i<n;i
 function strike(r:BladeRun) {const t=r.stats;r.state.swing={id:r.state.nextId++,tier:r.tier,angle:0,age:t.windup+t.strike*.45-1/60,windup:t.windup,strike:t.strike,recovery:t.recovery,resolved:false};const events=step(r,1);return r.isRanged?[...events,...step(r,30)]:events;}
 
 describe('six real equipment decisions, rather than buying every stat',()=>{
- it('offers fourteen original items, three classes and five non-binding build recipes',()=>{
+ it('keeps fourteen original items independently composable into sample loadouts',()=>{
   expect(GEAR_IDS).toHaveLength(14);expect(Object.keys(BUILDS)).toHaveLength(5);
   for(const recipe of Object.values(BUILDS)){expect(recipe.items).toHaveLength(6);expect(new Set(recipe.items).size).toBe(6);}
  });
