@@ -20,7 +20,7 @@ try{
  for(const blade of[15,16,17,18]){
   const p=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});await boot(p,blade);
   const before=await p.evaluate(()=>structuredClone(__BLADE__.run.stats));await p.locator('#shop-button').click();await p.locator('[data-action="shop-category"][data-value="attack"]').click();
-  check(`${blade}: attack filter contains seven freely selectable items`,await p.locator('.shop-item').count()===7&&await p.locator('#build-choice,.build-guide').count()===0);
+  check(`${blade}: attack filter contains ten freely selectable items`,await p.locator('.shop-item').count()===10&&await p.locator('#build-choice,.build-guide').count()===0);
   await p.locator('.shop-item[data-value="chainLightning"]').click();
   check(`${blade}: new item displays exact flat attack and attack-speed bonuses`,await p.locator('.shop-detail').textContent().then(t=>t.includes('攻击力 +20')&&t.includes('攻击速度 +15%')));
   check(`${blade}: original metallic-node icon is embedded and sharp at 128 pixels`,await p.locator('.shop-item[data-value="chainLightning"] .gear-icon').evaluate(i=>i.complete&&i.naturalWidth===128&&i.src.startsWith('data:image/svg+xml,')));
@@ -48,10 +48,10 @@ try{
   await p.close();
  }
  const p=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2});await boot(p,15);
- const previous=await p.evaluate(()=>{const a=__BLADE__;a.run.buyGear('sugarCore');a.run.buyGear('clockGrip');a.run.state.build.heat=2;a.run.state.build.heatTime=1.5;a.run.state.time=173;a.storage.data.meta.bestScore=9001;a.save();const data=JSON.parse(localStorage.getItem('blade-evolution-save-v1'));data.version=10;data.run.version=10;delete data.run.economy.gear.chainLightning;delete data.run.build.chainCharge;return data;});
+ const previous=await p.evaluate(()=>{const a=__BLADE__;a.run.buyGear('sugarCore');a.run.buyGear('clockGrip');a.run.state.build.heat=2;a.run.state.build.heatTime=1.5;a.run.state.time=173;a.storage.data.meta.bestScore=9001;a.save();const data=JSON.parse(localStorage.getItem('blade-evolution-save-v1'));data.version=10;data.run.version=10;for(const id of ['chainLightning','redMoonBlade','solarEdge','stoneCleaver'])delete data.run.economy.gear[id];for(const key of ['chainCharge','bloodShield','bloodShieldTime'])delete data.run.build[key];return data;});
  await p.addInitScript(data=>{if(!sessionStorage.getItem('previous-v10')){localStorage.setItem('blade-evolution-save-v1',JSON.stringify(data));sessionStorage.setItem('previous-v10','1');}},previous);
  await p.reload();await p.locator('#boot-status').waitFor({state:'hidden'});await p.getByRole('button',{name:'继续试炼',exact:true}).click();const migrated=await state(p);
- check('previous v10 saves keep paid equipment, gold, time, heat and permanent score',migrated.version===11&&migrated.economy.wallet===485&&migrated.economy.gear.sugarCore===1&&migrated.economy.gear.clockGrip===1&&migrated.economy.refunded===0&&migrated.time===173&&migrated.build.heat===2&&migrated.build.chainCharge===0&&await p.evaluate(()=>__BLADE__.storage.data.meta.bestScore===9001));
+ check('previous v10 saves keep paid equipment, gold, time, heat and permanent score',migrated.version===12&&migrated.economy.wallet===485&&migrated.economy.gear.sugarCore===1&&migrated.economy.gear.clockGrip===1&&migrated.economy.refunded===0&&migrated.time===173&&migrated.build.heat===2&&migrated.build.chainCharge===0&&await p.evaluate(()=>__BLADE__.storage.data.meta.bestScore===9001));
  await p.locator('#shop-button').click();await p.locator('.shop-item[data-value="chainLightning"]').click();await p.locator('.buy-gear').click();await p.reload();await p.locator('#boot-status').waitFor({state:'hidden'});await p.getByRole('button',{name:'继续试炼',exact:true}).click();
  check('v10 migration does not replay after buying the new item and refreshing',(await state(p)).economy.wallet===335&&(await state(p)).economy.gear.chainLightning===1&&(await state(p)).economy.refunded===0);
  await p.setViewportSize({width:320,height:568});await p.locator('#shop-button').tap();await p.locator('[data-action="shop-category"][data-value="attack"]').tap();await p.locator('.shop-item[data-value="chainLightning"]').tap();await p.locator('.buy-gear').tap();

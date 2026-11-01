@@ -23,6 +23,9 @@ export const GEAR = {
   stormCoil: {name:'疾电线圈',category:'attack',price:65,effect:'攻速 +10%；每四次有效普攻连锁闪电',note:'每级攻速 +10%。每四次有效普攻释放连锁电击，最多 3 个目标，每目标造成 45%/55%/65% 普攻伤害。多目标命中不重复计数。'},
   chainLightning: {name:'闪电连锁',category:'attack',price:150,effect:'攻击力 +20；攻击速度 +15%',note:'盈能：每次有效普攻积攒 20 点，满 100 点后的下一次普攻命中释放连锁闪电，最多命中 4～8 个不同目标，随英雄等级提升。闪电随等级与攻击力成长，每跳伤害递减 10%。每级再增加 20 攻击力、15% 攻速，并提高闪电伤害。'},
   bloodFang: {name:'血莓獠牙',category:'attack',price:60,effect:'攻击 +8%；普攻吸血 +6%',note:'每级攻击 +8%、普攻吸血 +6%。按实际造成的伤害回复；每秒最多恢复最大生命 5%，治疗增幅也提高此上限，防止横扫无限吸血。'},
+  redMoonBlade: {name:'赤月誓刃',category:'attack',price:170,effect:'攻击力 +25；生命偷取 +12%',note:'血契：普攻吸血溢出的治疗转为护盾，上限为最大生命的 15%/20%/25%，持续 6 秒，溢出吸血时刷新。每级攻击力 +25、生命偷取 +12%。治疗与蓄盾共享每秒最大生命 5% 的预算，可被治疗增幅提高。'},
+  solarEdge: {name:'曜金裁决',category:'attack',price:180,effect:'攻击力 +30；暴击率 +20%；暴击伤害 +30%',note:'破晓：每级攻击力 +30、暴击率 +20%，暴击倍率额外 +0.30。与其他暴击装备自然叠加，总暴击率最高 100%。刀、剑、箭与矛均可触发。'},
+  stoneCleaver: {name:'玄岩巨斧',category:'attack',price:175,effect:'攻击力 +15；最大生命 +70；普攻附带裂岩溅射',note:'裂岩：每级攻击力 +15、生命 +70。普攻附加最大生命 1.5%/3%/4.5% 伤害；每轮命中再向目标周围溅射一次，伤害随攻击力与最大生命成长。溅射不暴击、不吸血、不触发其他普攻特效。'},
   breezeBoots: {name:'轻云疾行靴',category:'footwear',price:45,effect:'移速 +9%；灵活走位',note:'每级移速 +9%，同步改善起步。与远距离、暴击或续航装备自由混搭。足具只能穿一件。'},
   springBoots: {name:'回响步靴',category:'footwear',price:50,effect:'瞬步冷却 −0.55 秒；瞬步强化下一次命中',note:'每级缩短瞬步冷却 0.55 秒；瞬步后 3 秒内，下一次普攻的首个命中额外造成 25%/50%/75% 伤害。足具只能穿一件。'},
   pickupBoots: {name:'逐风战靴',category:'footwear',price:50,effect:'攻速 +8%；金币经验吸取范围 +15%',note:'每级攻速 +8%、金币与经验吸取范围 +15%。适合攻速特效与吸血搭配。足具只能穿一件。'},
@@ -36,7 +39,8 @@ export const gearPrice = (id: GearId, currentRank: number) => GEAR[id].price + c
 export const gearInvestment = (id: GearId, rank: number) => rank * GEAR[id].price + rank * (rank-1) * 35 / 2;
 export const gearSpent = (gear: GearInventory) => GEAR_IDS.reduce((sum,id) => sum + gearInvestment(id,gear[id]),0);
 export const gearSellPrice = (id: GearId, rank: number) => Math.floor(gearInvestment(id,rank) * .75);
-export const gearMaxHp = (g: GearInventory) => 35*g.jellyVest + 10*g.honeyCharm + 20*g.emberPlate + 15*g.thornArmor;
+export const gearMaxHp = (g: GearInventory) => 35*g.jellyVest + 10*g.honeyCharm + 20*g.emberPlate + 15*g.thornArmor + 70*g.stoneCleaver;
+export const bloodShieldCap = (maxHp:number,g:GearInventory) => g.redMoonBlade ? maxHp*(.10+.05*g.redMoonBlade)*(1+.20*g.honeyCharm) : 0;
 export function gearBlockReason(e: EconomyState, id: GearId): string {
   if (e.gear[id]>=GEAR_CAP) return '已满级';
   if (!e.gear[id] && e.order.length>=GEAR_SLOTS) return '六件已满';
@@ -58,6 +62,9 @@ export function gearDetail(id: GearId, rank: number) {
     case 'stormCoil':return `攻速 +${10*rank}%；每四次有效普攻电击 3 人，各 ${35+10*rank}% 普攻伤害`;
     case 'chainLightning':return `攻击力 +${20*rank}；攻击速度 +${15*rank}%；盈能攻击连锁 4～8 个目标`;
     case 'bloodFang':return `攻击 +${8*rank}%；普攻吸血 ${6*rank}%，每秒上限 5% 最大生命，可被治疗增幅提高`;
+    case 'redMoonBlade':return `攻击力 +${25*rank}；生命偷取 +${12*rank}%；溢出治疗转为最多 ${10+5*rank}% 最大生命护盾`;
+    case 'solarEdge':return `攻击力 +${30*rank}；暴击率 +${20*rank}%；暴击倍率额外 +${(.30*rank).toFixed(2)}`;
+    case 'stoneCleaver':return `攻击力 +${15*rank}；生命 +${70*rank}；普攻附加最大生命 ${(1.5*rank).toFixed(1)}% 伤害并向目标周围溅射`;
     case 'breezeBoots':return `移速 +${9*rank}%；起步与转向同步改善`;
     case 'springBoots':return `瞬步冷却 ${(5-.55*rank).toFixed(2)} 秒；瞬步后首个命中 +${25*rank}% 伤害`;
     case 'pickupBoots':return `攻速 +${8*rank}%；金币经验吸取范围 +${15*rank}%`;
@@ -87,11 +94,12 @@ export function validEconomy(value:unknown):value is EconomyState {
     && e.order.filter(id=>GEAR[id].category==='footwear').length<=1
     && Number.isFinite(e.regen)&&e.regen>=0&&e.regen<5.000001;
 }
-// v10 had fourteen items at the same prices, with no chain-lightning entry.
-export function validPreviousEconomy(value:unknown):boolean {
+// Historical catalogues use unchanged prices, with newly introduced identities absent.
+export function validPreviousEconomy(value:unknown,version:10|11=11):boolean {
   if (!value || typeof value!=='object') return false;
   const e=value as EconomyState;
-  return !!e.gear && Object.keys(e.gear).length===GEAR_IDS.length-1
-    && !Object.hasOwn(e.gear,'chainLightning')
-    && validEconomy({...e,gear:{...e.gear,chainLightning:0}});
+  const missing=version===10 ? ['chainLightning','redMoonBlade','solarEdge','stoneCleaver'] : ['redMoonBlade','solarEdge','stoneCleaver'];
+  return !!e.gear && Object.keys(e.gear).length===GEAR_IDS.length-missing.length
+    && missing.every(id=>!Object.hasOwn(e.gear,id))
+    && validEconomy({...e,gear:{...e.gear,...Object.fromEntries(missing.map(id=>[id,0]))}});
 }

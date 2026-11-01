@@ -1,0 +1,71 @@
+{
+  "created_at_utc": "2026-11-01T10:44:50.504230+00:00",
+  "branch": "reconstruct/latest-from-conversation",
+  "baseline": "14bd777f76b52892cb183ce69a29afb03bd20d0c",
+  "added_items": [
+    {
+      "id": "redMoonBlade",
+      "name": "赤月誓刃",
+      "price": 170,
+      "rank_one": {
+        "attack": 25,
+        "lifesteal": 0.12
+      },
+      "passive": "Overheal from basic-attack lifesteal becomes a temporary shield."
+    },
+    {
+      "id": "solarEdge",
+      "name": "曜金裁决",
+      "price": 180,
+      "rank_one": {
+        "attack": 30,
+        "critical_chance": 0.2,
+        "critical_multiplier_bonus": 0.3
+      },
+      "passive": "Critical chance and damage stack with existing equipment; chance caps at 100%."
+    },
+    {
+      "id": "stoneCleaver",
+      "name": "玄岩巨斧",
+      "price": 175,
+      "rank_one": {
+        "attack": 15,
+        "max_hp": 70,
+        "on_hit_max_hp_ratio": 0.015
+      },
+      "passive": "One attack applies one impact-area cleave, scaling with attack and maximum HP."
+    }
+  ],
+  "catalogue": {
+    "total": 18,
+    "defense": 5,
+    "attack": 10,
+    "footwear": 3,
+    "slots": 6,
+    "one_footwear": true,
+    "build_presets": false
+  },
+  "save_version": 12,
+  "previous_v10_v11_inventory_preservation_implemented": true,
+  "icons": [
+    "docs/images/red-moon-blade.svg",
+    "docs/images/solar-edge.svg",
+    "docs/images/stone-cleaver.svg",
+    "docs/images/three-relics-icons.svg"
+  ],
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "standalone_bytes": 9532280,
+    "sha256": "fe5f4b71e429073acffab59f57387f1cfef375375388cf8f532e55fe48b65ab3"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "typecheck_run": false,
+  "reason": "User explicitly requested no testing or operational playtest after completion.",
+  "existing_test_metadata_updated_but_not_executed": true,
+  "pages_published": false
+}

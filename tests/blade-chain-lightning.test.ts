@@ -13,7 +13,7 @@ function step(r:BladeRun,n:number){const events:RunEvent[]=[];for(let i=0;i<n;i+
 function strike(r:BladeRun){const t=r.stats;r.state.swing={id:r.state.nextId++,tier:r.tier,angle:0,age:t.windup+t.strike*.45-1/60,windup:t.windup,strike:t.strike,recovery:t.recovery,resolved:false};return step(r,r.isRanged?15:1);}
 const lightning=(events:RunEvent[])=>events.filter(e=>e.type==='gear-proc'&&e.gearId==='chainLightning');
 function crowd(r:BladeRun){return [target(r),...Array.from({length:9},(_,i)=>target(r,200+i*40,0,'armor'))];}
-function previousSnapshot(r:BladeRun){const s=r.snapshot();s.version=10;delete(s.economy!.gear as Partial<GearInventory>).chainLightning;delete(s.build as Partial<GearCombatState>).chainCharge;return s;}
+function previousSnapshot(r:BladeRun){const s=r.snapshot();s.version=10;for(const id of ['chainLightning','redMoonBlade','solarEdge','stoneCleaver'] as const)delete(s.economy!.gear as Partial<GearInventory>)[id];for(const key of ['chainCharge','bloodShield','bloodShieldTime'] as const)delete(s.build as Partial<GearCombatState>)[key];return s;}
 
 describe.each(BASIC_WEAPON_INDICES)('energized chain lightning on weapon %i',blade=>{
  it('adds twenty real attack damage and fifteen percent native attack speed',()=>{
@@ -85,7 +85,7 @@ describe('old saves keep their paid equipment',()=>{
  it('adds an empty item and energy field to v10 while preserving the complete old run',()=>{
   const r=arena();r.state.economy!.wallet=r.state.economy!.earned=1000;r.buyGear('sugarCore');r.buyGear('clockGrip');r.buyGear('bubbleGuard');r.state.build!.heat=2;r.state.build!.heatTime=1.5;
   r.state.time=173;r.addOrb(500,300,4,'coin');const old=previousSnapshot(r),text=JSON.stringify(old);
-  expect(validSnapshot(old)).toBe(true);const upgraded=migrateEconomy(restoreSnapshot(old)!);expect(upgraded.version).toBe(11);
+  expect(validSnapshot(old)).toBe(true);const upgraded=migrateEconomy(restoreSnapshot(old)!);expect(upgraded.version).toBe(12);
   expect(upgraded.economy!.gear.chainLightning).toBe(0);expect(upgraded.build!.chainCharge).toBe(0);
   expect(previousSnapshot(new BladeRun(1,upgraded))).toEqual(old);expect(JSON.stringify(old)).toBe(text);
   expect(migrateEconomy(structuredClone(upgraded))).toEqual(upgraded);expect(new BladeRun(1,old).state).toEqual(upgraded);

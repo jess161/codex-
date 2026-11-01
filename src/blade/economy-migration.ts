@@ -12,15 +12,17 @@ import type { RunState } from './simulation';
 // Only called after historical validation. Old carried gear is refunded once;
 // uncollected gear becomes coins at the same world positions, never remote credit.
 export function migrateEconomy(snapshot: RunState): RunState {
-  if (snapshot.version === 11) return snapshot;
-  if (snapshot.version === 10) {
-    snapshot.economy!.gear.chainLightning=0;snapshot.build!.chainCharge=0;snapshot.version=11;
+  if (snapshot.version === 12) return snapshot;
+  if (snapshot.version === 10 || snapshot.version === 11) {
+    if(snapshot.version===10){snapshot.economy!.gear.chainLightning=0;snapshot.build!.chainCharge=0;}
+    snapshot.economy!.gear.redMoonBlade=0;snapshot.economy!.gear.solarEdge=0;snapshot.economy!.gear.stoneCleaver=0;
+    snapshot.build!.bloodShield=0;snapshot.build!.bloodShieldTime=0;snapshot.version=12;
     return snapshot;
   }
   if (snapshot.version === 9) {
     const ratio=snapshot.hp/snapshot.maxHp;
     snapshot.economy=freshEconomy(snapshot.economy!.earned);
-    snapshot.version=11;snapshot.build=freshGearCombat();snapshot.maxHp=100+2*(snapshot.level-1);
+    snapshot.version=12;snapshot.build=freshGearCombat();snapshot.maxHp=100+2*(snapshot.level-1);
     snapshot.hp=Math.max(1,snapshot.maxHp*ratio);snapshot.swing=null;snapshot.attackTimer=.2;
     if (snapshot.blade===17) snapshot.archery=freshArchery();
     return snapshot;
@@ -37,7 +39,7 @@ export function migrateEconomy(snapshot: RunState): RunState {
     s.orbs.push({id: s.nextId++, x: d.x, y: d.y, value: 20, kind: 'coin', dropTimer: 0});
   }
   const healthRatio = s.hp / s.maxHp;
-  s.version = 11; s.build = freshGearCombat(); s.economy = freshEconomy(refund); s.classicTiming = false;
+  s.version = 12; s.build = freshGearCombat(); s.economy = freshEconomy(refund); s.classicTiming = false;
   s.time = s.time / oldWave * SURVIVAL_DURATION;
   s.bossTime = s.bossTime / oldBoss * FINALE_DURATION;
   s.formStartedAt = scaleTime(s.formStartedAt);

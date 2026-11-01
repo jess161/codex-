@@ -13,8 +13,8 @@ function step(r:BladeRun,n:number) {const events:RunEvent[]=[];for(let i=0;i<n;i
 function strike(r:BladeRun) {const t=r.stats;r.state.swing={id:r.state.nextId++,tier:r.tier,angle:0,age:t.windup+t.strike*.45-1/60,windup:t.windup,strike:t.strike,recovery:t.recovery,resolved:false};const events=step(r,1);return r.isRanged?[...events,...step(r,30)]:events;}
 
 describe('six real equipment decisions, rather than buying every stat',()=>{
- it('keeps fifteen original items independently composable into sample loadouts',()=>{
-  expect(GEAR_IDS).toHaveLength(15);expect(Object.keys(BUILDS)).toHaveLength(6);
+ it('keeps eighteen original items independently composable into sample loadouts',()=>{
+  expect(GEAR_IDS).toHaveLength(18);expect(Object.keys(BUILDS)).toHaveLength(6);
   for(const recipe of Object.values(BUILDS)){expect(recipe.items).toHaveLength(6);expect(new Set(recipe.items).size).toBe(6);}
  });
  it('enforces six owned identities and a single footwear piece, while allowing upgrades',()=>{
@@ -98,8 +98,8 @@ describe('persistent build state and compatibility',()=>{
   const s=arena().snapshot();s.version=9;delete s.build;
   s.economy={wallet:200,earned:284,spent:84,gear:{jellyVest:2,bubbleGuard:0,honeyCharm:0,sugarCore:0,clockGrip:0,clearLens:0,breezeBoots:0,springBoots:0,pickupBoots:0},order:['jellyVest'],regen:0} as typeof s.economy;
   s.maxHp=140;s.hp=70;s.time=180;expect(validSnapshot(s)).toBe(true);
-  expect(new BladeRun(1,restoreSnapshot(s)!).state.version).toBe(11);
-  const upgraded=migrateEconomy(restoreSnapshot(s)!);expect(upgraded.version).toBe(11);expect(upgraded.economy!.wallet).toBe(284);
+  expect(new BladeRun(1,restoreSnapshot(s)!).state.version).toBe(12);
+  const upgraded=migrateEconomy(restoreSnapshot(s)!);expect(upgraded.version).toBe(12);expect(upgraded.economy!.wallet).toBe(284);
   expect(upgraded.economy!.order).toEqual([]);expect(upgraded.time).toBe(180);expect(upgraded.hp).toBe(50);expect(validSnapshot(upgraded)).toBe(true);expect(migrateEconomy(structuredClone(upgraded))).toEqual(upgraded);
  });
  it('rejects invalid slots, duplicate boots, refund accounting and transient combat state',()=>{
