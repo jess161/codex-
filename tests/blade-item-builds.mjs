@@ -26,21 +26,27 @@ async function buy(p, id) {
 try {
   for (const index of [15, 16, 17, 18]) {
     const p = await browser.newPage({viewport: {width: 1100, height: 800}, deviceScaleFactor: 2}); await boot(p, index, index === 17);
-    await p.evaluate(() => {const r = __BLADE__.run, e = r.spawnEnemy('armor', 75, 0); e.hp = 1; e.speed = 0; e.cooldown = 1000; r.state.attackTimer = 0;}); await frame(p, 80);
+    await p.evaluate(() => {const r = __BLADE__.run, e = r.spawnEnemy('elite', 75, 0); e.hp = 1; e.speed = 0; e.cooldown = 1000; r.state.attackTimer = 0;}); await frame(p, 80);
     const dead = await snapshot(p), coin = dead.orbs.find(o => o.kind === 'coin');
-    check(`weapon ${index}: actual kill drops a four-value coin in the world, without remote credit`, dead.kills === 1 && coin?.value === 4 && dead.economy.wallet === 0 && dead.relicDrops.length === 0);
+    check(`weapon ${index}: actual elite kill drops a guaranteed 25-value coin without remote credit`, dead.eliteKills === 1 && coin?.value === 25 && dead.economy.wallet === 0 && dead.relicDrops.length === 0);
     await p.keyboard.down('d'); await frame(p, 20); await p.keyboard.up('d'); await frame(p, 14);
-    check(`weapon ${index}: approaching the dropped coin credits it once`, (await snapshot(p)).economy.earned === 4);
+    check(`weapon ${index}: approaching the dropped coin credits it once`, (await snapshot(p)).economy.earned === 25);
     await fundWithCoins(p);
-    await p.keyboard.down('s'); const moving = await snapshot(p); await p.locator('#shop-button').click(); await frame(p, 12);
-    check(`weapon ${index}: opening shop preserves movement and advances battle time`, (await snapshot(p)).player.y > moving.player.y && (await snapshot(p)).time > moving.time && await p.evaluate(() => __BLADE__.panel === 'none'));
+    check(`weapon ${index}: shop uses a transparent outlined icon with an accessible label`, await p.locator('#shop-button').evaluate(b=>getComputedStyle(b).backgroundColor==='rgba(0, 0, 0, 0)'&&!!b.querySelector('svg[fill="none"]')&&b.getAttribute('aria-label').includes('暂停')) && await p.locator('.wallet-bar').evaluate(b=>getComputedStyle(b).backgroundColor==='rgba(0, 0, 0, 0)'));
+    await p.keyboard.down('s'); await frame(p,6); const moving = await snapshot(p); await p.locator('#shop-button').click(); const frozen=await snapshot(p);await frame(p,120);
+    check(`weapon ${index}: opening shop freezes the entire simulation and clears held movement`, JSON.stringify(await snapshot(p))===JSON.stringify(frozen) && frozen.time===moving.time && await p.evaluate(() => __BLADE__.battlePaused && __BLADE__.scene.pausedRun && __BLADE__.panel === 'none'));
+    await p.keyboard.press('Space');await p.locator('#dash-button').click();await frame(p,30);
+    check(`weapon ${index}: neither keyboard nor dash button can queue an action while shopping`,JSON.stringify(await snapshot(p))===JSON.stringify(frozen));
     check(`weapon ${index}: shop has defense, attack, footwear and no random offers`, JSON.stringify(await p.locator('.shop-tabs button').allTextContents()) === JSON.stringify(['防御类','攻击类','足具类']) && await p.locator('.shop-row').count() === 6);
     const prior = await snapshot(p); await buy(p, 'sugarCore'); await frame(p, 6); await p.keyboard.up('s'); await frame(p, 1);
     const bought = await snapshot(p);
-    check(`weapon ${index}: buying costs exactly 60 coins without interrupting the held key`, bought.economy.wallet === prior.economy.wallet - 60 && bought.player.y > prior.player.y && bought.economy.gear.sugarCore === 1 && await p.locator('.equipment-chip').count() === 1);
+    check(`weapon ${index}: buying costs exactly 60 coins while combat stays paused`, bought.economy.wallet === prior.economy.wallet - 60 && bought.player.y === prior.player.y && bought.time === prior.time && bought.economy.gear.sugarCore === 1 && await p.locator('.equipment-chip').count() === 1);
     for (const id of ids.filter(id => id !== 'sugarCore')) await buy(p, id);
     check(`weapon ${index}: six chosen items fill the loadout without unowned placeholders`, await p.locator('.equipment-chip').count() === 6 && JSON.stringify((await snapshot(p)).economy.order) === JSON.stringify(ids));
     await p.selectOption('#build-choice', 'onhit');
+    await p.locator('#build-choice').focus();await p.keyboard.press('ArrowDown');
+    check(`weapon ${index}: build selector works with arrow keys during the pause`,await p.locator('#build-choice').inputValue()==='sustain'&&(await snapshot(p)).time===prior.time);
+    await p.selectOption('#build-choice','onhit');
     check(`weapon ${index}: five recipes explain stat interactions without auto-buying`, await p.locator('#build-choice option').count() === 5 && (await snapshot(p)).economy.order.length === 6 && await p.locator('.build-guide').textContent().then(t => t.includes('六') || t.includes('6/6')));
     await p.locator('[data-action="shop-category"][data-value="attack"]').click();
     check(`weapon ${index}: seventh identity is disabled at six slots`, await p.locator('[data-action="buy-gear"][data-value="stormCoil"]').isDisabled());
@@ -57,7 +63,9 @@ try {
     const ds=await p.locator('#equipment-shop').boundingBox(),dd=await p.locator('#dash-button').boundingBox();
     check(`weapon ${index}: shop leaves the complete dash button exposed`,ds.y+ds.height<=dd.y||ds.x+ds.width<=dd.x);
     await p.screenshot({path: `${out}/desktop-shop-${index}.png`});
-    await p.keyboard.press('Escape'); check(`weapon ${index}: Escape closes only the live shop`, !await p.locator('#equipment-shop').isVisible() && await p.evaluate(() => __BLADE__.panel === 'none'));
+    await p.keyboard.press('Escape'); check(`weapon ${index}: Escape closes the shop and resumes combat`, !await p.locator('#equipment-shop').isVisible() && await p.evaluate(() => __BLADE__.panel === 'none'));
+    const closed=await snapshot(p);await frame(p,12);
+    check(`weapon ${index}: closing resumes time without replaying old movement or queued dash`,(await snapshot(p)).time>closed.time&&JSON.stringify((await snapshot(p)).player)===JSON.stringify(closed.player)&&(await snapshot(p)).dashCooldown===closed.dashCooldown&&!await p.evaluate(()=>__BLADE__.battlePaused));
     const stored = await snapshot(p); await p.evaluate(() => __BLADE__.save()); await p.reload(); await p.locator('#boot-status').waitFor({state: 'hidden'}); await p.getByRole('button', {name: '继续试炼', exact: true}).click();
     check(`weapon ${index}: refresh restores exact gold, equipment, drops and RNG`, JSON.stringify(await snapshot(p)) === JSON.stringify(stored) && await p.locator('.equipment-chip').count() === 6);
     await p.keyboard.press('i'); check(`weapon ${index}: owned inventory has three groups and no old set bonuses`, await p.locator('.owned-gear-category').count() === 3 && await p.locator('.owned-gear-category article').count() === 6 && await p.locator('.relic-set-bonuses').count() === 0);
@@ -70,18 +78,18 @@ try {
     const center = async selector => {const r = await p.locator(selector).boundingBox(); return pt(r.x + r.width / 2, r.y + r.height / 2, 2);};
     await send('touchStart', [pt(25, 590)]); const primary = pt(60, 590); await send('touchMove', [primary]); await frame(p, 8);
     const before = await snapshot(p), open = await center('#shop-button'); await send('touchStart', [primary, open]); await send('touchEnd', [open]); await frame(p, 8);
-    check(`phone ${index}: second finger opens the shop while joystick keeps moving`, await p.locator('#touch-joystick').isVisible() && (await snapshot(p)).player.x > before.player.x && await p.locator('#equipment-shop').isVisible());
+    check(`phone ${index}: second finger opens a paused shop and releases the old joystick`, !await p.locator('#touch-joystick').isVisible() && (await snapshot(p)).time === before.time && JSON.stringify((await snapshot(p)).player)===JSON.stringify(before.player) && await p.locator('#equipment-shop').isVisible());
     const button = await center('[data-action="buy-gear"][data-value="sugarCore"]'), preBuy = await snapshot(p);
     await send('touchStart', [primary, button]);
-    // A coin arrives while the finger is still on the button. Updating affordability
-    // must preserve the button node so that pointerup still buys exactly once.
+    // A physical coin added during the pause must stay on the ground until closing.
     await p.evaluate(() => {const r = __BLADE__.run; r.addOrb(r.state.player.x, r.state.player.y, 1, 'coin');}); await frame(p, 16);
     await send('touchEnd', [button]); await frame(p, 8); const postBuy = await snapshot(p);
-    check(`phone ${index}: purchase survives a live wallet update and does not release the movement finger`, postBuy.economy.gear.sugarCore === 1 && postBuy.economy.spent === 60 && postBuy.player.x > preBuy.player.x && await p.locator('#touch-joystick').isVisible());
+    check(`phone ${index}: touch purchase works during pause and ground coins stay uncollected`, postBuy.economy.gear.sugarCore === 1 && postBuy.economy.spent === 60 && postBuy.economy.wallet === preBuy.economy.wallet-60 && postBuy.time===preBuy.time && postBuy.player.x === preBuy.player.x && postBuy.orbs.some(o=>o.kind==='coin'&&o.value===1) && !await p.locator('#touch-joystick').isVisible());
     await send('touchEnd'); await frame(p, 1); const stopped = (await snapshot(p)).player; await frame(p, 8);
-    check(`phone ${index}: lifting the joystick stops immediately after buying`, JSON.stringify((await snapshot(p)).player) === JSON.stringify(stopped));
+    check(`phone ${index}: shopping stays stationary after releasing all fingers`, JSON.stringify((await snapshot(p)).player) === JSON.stringify(stopped));
     for (const id of ids.filter(id => id !== 'sugarCore')) await buy(p, id);
-    await p.locator('#shop-button').click();
+    const pausedWallet=(await snapshot(p)).economy.wallet;await p.locator('#shop-button').click();await frame(p,16);
+    check(`phone ${index}: closing resumes pickup without reviving the old movement gesture`,(await snapshot(p)).economy.wallet===pausedWallet+1&&JSON.stringify((await snapshot(p)).player)===JSON.stringify(stopped)&&!await p.evaluate(()=>__BLADE__.battlePaused));
     await p.setViewportSize({width:320,height:568}); await frame(p);
     const strip = await p.locator('#equipment-strip').boundingBox();
     await send('touchStart', [pt(strip.x + strip.width - 14, strip.y + strip.height / 2)]);
@@ -91,7 +99,7 @@ try {
     await p.setViewportSize({width:390,height:844}); await frame(p); await p.screenshot({path: `${out}/phone-equipment-${index}.png`}); await p.locator('#shop-button').click(); await p.screenshot({path: `${out}/phone-shop-${index}.png`});
     for (const size of [{width:390,height:844},{width: 320, height: 568}, {width: 740, height: 360}]) {
       await p.setViewportSize(size); await frame(p, 1); const shop = await p.locator('#equipment-shop').boundingBox(), dash = await p.locator('#dash-button').boundingBox(), dock = await p.locator('#equipment-dock').boundingBox();
-      check(`phone ${index} ${size.width}x${size.height}: live shop, dash and scrolling dock fit on-screen`, shop.x >= 0 && shop.x + shop.width <= size.width && shop.y + shop.height <= size.height && (shop.y+shop.height<=dash.y || shop.x+shop.width<=dash.x) && dash.y + dash.height <= dock.y && await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+      check(`phone ${index} ${size.width}x${size.height}: paused shop, dash and scrolling dock fit on-screen`, shop.x >= 0 && shop.x + shop.width <= size.width && shop.y + shop.height <= size.height && (shop.y+shop.height<=dash.y || shop.x+shop.width<=dash.x) && dash.y + dash.height <= dock.y && await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       if(size.width===320){await p.locator('[data-action="buy-gear"][data-value="springBoots"]').click();check(`phone ${index}: compact shop can actually upgrade the equipped boots`,(await snapshot(p)).economy.gear.springBoots===2&&await p.evaluate(()=>__BLADE__.panel==='none'));}
 
     }
@@ -133,8 +141,8 @@ try {
   check('previous nine-item v9: all 84 spent coins are refunded, time and health ratio survive',newBuild.version===10&&newBuild.economy.wallet===284&&newBuild.economy.spent===0&&newBuild.time===180&&newBuild.hp===50&&await v9.locator('.equipment-chip').count()===0);
   await buy(v9,'sugarCore');await v9.evaluate(()=>__BLADE__.save());await v9.reload();await v9.locator('#boot-status').waitFor({state:'hidden'});await v9.getByRole('button',{name:'继续试炼',exact:true}).click();
   check('v9 refund is not repeated after purchasing a new build item and reloading', (await snapshot(v9)).economy.wallet===224&&(await snapshot(v9)).economy.gear.sugarCore===1);await v9.close();
-  check('six-slot builds, shop recommendations, selling, live wallet and mobile input have no runtime errors', errors.length === 0);
-  await fs.writeFile(`${out}/results.json`, JSON.stringify({passed: checks.length, checks, errors, artifact: base, scope: 'Native menus, physical coin pickup, live non-pausing shop, real keyboard and CDP multitouch, scrolling, exact saves, continuous boss entry and ten-minute deadline. Stationary enemies, on-player coin funding and timeline-edge fixtures are explicit QA fixtures. Fourteen equipment effects on all four weapons are separately exercised in unit simulation tests.'}, null, 2));
+  check('six-slot builds, shop recommendations, selling, paused shopping and mobile input have no runtime errors', errors.length === 0);
+  await fs.writeFile(`${out}/results.json`, JSON.stringify({passed: checks.length, checks, errors, artifact: base, scope: 'Native menus, physical coin pickup, paused shop with frozen full snapshots, clean input release and native keyboard selection, real keyboard and CDP multitouch, scrolling, exact saves, continuous boss entry and ten-minute deadline. Stationary enemies, on-player coin funding and timeline-edge fixtures are explicit QA fixtures. Fourteen equipment effects on all four weapons are separately exercised in unit simulation tests.'}, null, 2));
 } catch (error) {
   for (const c of browser.contexts()) for (const p of c.pages()) try {await p.screenshot({path: `${out}/failure-${p.viewportSize()?.width}.png`});} catch {}
   throw error;

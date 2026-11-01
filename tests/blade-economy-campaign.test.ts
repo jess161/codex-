@@ -60,7 +60,11 @@ it.each(BASIC_WEAPON_INDICES.flatMap(i => Object.entries(BUILDS).map(([build,rec
   expect(r.state.level).toBeGreaterThanOrEqual(20); expect(r.state.pending).toEqual([]);expect(r.state.choices).toEqual([]); expect(r.tier).toBe(blade);
   expect(r.state.bossTime).toBeLessThan(r.bossDuration); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
   expect(r.state.enemies.length).toBeLessThanOrEqual(280);
-  if (r.hasActiveSkill) expect(r.active.casts).toBeGreaterThan(10); else expect(r.active.casts).toBe(0);expect(r.state.economy!.earned).toBeGreaterThan(100); expect(r.gearOrder).toHaveLength(6); expect(validEconomy(r.state.economy)).toBe(true); expect(r.state.relicDrops).toEqual([]);
+  if (r.hasActiveSkill) expect(r.active.casts).toBeGreaterThan(10); else expect(r.active.casts).toBe(0);expect(r.state.economy!.earned).toBeGreaterThan(100);
+  // Lower drop rates make six slots a capacity, while each route must still afford its core.
+  expect(r.gearOrder.length).toBeGreaterThanOrEqual(4);expect(r.gearOrder.length).toBeLessThanOrEqual(6);
+  for(const id of BUILDS[build as keyof typeof BUILDS].core)expect(r.state.economy!.gear[id]).toBeGreaterThan(0);
+  expect(validEconomy(r.state.economy)).toBe(true); expect(r.state.relicDrops).toEqual([]);
   expect(formTimes[0]).toBeGreaterThanOrEqual(r.practiceTime - .01);
   formTimes.slice(1).forEach((time, i) => expect(time - formTimes[i]).toBeGreaterThanOrEqual(r.practiceTime - .01));
   if((globalThis as unknown as {process?:{env?:Record<string,string>}}).process?.env?.BLADE_CAMPAIGN_METRICS)console.info('CAMPAIGN_METRICS '+JSON.stringify({blade:TIERS[blade].name,build,time:r.state.time+r.state.bossTime,level:r.state.level,kills:r.state.kills,earned:r.state.economy!.earned,spent:r.state.economy!.spent,wallet:r.state.economy!.wallet,owned:r.gearOrder.length,gear:r.state.economy!.gear,casts:r.active.casts,mode:r.state.mode}));

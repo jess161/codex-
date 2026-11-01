@@ -73,7 +73,7 @@ describe.each(BASIC_WEAPON_INDICES)('mechanical build effects on weapon %i',blad
  });
  it('attack-speed footwear increases native attack count as well as pickup range',()=>{
   const a=arena(blade),b=arena(blade);fund(b);buy(b,'pickupBoots',3);
-  for(const r of[a,b]){target(r);r.state.attackTimer=0;}step(a,180);step(b,180);
+  for(const r of[a,b]){target(r);r.state.attackTimer=0;}step(a,600);step(b,600);
   expect(b.state.attackCount).toBeGreaterThan(a.state.attackCount);expect(b.coinRange).toBeGreaterThan(a.coinRange);expect(b.stats.magnet).toBeGreaterThan(a.stats.magnet);
  });
  it('dash footwear empowers only the next first contact and is usable by ranged attacks',()=>{

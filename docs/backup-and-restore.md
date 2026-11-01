@@ -1,8 +1,8 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮从已备份的 `b8ce4f1` 九件数值装备版，重做为十四件装备、六件出装、五种参考流派。设计见 [流派说明](gdd/blade-evolution-item-builds-v1.4.md)，验收见 [本轮记录](blade-item-builds-verification.json)。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮从已备份的 `6430d9c` 流派出装版，调整为透明图标、暂停商店、较低金币掉率与较弱开局武器。设计见 [本轮调整](gdd/blade-evolution-shop-balance-v1.5.md)，验收见 [本轮记录](blade-shop-balance-verification.json)。
 
-[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages 发布分支；旧网页不能代表新出装版。历史静态发布分支为 `preview/mobile-20261031`。
+[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages 发布分支；旧网页不能代表本轮调整版。历史静态发布分支为 `preview/mobile-20261031`。
 
 远端备份需要推送并核对提交：
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-本轮工作区备份使用 `blade-item-builds-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。工作区文件需要另存到自己的设备，才能在环境删除后独立恢复。
+本轮工作区备份使用 `blade-shop-balance-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。工作区文件需要另存到自己的设备，才能在环境删除后独立恢复。
 
 ```bash
 mkdir -p /workspace/backups

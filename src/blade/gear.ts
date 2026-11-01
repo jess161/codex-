@@ -78,6 +78,8 @@ export const COIN_VALUES: Record<EnemyKind, number> = {
   blob: 1, swift: 2, armor: 4, shooter: 3, charger: 4, wisp: 4, splitter: 3,
   brood: 1, spiker: 5, poison: 4, bomber: 4, stalker: 5, elite: 25, boss: 100,
 };
+export const NORMAL_COIN_DROP_CHANCE = .60;
+export const coinDropChance = (kind: EnemyKind) => kind === 'elite' || kind === 'boss' ? 1 : NORMAL_COIN_DROP_CHANCE;
 export interface EconomyState {wallet:number;earned:number;spent:number;refunded:number;gear:GearInventory;order:GearId[];regen:number}
 export const freshEconomy = (coins=0):EconomyState => ({wallet:coins,earned:coins,spent:0,refunded:0,gear:freshGear(),order:[],regen:0});
 export function validEconomy(value:unknown):value is EconomyState {

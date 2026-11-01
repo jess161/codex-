@@ -5,7 +5,7 @@ import {COIN_VALUES, GEAR, GEAR_IDS, GEAR_CAP, RUN_DURATION, SURVIVAL_DURATION, 
 import {migrateEconomy} from '../src/blade/economy-migration';
 import {freshRelics, freshRelicState} from '../src/blade/relics';
 const idle = {x: 0, y: 0, dash: false};
-function arena(blade: number = 15) {const r = new BladeRun(923, undefined, blade); r.state.enemies = []; r.state.spawnBudget = -1e6; r.state.eliteIndex = 4; r.state.attackTimer = 1e6; return r;}
+function arena(blade: number = 15) {const r = new BladeRun(819, undefined, blade); r.state.enemies = []; r.state.spawnBudget = -1e6; r.state.eliteIndex = 4; r.state.attackTimer = 1e6; return r;}
 function fund(r: BladeRun, value = 10000) {r.state.economy!.wallet = r.state.economy!.earned = value;}
 function steps(r: BladeRun, n: number, move = idle) {for (let i = 0; i < n; i++) r.step(1 / 60, move);}
 function enemy(r: BladeRun, x: number, y = 0, kind: Enemy['kind'] = 'armor') {const e = r.spawnEnemy(kind, x, y); e.hp = e.maxHp = 10000; e.speed = 0; e.cooldown = 1e6; return e;}
@@ -18,7 +18,7 @@ describe('coin drops, proximity and purchase conservation', () => {
     const r = arena(); expect(r.state.version).toBe(10); expect(r.state.relics).toEqual(freshRelics()); expect(r.availableRelics).toEqual([]);
     expect(r.addRelicDrop('stone', 0, 0)).toBeUndefined(); expect(r.state.relicDrops).toEqual([]);
   });
-  it.each(Object.keys(COIN_VALUES) as Enemy['kind'][])('drops the correct %s coin value once on a credited kill', kind => {
+  it.each(Object.keys(COIN_VALUES) as Enemy['kind'][])('keeps the correct %s denomination when its seeded kill drops coins', kind => {
     const r = arena(), e = enemy(r, 45, 0, kind); e.hp = 1; strike(r);
     const coins = r.state.orbs.filter(o => o.kind === 'coin'); expect(coins).toHaveLength(1); expect(coins[0].value).toBe(COIN_VALUES[kind]);
     expect(r.state.economy!.wallet).toBe(0); if (kind !== 'boss') {steps(r, 3); expect(r.state.orbs.filter(o => o.kind === 'coin')).toHaveLength(1);}

@@ -38,6 +38,7 @@ export class BladeApp {
   private activeTouch: number | null = null;
   private touchOrigin: { x: number; y: number } | null = null;
   private touchRadius = 35;
+  get battlePaused() { return this.panel !== 'none' || this.ui.shopOpen; }
   constructor() {
     this.ui = new BladeUI(this);
     this.scene.onReady = () => { this.ready = true; this.ui.ready(); this.applySettings(); if (this.storage.warning) this.ui.toast(this.storage.warning); };
@@ -104,6 +105,7 @@ export class BladeApp {
     const movement = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright', ' '];
     window.addEventListener('keydown', event => {
       const key = event.key.toLowerCase();
+      if (key !== 'escape' && event.target instanceof HTMLElement && event.target.closest('select,input,textarea')) return;
       if (movement.includes(key) || key === 'escape') event.preventDefault();
       if (event.repeat && (key === ' ' || key === 'escape')) return;
       if (key === 'b' && !event.repeat && this.panel === 'none') { this.action('shop'); return; }
@@ -114,7 +116,7 @@ export class BladeApp {
         return;
       }
       if (key === 'f') { this.action('fullscreen'); return; }
-      if (this.panel !== 'none' || !this.run) return;
+      if (this.battlePaused || !this.run) return;
       if(key==='q'){event.preventDefault();if(!event.repeat)this.action('active');return;}
       if (key === 'c') { this.action('power'); return; }
       if (key === 'i') { this.action('relics'); return; }
@@ -139,7 +141,7 @@ export class BladeApp {
       document.querySelector<HTMLElement>('#joystick-thumb')!.style.transform = `translate(calc(-50% + ${dx * factor}px), calc(-50% + ${dy * factor}px))`;
     };
     surface.addEventListener('pointerdown', event => {
-      if (this.panel !== 'none' || this.run?.state.mode !== 'playing') return;
+      if (this.battlePaused || this.run?.state.mode !== 'playing') return;
       if (event.pointerType !== 'touch' && event.pointerType !== 'pen') {
         if (event.button === 0) { this.dashQueued = true; this.audio.unlock(); }
         return;
@@ -160,7 +162,7 @@ export class BladeApp {
     surface.addEventListener('pointerup', release); surface.addEventListener('pointercancel', release);
     surface.addEventListener('lostpointercapture', event => { if (event.target === surface) release(event); });
     document.querySelector('#active-button')!.addEventListener('pointerdown',event=>{event.preventDefault();event.stopPropagation();this.action('active');});
-    document.querySelector('#dash-button')!.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); if (this.panel === 'none' && this.run?.state.mode === 'playing') { this.dashQueued = true; this.audio.unlock(); } });
+    document.querySelector('#dash-button')!.addEventListener('pointerdown', event => { event.preventDefault(); event.stopPropagation(); if (!this.battlePaused && this.run?.state.mode === 'playing') { this.dashQueued = true; this.audio.unlock(); } });
   }
   start(resume = false) {
     if (!this.ready) { this.ui.toast('刀锋即将就绪，请稍候。'); return; }
@@ -236,8 +238,8 @@ export class BladeApp {
       if (action === 'save-title') this.save();
       this.run = undefined; this.scene.activeRun = false; this.scene.pausedRun = false; this.panel = 'title'; this.clearInputs(); this.ui.render(true); return;
     }
-    if(action==='active'){if(this.panel==='none'&&this.run?.state.mode==='playing'&&this.run.hasActiveSkill&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
-    if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
+    if(action==='active'){if(!this.battlePaused&&this.run?.state.mode==='playing'&&this.run.hasActiveSkill&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
+    if (action === 'dash') { if (!this.battlePaused && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
   }
   setSetting(key: string, value: boolean) {
     if (!['sound', 'monsterSound', 'simplified', 'motion', 'shake', 'hitPause', 'haptics'].includes(key)) return;
@@ -250,7 +252,7 @@ export class BladeApp {
     return { x: Number(right) - Number(left) + this.joystick.x, y: Number(down) - Number(up) + this.joystick.y, dash: this.dashQueued, active:this.activeQueued };
   }
   private tick() {
-    if (!this.run || this.panel !== 'none') return;
+    if (!this.run || this.battlePaused) return;
     const modeBefore = this.run.state.mode;
     this.run.step(FIXED_STEP, this.input()); this.dashQueued = false; this.activeQueued=false;
     this.scene.ingest(this.run.events);
@@ -309,10 +311,10 @@ export class BladeApp {
     } else this.storage.write();
   }
   frame(dt: number) {
-    this.scene.pausedRun = this.panel !== 'none';
+    this.scene.pausedRun = this.battlePaused;
     this.scene.impactStopped = false;
-    if (this.hitStop > 0 && this.panel === 'none') { this.scene.impactStopped = true; this.hitStop = Math.max(0,this.hitStop-dt); this.accumulator=0; this.ui.render(); return; }
-    if (this.run && this.panel === 'none' && !['won', 'dead'].includes(this.run.state.mode)) {
+    if (this.hitStop > 0 && !this.battlePaused) { this.scene.impactStopped = true; this.hitStop = Math.max(0,this.hitStop-dt); this.accumulator=0; this.ui.render(); return; }
+    if (this.run && !this.battlePaused && !['won', 'dead'].includes(this.run.state.mode)) {
       this.accumulator += Math.min(dt, .1);
       let ticks = 0;
       while (this.accumulator >= FIXED_STEP && ticks++ < 6) { this.accumulator -= FIXED_STEP; this.tick(); if(this.hitStop>0) { this.accumulator=0; this.scene.impactStopped=true; break; } }
@@ -324,7 +326,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:this.run!.hasActiveSkill?{name:this.run!.activeInfo?.name,...this.run!.active}:null, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, economy: s.economy, build: s.build, coinsOnGround: s.orbs.filter(o => o.kind === 'coin').length, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, shopOpen: this.ui.shopOpen, battlePaused: this.battlePaused, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:this.run!.hasActiveSkill?{name:this.run!.activeInfo?.name,...this.run!.active}:null, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, economy: s.economy, build: s.build, coinsOnGround: s.orbs.filter(o => o.kind === 'coin').length, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

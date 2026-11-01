@@ -34,7 +34,10 @@ try {
     await p.locator('#shop-button').click();
     check(`offline ${name}: all three universal shop categories work with embedded candy icons`, await p.locator('.shop-tabs button').count() === 3 && await p.locator('#build-choice option').count() === 5 && await p.locator('.shop-row .gear-icon').evaluateAll(images => images.length === 6 && images.every(i => i.complete && i.naturalWidth === 128)));
     await p.locator('[data-action="shop-category"][data-value="defense"]').click();
-    check(`offline ${name}: shop remains live and requires actual coins to buy`, await p.locator('.buy-gear').evaluateAll(buttons => buttons.every(b => b.disabled)) && await p.locator('#clock-goal').textContent() === '/ 10:00');
+    check(`offline ${name}: paused shop requires actual coins to buy`, await p.locator('.buy-gear').evaluateAll(buttons => buttons.every(b => b.disabled)) && await p.locator('#clock-goal').textContent() === '/ 10:00');
+    const frozen = await p.evaluate(() => render_game_to_text());
+    await p.keyboard.press('Space');await p.waitForTimeout(900);
+    check(`offline ${name}: shop freezes combat and rejects queued dash without a QA controller`, await p.evaluate(() => render_game_to_text()) === frozen && JSON.parse(frozen).battlePaused === true);
     await p.locator('#shop-button').click();
     await p.keyboard.down('w'); await p.waitForTimeout(1200); await p.keyboard.up('w');
     check(`offline ${name}: real game clock advances`, await p.locator('#clock').textContent() !== '00:00');

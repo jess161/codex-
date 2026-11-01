@@ -1,7 +1,7 @@
 import {migrateEconomy} from './economy-migration';
 import { validLegacyEconomy } from './legacy-gear';
 import { freshGearCombat, validGearCombat, type GearCombatState } from './build-state';
-import { COIN_VALUES, GEAR_CAP, gearBlockReason, gearMaxHp, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
+import { COIN_VALUES, coinDropChance, GEAR_CAP, gearBlockReason, gearMaxHp, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
 import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type ArcheryState,type BowHost} from './bows';
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
@@ -609,7 +609,7 @@ export class BladeRun {
       for (const other of this.grid.query(e.x, e.y, radius + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= radius + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
       this.emitPassive('ryujin', e.x, e.y, radius);
     }
-    if (s.economy) this.addOrb(e.x, e.y, COIN_VALUES[e.kind], 'coin');
+    if (s.economy && (coinDropChance(e.kind) === 1 || this.lootRandom() < coinDropChance(e.kind))) this.addOrb(e.x, e.y, COIN_VALUES[e.kind], 'coin');
     if (e.kind === 'boss') { s.mode = 'won'; this.events.push({ type: 'win' }); return true; }
     this.tryRelicReward(e);
     if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal','bread'); }

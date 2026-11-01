@@ -56,11 +56,11 @@ export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '�
 // The new catalogue is weapon-neutral. No historical relic or set is consulted.
 export function shopEquipmentStats(level: number, blade: number, gear: import('./gear').GearInventory, heat = 0) {
   const t = TIERS[blade], mastery = tierForLevel(level), base = equipmentStats(1, freshPerks(), blade, freshRelics());
-  const pace = 1 / (1 + .12 * gear.clockGrip + .03 * gear.clockGrip * heat + .10 * gear.stormCoil + .08 * gear.pickupBoots);
-  const range = Math.min(isBow(blade) ? 900 : 420, t.range * (1 + .10 * mastery) * (1 + .10 * gear.clearLens));
+  const pace = 1.10 / (1 + .12 * gear.clockGrip + .03 * gear.clockGrip * heat + .10 * gear.stormCoil + .08 * gear.pickupBoots);
+  const range = Math.min(isBow(blade) ? 900 : 420, t.range * .90 * (1 + .10 * mastery) * (1 + .10 * gear.clearLens));
   const windup = base.windup * pace, strike = base.strike * pace, recovery = base.recovery * pace;
   return {...base,
-    damage: Math.round((20 + level - 1) * t.multiplier * (1 + .10 * mastery) * (1 + .02 * (level - 1)) * (1 + .12 * gear.sugarCore + .08 * gear.bloodFang + .06 * gear.tideFang)),
+    damage: Math.round((13 + level - 1) * t.multiplier * (1 + .10 * mastery) * (1 + .02 * (level - 1)) * (1 + .12 * gear.sugarCore + .08 * gear.bloodFang + .06 * gear.tideFang)),
     interval: Math.max(windup + strike + recovery + .015, base.interval * pace),
     windup, strike, recovery, range, lengthScale: (range - 10) / (t.range - 10),
     widthScale: 1 + .09 * mastery, arc: Math.min(t.id === 'sword' ? 110 : 250, t.arc + 9 * mastery),

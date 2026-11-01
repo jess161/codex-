@@ -68,7 +68,8 @@ describe('four ordinary starting weapons', () => {
   it('spear deals one full hit to every enemy in a line, with normal kill and XP credit', () => {
     const r = arena(18); const enemies = Array.from({length: 8}, (_, i) => target(r, 40 + i * 14));
     enemies.forEach(e => e.hp = 1); strike(r);
-    expect(r.state.kills).toBe(8); expect(r.state.bestCleave).toBe(8); expect(r.state.orbs.filter(o => o.kind === 'xp')).toHaveLength(8); expect(r.state.orbs.filter(o => o.kind === 'coin')).toHaveLength(8);
+    expect(r.state.kills).toBe(8); expect(r.state.bestCleave).toBe(8); expect(r.state.orbs.filter(o => o.kind === 'xp')).toHaveLength(8);
+    const coins=r.state.orbs.filter(o => o.kind === 'coin');expect(coins.length).toBeGreaterThan(0);expect(coins.length).toBeLessThan(8);expect(coins.every(o=>o.value===4)).toBe(true);
     expect(r.state.waves).toEqual([]); expect(r.state.passive.stacks).toBe(0);
   });
   it.each(BASIC_WEAPON_INDICES)('keeps weapon %i basic through mastery, dash and active input', blade => {
