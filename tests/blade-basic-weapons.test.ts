@@ -133,7 +133,7 @@ describe('shared attack visuals and resumable basics', () => {
     try {
       const storage = new BladeStorage(); expect(storage.data.settings.blade).toBe(17); expect(storage.data.run!.blade).toBe(17);
       expect(storage.data.meta.seenBlades).toEqual([15, 16, 17]); expect(storage.data.meta.bestScore).toBe(1234);
-      expect(storage.warning).toContain('旧装备折算为金币'); expect(storage.write()).toBe(true);
+      expect(storage.warning).toContain('退还金币'); expect(storage.write()).toBe(true);
     } finally {vi.unstubAllGlobals();}
   });
 });

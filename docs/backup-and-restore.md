@@ -1,17 +1,17 @@
 # 源码备份与恢复
 
-当前源码分支是 `reconstruct/latest-from-conversation`。本轮基于已备份的 `2865433` 四武器版本，取消旧装备与套装，改为十分钟金币商店与三类通用装备。规则见 [本轮设计](gdd/blade-evolution-economy-v1.3.md)，验证见 [本轮验收](blade-economy-verification.json)。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮从已备份的 `b8ce4f1` 九件数值装备版，重做为十四件装备、六件出装、五种参考流派。设计见 [流派说明](gdd/blade-evolution-item-builds-v1.4.md)，验收见 [本轮记录](blade-item-builds-verification.json)。
 
-[此前已发布试玩](https://jess161.github.io/codex-/) 与源码分支独立更新。本轮备份源码、生成离线试玩，没有更新 Pages 静态发布分支；不能把旧网页当成本轮新版。历史网页使用 `preview/mobile-20261031` 静态分支。
+[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages 发布分支；旧网页不能代表新出装版。历史静态发布分支为 `preview/mobile-20261031`。
 
-源码备份需推送并核对远端提交，本地提交和 ZIP 不等于远端备份：
+远端备份需要推送并核对提交：
 
 ```bash
 git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-工作区备份使用 `blade-economy-<源码短提交>` 前缀：源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。它们应下载到自己的设备，才能在云环境删除后独立恢复。
+本轮工作区备份使用 `blade-item-builds-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。工作区文件需要另存到自己的设备，才能在环境删除后独立恢复。
 
 ```bash
 mkdir -p /workspace/backups
@@ -20,7 +20,7 @@ git bundle create /workspace/backups/blade-history.bundle --all
 git bundle verify /workspace/backups/blade-history.bundle
 ```
 
-从 bundle 恢复：
+恢复完整历史：
 
 ```bash
 git clone --branch reconstruct/latest-from-conversation blade-history.bundle recovered-game
@@ -29,6 +29,6 @@ npm ci
 npm run dev -- --port 4173
 ```
 
-构建命令 `npm run build` 生成 `dist/blade-evolution.html` 单文件离线游戏。当前浏览器禁用 `file://`，离线验收以实际 HTML 字节在内存页面提供并关闭网络完成，未宣称对手机文件管理器做过实测。
+`npm run build` 生成 `dist/blade-evolution.html`，自带代码和图片。离线检查使用实际 HTML 字节在内存页面中提供游戏并禁网；环境浏览器禁用 `file://`，未宣称测试过手机文件管理器。
 
-游戏沿用存储键，新数据为 v9；读取旧版本时，已持有旧装备折算金币，旧地面装备转换为原地金币，旧套装清除，战绩和等级保留。转换只执行一次。旧版本源码仍可从 Git 历史中恢复，已有的历史报告不会被改成新版验收结论。
+存储键继续使用 `blade-evolution-save-v1`，新结构 v10。上一版 v9 的装备按当时价格验证，已花金币全额退回，便于重新出装；等级、时间、世界位置、地面金币、生命比例与永久战绩保留。补偿只执行一次，新版购买、出售与触发状态可精确恢复。历史源码和旧验收报告仍保留在 Git 中。

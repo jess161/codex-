@@ -1,3 +1,4 @@
+import {drawBuildBody,drawBuildProc} from './build-art';
 import { drawBasicMelee } from './basic-weapon-art';
 import { drawArchery } from './bow-art';
 import Phaser from 'phaser';
@@ -64,6 +65,7 @@ export class BattleScene extends Phaser.Scene {
   private used = new Set<string>();
   private particles: Particle[] = [];
   private passiveFx: PassiveFX[] = [];
+  private buildFx:{event:RunEvent;age:number}[]=[];
   private activeFx:{event:RunEvent;age:number}[]=[];
   private relicFx: RelicFX[] = [];
   private labels: DamageLabel[] = [];
@@ -110,7 +112,7 @@ export class BattleScene extends Phaser.Scene {
     this.textures.create(key, canvas)!.add('__BASE', 0, 0, 0, canvas.width, canvas.height);
   }
   reset(run: BladeRun) {
-    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.activeFx=[]; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
+    this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.activeFx=[]; this.buildFx=[]; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
     for (const label of this.labels) { label.object.setVisible(false); this.spareLabels.push(label.object); }
     this.labels = [];
   }
@@ -125,9 +127,10 @@ export class BattleScene extends Phaser.Scene {
     if(kills.length>=3 && this.run) this.damageLabel(`一刀 ${kills.length}`,this.run.state.player.x,this.run.state.player.y-22);
     for (const event of events) {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
-      const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active');
+      const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active' || event.source==='gear');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
+      if(event.type==='gear-proc'&&this.buildFx.length<(this.simplified?8:16))this.buildFx.push({event,age:0});
       if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
       if((event.type==='active'&&event.activePhase!=='heal'||event.type==='bow-blast')&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });
@@ -377,6 +380,9 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(1.6, 0x88cfe7, .75).strokeCircle(s.player.x, s.player.y, 26);
       g.beginPath().lineStyle(2.2, 0xffffff, .9).arc(s.player.x, s.player.y, 22, -2.6, -1.9).strokePath();
     }
+    drawBuildBody(g,run);
+    for(const f of this.buildFx) {f.age+=fxDt;drawBuildProc(g,f.event,f.age);}
+    this.buildFx=this.buildFx.filter(f=>f.age<.32);
     drawActiveFields(g,run,this.reducedMotion,this.simplified,(...args)=>this.sprite(...args));
     for(const effect of this.activeFx){effect.age+=fxDt;drawActiveBurst(g,effect.event,effect.age,this.reducedMotion,(...args)=>this.sprite(...args));}
     this.activeFx=this.activeFx.filter(f=>f.age<.42);

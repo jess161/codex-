@@ -2,19 +2,19 @@ import { it, expect } from 'vitest';
 import { BladeRun } from '../src/blade/simulation';
 import { BASIC_WEAPON_INDICES, TIERS, xpToLevel } from '../src/blade/config';
 
-import { GEAR_CAP, gearPrice, validEconomy, type GearId } from '../src/blade/gear';
+import { BUILDS, GEAR_CAP, gearPrice, validEconomy, type GearId } from '../src/blade/gear';
 
 // An input-only bot completes the real campaign without changing HP, damage, XP or clocks.
 // This verifies reachability and deterministic long-run behavior, not human difficulty.
-it.each(BASIC_WEAPON_INDICES.map(i => [i, TIERS[i].name] as const))('completes a real ten-minute coin-and-shop campaign with weapon %i · %s', async (blade) => {
+it.each(BASIC_WEAPON_INDICES.flatMap(i => Object.entries(BUILDS).map(([build,recipe]) => [i, TIERS[i].name, build, recipe.items] as const)))('completes weapon %i · %s with %s build', async (blade, _name, build, recipe) => {
   await new Promise(resolve => setTimeout(resolve, 0));
   const seed = blade + 1, r = new BladeRun(seed, undefined, blade);
   let lastMastery=0; const formTimes: number[] = [];
   for (let tick = 0; tick < 37000; tick++) {
     const s = r.state;
     const economy = s.economy!;
-    const plan: GearId[] = ['sugarCore','pickupBoots','clockGrip','bubbleGuard','breezeBoots','jellyVest','clearLens','honeyCharm','springBoots'];
-    const lowest = Math.min(...Object.values(economy.gear));
+    const plan: readonly GearId[] = recipe;
+    const lowest = Math.min(...plan.map(id=>economy.gear[id]));
     const next = plan.find(id => economy.gear[id] === lowest && lowest < GEAR_CAP);
     if (next && economy.wallet >= gearPrice(next, economy.gear[next])) r.buyGear(next);
     if(r.mastery!==lastMastery){lastMastery=r.mastery;formTimes.push(s.time+s.bossTime);}
@@ -60,8 +60,8 @@ it.each(BASIC_WEAPON_INDICES.map(i => [i, TIERS[i].name] as const))('completes a
   expect(r.state.level).toBeGreaterThanOrEqual(20); expect(r.state.pending).toEqual([]);expect(r.state.choices).toEqual([]); expect(r.tier).toBe(blade);
   expect(r.state.bossTime).toBeLessThan(r.bossDuration); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
   expect(r.state.enemies.length).toBeLessThanOrEqual(280);
-  if (r.hasActiveSkill) expect(r.active.casts).toBeGreaterThan(10); else expect(r.active.casts).toBe(0);expect(r.state.economy!.earned).toBeGreaterThan(100); expect(r.gearOrder).toHaveLength(9); expect(validEconomy(r.state.economy)).toBe(true); expect(r.state.relicDrops).toEqual([]);
+  if (r.hasActiveSkill) expect(r.active.casts).toBeGreaterThan(10); else expect(r.active.casts).toBe(0);expect(r.state.economy!.earned).toBeGreaterThan(100); expect(r.gearOrder).toHaveLength(6); expect(validEconomy(r.state.economy)).toBe(true); expect(r.state.relicDrops).toEqual([]);
   expect(formTimes[0]).toBeGreaterThanOrEqual(r.practiceTime - .01);
   formTimes.slice(1).forEach((time, i) => expect(time - formTimes[i]).toBeGreaterThanOrEqual(r.practiceTime - .01));
-  if((globalThis as unknown as {process?:{env?:Record<string,string>}}).process?.env?.BLADE_CAMPAIGN_METRICS)console.info('CAMPAIGN_METRICS '+JSON.stringify({blade:TIERS[blade].name,time:r.state.time+r.state.bossTime,level:r.state.level,kills:r.state.kills,earned:r.state.economy!.earned,spent:r.state.economy!.spent,wallet:r.state.economy!.wallet,owned:r.gearOrder.length,gear:r.state.economy!.gear,casts:r.active.casts,mode:r.state.mode}));
+  if((globalThis as unknown as {process?:{env?:Record<string,string>}}).process?.env?.BLADE_CAMPAIGN_METRICS)console.info('CAMPAIGN_METRICS '+JSON.stringify({blade:TIERS[blade].name,build,time:r.state.time+r.state.bossTime,level:r.state.level,kills:r.state.kills,earned:r.state.economy!.earned,spent:r.state.economy!.spent,wallet:r.state.economy!.wallet,owned:r.gearOrder.length,gear:r.state.economy!.gear,casts:r.active.casts,mode:r.state.mode}));
 }, 30000);

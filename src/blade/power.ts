@@ -11,9 +11,9 @@ export const POWER_AXES = [
 export function combatPower(run: BladeRun) {
   if (run.state.economy) {
     const s = run.state, stats = run.stats, e = s.economy!, base = shopEquipmentStats(1, run.tier, freshGear());
-    const ratios = {output: stats.damage / base.damage * base.interval / stats.interval, crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65,
+    const ratios = {output: stats.damage / base.damage * base.interval / stats.interval * (1+stats.critChance*(stats.critMultiplier-1)) * (1+.08*e.gear.tideFang+.05*e.gear.stormCoil), crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65,
       mobility: (stats.moveSpeed / base.moveSpeed) ** .7 * (base.dashCooldown / stats.dashCooldown) ** .2 * (stats.magnet / base.magnet) ** .15,
-      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .05 * e.gear.honeyCharm)};
+      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .08 * e.gear.honeyCharm + .05*e.gear.bloodFang + .05*e.gear.bubbleGuard)};
     const axes = POWER_AXES.map(axis => ({...axis, ratio: ratios[axis.id]}));
     return {value: Math.round(1000 * Math.exp(axes.reduce((sum, a) => sum + a.weight * Math.log(a.ratio), 0))), axes, blade: TIERS[run.tier].name, stats};
   }

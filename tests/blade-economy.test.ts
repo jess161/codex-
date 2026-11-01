@@ -13,9 +13,9 @@ function strike(r: BladeRun) {const t = r.stats; r.state.swing = {id: r.state.ne
 
 describe('coin drops, proximity and purchase conservation', () => {
   it('replaces old equipment with exactly three universal categories and no set requirements', () => {
-    expect(GEAR_IDS).toHaveLength(9);
-    for (const category of ['defense', 'attack', 'footwear']) expect(GEAR_IDS.filter(id => GEAR[id].category === category)).toHaveLength(3);
-    const r = arena(); expect(r.state.version).toBe(9); expect(r.state.relics).toEqual(freshRelics()); expect(r.availableRelics).toEqual([]);
+    expect(GEAR_IDS).toHaveLength(14);
+    expect(['defense','attack','footwear'].map(category=>GEAR_IDS.filter(id=>GEAR[id].category===category).length)).toEqual([5,6,3]);
+    const r = arena(); expect(r.state.version).toBe(10); expect(r.state.relics).toEqual(freshRelics()); expect(r.availableRelics).toEqual([]);
     expect(r.addRelicDrop('stone', 0, 0)).toBeUndefined(); expect(r.state.relicDrops).toEqual([]);
   });
   it.each(Object.keys(COIN_VALUES) as Enemy['kind'][])('drops the correct %s coin value once on a credited kill', kind => {
@@ -58,16 +58,16 @@ describe('coin drops, proximity and purchase conservation', () => {
 
 describe.each(BASIC_WEAPON_INDICES)('all nine equipment effects work in real play on weapon %i', blade => {
   it('fruit heart increases real HP capacity and heals once', () => {
-    const r = arena(blade); fund(r); r.state.hp = 60; r.buyGear('jellyVest'); expect(r.state.maxHp).toBe(120); expect(r.state.hp).toBe(80);
-    r.buyGear('jellyVest'); expect(r.state.maxHp).toBe(140); expect(r.state.hp).toBe(100);
+    const r = arena(blade); fund(r); r.state.hp = 60; r.buyGear('jellyVest'); expect(r.state.maxHp).toBe(135); expect(r.state.hp).toBe(95);
+    r.buyGear('jellyVest'); expect(r.state.maxHp).toBe(170); expect(r.state.hp).toBe(130);
   });
   it('bubble armor reduces actual incoming damage', () => {
     const a = arena(blade), b = arena(blade); fund(b); b.buyGear('bubbleGuard'); a.state.invincible = b.state.invincible = 0;
-    a.damagePlayer(40, 'test'); b.damagePlayer(40, 'test'); expect(a.state.hp).toBe(60); expect(b.state.hp).toBeCloseTo(62.4);
+    a.damagePlayer(40, 'test'); b.damagePlayer(40, 'test'); expect(a.state.hp).toBe(60); expect(b.state.hp).toBeCloseTo(61.6);
   });
   it('honey heals on the live simulation clock without requiring a hit', () => {
-    const r = arena(blade); fund(r); r.state.hp = 60; r.buyGear('honeyCharm'); steps(r, 299); expect(r.state.hp).toBe(60);
-    steps(r, 1); expect(r.state.hp).toBe(62); r.state.hp = r.state.maxHp; steps(r, 600); r.state.hp = 60; steps(r, 1); expect(r.state.hp).toBe(60);
+    const r = arena(blade); fund(r); r.state.hp = 60; r.buyGear('honeyCharm'); r.state.hp = 60; steps(r, 299); expect(r.state.hp).toBe(60);
+    steps(r, 1); expect(r.state.hp).toBeCloseTo(61.2); r.state.hp = r.state.maxHp; steps(r, 600); r.state.hp = 60; steps(r, 1); expect(r.state.hp).toBe(60);
   });
   it('sugar increases real melee or arrow damage', () => {
     const a = arena(blade), b = arena(blade); fund(b); b.buyGear('sugarCore');
@@ -90,8 +90,8 @@ describe.each(BASIC_WEAPON_INDICES)('all nine equipment effects work in real pla
   });
   it('spring boots shorten live dash cooldown without changing distance', () => {
     const a = arena(blade), b = arena(blade); fund(b); a.dash(); b.dash(); b.buyGear('springBoots');
-    expect(b.state.dashCooldown).toBeCloseTo(a.state.dashCooldown - .4); steps(a, 12); steps(b, 12);
-    expect(b.state.player).toEqual(a.state.player); expect(b.stats.dashCooldown).toBe(4.6);
+    expect(b.state.dashCooldown).toBeCloseTo(a.state.dashCooldown - .55); steps(a, 12); steps(b, 12);
+    expect(b.state.player).toEqual(a.state.player); expect(b.stats.dashCooldown).toBe(4.45);
   });
   it('pickup boots really collect coins and XP that stay out of the original radius', () => {
     const a = arena(blade), b = arena(blade); fund(b); b.buyGear('pickupBoots'); const wallet = b.state.economy!.wallet;
@@ -114,7 +114,7 @@ describe('ten-minute pacing, persistent economy and historical conversion', () =
   it('refunds retired carried equipment once, converts ground items to coins and removes all old sets', () => {
     const r = arena(0); r.state.time = 180; r.state.level = 10; r.state.maxHp = 133; r.state.hp = 66.5; r.state.relics.heart = 1; r.state.relics.stone = 2; r.state.relicState.heartPeak = 1; r.state.perks.long = 2;
     r.addRelicDrop('crystal', 200, 300); const before = r.snapshot(); expect(validSnapshot(before)).toBe(true); const s = migrateEconomy(restoreSnapshot(before)!);
-    expect(s.version).toBe(9); expect(s.time).toBe(270); expect(s.level).toBe(10); expect(s.economy!.wallet).toBe(144); expect(s.relics).toEqual(freshRelics()); expect(s.perks).toEqual(freshPerks()); expect(s.relicState).toEqual(freshRelicState());
+    expect(s.version).toBe(10); expect(s.time).toBe(270); expect(s.level).toBe(10); expect(s.economy!.wallet).toBe(144); expect(s.relics).toEqual(freshRelics()); expect(s.perks).toEqual(freshPerks()); expect(s.relicState).toEqual(freshRelicState());
     expect(s.orbs.find(o => o.kind === 'coin')).toMatchObject({x: 200, y: 300, value: 20}); expect(s.relicDrops).toEqual([]); expect(s.hp / s.maxHp).toBe(.5); expect(validSnapshot(s)).toBe(true);
     expect(migrateEconomy(structuredClone(s))).toEqual(s); expect(r.snapshot()).toEqual(before);
   });

@@ -1,3 +1,4 @@
+import { freshGearCombat } from './build-state';
 import { freshEconomy, SURVIVAL_DURATION, FINALE_DURATION } from './gear';
 import { freshPerks } from './config';
 import { freshRelics, freshRelicState } from './relics';
@@ -11,7 +12,15 @@ import type { RunState } from './simulation';
 // Only called after historical validation. Old carried gear is refunded once;
 // uncollected gear becomes coins at the same world positions, never remote credit.
 export function migrateEconomy(snapshot: RunState): RunState {
-  if (snapshot.version === 9) return snapshot;
+  if (snapshot.version === 10) return snapshot;
+  if (snapshot.version === 9) {
+    const ratio=snapshot.hp/snapshot.maxHp;
+    snapshot.economy=freshEconomy(snapshot.economy!.earned);
+    snapshot.version=10;snapshot.build=freshGearCombat();snapshot.maxHp=100+2*(snapshot.level-1);
+    snapshot.hp=Math.max(1,snapshot.maxHp*ratio);snapshot.swing=null;snapshot.attackTimer=.2;
+    if (snapshot.blade===17) snapshot.archery=freshArchery();
+    return snapshot;
+  }
   const s = migrateBasicWeapon(snapshot);
   const oldWave = s.classicTiming ? 600 : 360, oldBoss = s.classicTiming ? 90 : 45;
   const scaleTime = (time: number) => time <= oldWave ? time / oldWave * SURVIVAL_DURATION : SURVIVAL_DURATION + (time - oldWave) / oldBoss * FINALE_DURATION;
@@ -24,7 +33,7 @@ export function migrateEconomy(snapshot: RunState): RunState {
     s.orbs.push({id: s.nextId++, x: d.x, y: d.y, value: 20, kind: 'coin', dropTimer: 0});
   }
   const healthRatio = s.hp / s.maxHp;
-  s.version = 9; s.economy = freshEconomy(refund); s.classicTiming = false;
+  s.version = 10; s.build = freshGearCombat(); s.economy = freshEconomy(refund); s.classicTiming = false;
   s.time = s.time / oldWave * SURVIVAL_DURATION;
   s.bossTime = s.bossTime / oldBoss * FINALE_DURATION;
   s.formStartedAt = scaleTime(s.formStartedAt);
