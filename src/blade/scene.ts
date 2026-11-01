@@ -325,7 +325,20 @@ export class BattleScene extends Phaser.Scene {
     }
     if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else if (isBasicWeapon(run.tier)) {
       this.blade.setVisible(false); this.hilt.setVisible(false);
-      drawBasicMelee(g, run, (...args) => this.sprite(...args));
+      const contact=drawBasicMelee(g, run, (...args) => this.sprite(...args));
+      // Carrot pigment scratches use the real ground tip; organic contact has no metal sparks.
+      this.drag.update(fxDt,contact,this.simplified,true);
+      for(const mark of this.drag.marks){
+        const alpha=Math.min(1,dragOpacity(mark)*1.3);
+        this.grooves.lineStyle(mark.width+1.2,mark.color,alpha*.14).lineBetween(mark.from.x,mark.from.y,mark.to.x,mark.to.y);
+        this.grooves.lineStyle(mark.width,mark.color,alpha).lineBetween(mark.from.x,mark.from.y,mark.to.x,mark.to.y);
+        this.grooves.fillStyle(mark.color,alpha).fillCircle(mark.to.x,mark.to.y,mark.width/2);
+      }
+      if(contact){
+        const markWidth=contact.markWidth??2;
+        this.shadows.fillStyle(0x875630,.13).fillEllipse(contact.x+1,contact.y+1,7+markWidth,3);
+        this.shadows.fillStyle(contact.color,.16).fillEllipse(contact.x,contact.y,3+markWidth*.5,1.8);
+      }
     }else{
     const speed=Math.hypot(s.velocity.x,s.velocity.y);
     const direction=moving?(s.dashTime>0?s.direction:{x:s.velocity.x/(speed||1),y:s.velocity.y/(speed||1)}):undefined;

@@ -1,6 +1,6 @@
 import { swingPhase, type SwingTiming } from './equipment';
 interface Point { x: number; y: number }
-export interface DragContact extends Point { player: Point; range: number; widthScale: number; mass: number; color: number }
+export interface DragContact extends Point { player: Point; range: number; widthScale: number; mass: number; color: number; markWidth?: number }
 export interface DragMark { from: Point; to: Point; width: number; strength: number; age: number; life: number; color: number }
 export interface DragSpark extends Point { origin: Point; vx: number; vy: number; age: number; life: number; size: number }
 export const DRAG_REST_ANGLE = Math.PI * .30;
@@ -85,6 +85,7 @@ export class BladeDrag {
     }
     if (length < spacing) return;
     this.anchor = contact; const count = Math.min(simplified ? 12 : 24, Math.ceil(length / spacing)), profile = dragProfile(contact.range, contact.widthScale, contact.mass);
+    if(contact.markWidth!==undefined)profile.width=contact.markWidth;
     let from: Point = { x: previous.x, y: previous.y };
     for (let i = 1; i <= count; i++) { const t = i / count, to = { x: previous.x + (contact.x - previous.x) * t, y: previous.y + (contact.y - previous.y) * t }; this.marks.push({ from, to, ...profile, color: contact.color, age: 0 }); from = to; }
     if (this.marks.length > limit) this.marks.splice(0, this.marks.length - limit);

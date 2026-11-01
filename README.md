@@ -6,6 +6,8 @@
 
 商店装备同时适用于这两种武器，当前共有一件普通装备、三件稀有装备和三件史诗装备。金币掉率与装备价格沿用上一版。
 
+胡萝卜刀待机时以 45° 下斜、刀尖贴地，挥砍时抬刀，收势后平滑落回地面。移动时，刀尖沿地面留下与胡萝卜同色的橙色刀痕，约 3 秒逐渐淡去；刀痕宽度随胡萝卜当前显示粗细增长，已有刀痕保留留下时的宽度。暂停冻结痕迹，重新开局清空。
+
 商店使用纵向升级树：共享的普通装备在上，三个稀有分支在中，对应的史诗装备在下，用线连接。图标在上、名字在下；普通背景为灰色、稀有为蓝色、史诗为紫色。打开商店暂停战斗，关闭继续，购物时间不计入十分钟。
 
 本轮遵照玩家要求，未运行测试、试玩或独立类型检查，只打包网页与离线文件。历史报告及旧装备脚本保留其原有版本含义，不能代表当前版本。
@@ -53,7 +55,7 @@
 
 按玩家新要求，**每次游戏更新直接清除旧存档，重新开局**，不迁移装备、退款或保留旧战绩。存储键保持为 `blade-evolution-save-v1`，当前结构 v14，并保存游戏内容版本。打包时根据割草游戏源码生成版本指纹；内容改变后的新版首次打开会删除旧存档，同一版本内仍正常保存与继续。
 
-[当前设计](docs/gdd/blade-evolution-approved-a-v2.2.md) · [装备升级规则](docs/gdd/blade-evolution-upgrade-tree-v2.0.md) · [A 组选稿](docs/images/a-group-approved.png) · [备份说明](docs/backup-and-restore.md)。[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新，本轮未发布 Pages。
+[当前设计](docs/gdd/blade-evolution-carrot-drag-v2.3.md) · [A 组原画](docs/gdd/blade-evolution-approved-a-v2.2.md) · [装备升级规则](docs/gdd/blade-evolution-upgrade-tree-v2.0.md) · [备份说明](docs/backup-and-restore.md)。[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新，本轮未发布 Pages。
 
 开发需要 Node.js 20.19+ 或 22.12+。`npm ci` 安装依赖，`npm run dev -- --port 4173` 启动开发服务器。常规 `npm run build` 包含类型检查；本轮仅使用 Vite 资源打包及 `scripts/standalone.mjs` 生成自带资源的单文件游戏，按要求没有执行测试或试玩。
 

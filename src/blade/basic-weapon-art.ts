@@ -1,8 +1,21 @@
 import type Phaser from 'phaser';
 import { bladePresentation } from './feedback';
-import type { EquipmentStats, SwingTiming } from './equipment';
+import { swingPhase, type EquipmentStats, type SwingTiming } from './equipment';
 import type { BladeRun } from './simulation';
 import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
+import type { DragContact } from './blade-drag';
+
+export const CARROT_DRAG_ANGLE=Math.PI/4;
+export const CARROT_GROUND_INCLINATION=Math.PI/4;
+export const CARROT_GROUND_COLOR=0xf49a43;
+export const carrotMarkWidth=(displayHeight:number)=>Math.max(1.6,Math.min(8,displayHeight*.075));
+// Project vertical height into the game's ground view while keeping the rest pose readable.
+const HEIGHT_PROJECTION=.45;
+const GROUND_YAW=Math.acos(HEIGHT_PROJECTION*Math.tan(CARROT_GROUND_INCLINATION)/Math.SQRT2)-Math.PI/4;
+const GROUND_X=Math.cos(CARROT_GROUND_INCLINATION)*Math.cos(GROUND_YAW);
+const GROUND_Y=Math.cos(CARROT_GROUND_INCLINATION)*Math.sin(GROUND_YAW);
+const GROUND_HEIGHT=Math.sin(CARROT_GROUND_INCLINATION)*HEIGHT_PROJECTION;
+const GROUNDED_LENGTH=Math.hypot(GROUND_X,GROUND_Y+GROUND_HEIGHT);
 
 // Historical vector fallback; painted A-group sprites and alpha contours are active.
 export const CARROT_BODY_PATH='M146 62 C213 43 285 55 350 74 L582 118 Q614 128 582 141 L350 182 Q218 213 146 194 Q112 177 118 126 Q110 85 146 62 Z';
@@ -27,15 +40,21 @@ export const BASIC_WEAPON_ART:Record<string,string>={
 };
 
 export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|null,aim:number,stats:EquipmentStats){
- const rest=aim+.9;
+ const rest=CARROT_DRAG_ANGLE;
  const pose=swing?bladePresentation(swing,aim,stats.arc*Math.PI/180,stats.mass,rest):{angle:rest,opacity:0};
- return {...pose,hand:16,reach:stats.range};
+ let lifted=0;
+ if(swing){const {phase,progress}=swingPhase(swing),eased=progress*progress*(3-2*progress);lifted=phase==='strike'?1:phase==='windup'?eased:1-eased;}
+ const grounded=1-lifted,hand=16,length=stats.range-hand;
+ const restX=Math.cos(GROUND_YAW)*hand,restY=13+Math.sin(GROUND_YAW)*hand-length*GROUND_HEIGHT;
+ return {...pose,hand,reach:stats.range,inclination:CARROT_GROUND_INCLINATION*grounded,
+  handX:restX*grounded+Math.cos(pose.angle)*hand*lifted,handY:restY*grounded+Math.sin(pose.angle)*hand*lifted,
+  lengthProjection:GROUNDED_LENGTH*grounded+lifted};
 }
-export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image){
+export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image):DragContact|undefined{
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
- const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
+ const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+pose.handX,y=s.player.y+pose.handY;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
- const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
+ const width=art.width*scale*pose.lengthProjection,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
  sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
@@ -45,5 +64,11 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
    const leaf=a-.12-i*.1,r=stats.range*(.72+i*.07);
    g.fillStyle(i===1?0xffc16b:0x79b65c,pose.opacity*.7).fillEllipse(s.player.x+Math.cos(leaf)*r,s.player.y+Math.sin(leaf)*r,4.5,2.5);
   }
+ }
+ if(!s.swing&&s.mode==='playing'){
+  // Use the same pivot, scaling and rotation as the painted sprite's actual tip.
+  const tipX=(art.tip[0]-art.grip[0])*width/art.width;
+  const tipY=(art.tip[1]-art.grip[1])*height/art.height;
+  return {x:x+dx*tipX-dy*tipY,y:y+dy*tipX+dx*tipY,player:{...s.player},range:stats.range,widthScale:stats.widthScale,mass:stats.mass,color:CARROT_GROUND_COLOR,markWidth:carrotMarkWidth(height)};
  }
 }

@@ -1,0 +1,44 @@
+{
+  "change": "Grounded carrot rest pose and fading size-scaled orange tip scratches",
+  "baseline_commit": "6800dac7bcd9ca011d799c5aef974ede460c947c",
+  "branch": "reconstruct/latest-from-conversation",
+  "rest_pose": {
+    "ground_inclination_degrees": 45,
+    "screen_diagonal_degrees": 45,
+    "height_projection": 0.45,
+    "grounded_tip_shadow": true,
+    "smooth_lift_and_lower": true
+  },
+  "scratches": {
+    "origin": "actual A-group PNG tip after pivot, scale and rotation",
+    "color": "#f49a43",
+    "generation": "movement while tip grounded, outside swing",
+    "fade": "existing drag profile, about three seconds",
+    "width_formula": "clamp(displayed carrot height * 0.075, 1.6, 8)",
+    "older_widths_preserved": true,
+    "pause_freezes_age": true,
+    "restart_clears": true,
+    "metal_sparks": false,
+    "bounded_count": {
+      "normal": 320,
+      "simplified": 112
+    }
+  },
+  "workflow_skill": "game-feel",
+  "save_policy": "Updated content revision clears older saved game",
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 11767219,
+    "sha256": "969272fd95b75a7259a04fa42c699923f5c0c4c7973c5d3fb1d011d38236bb0a"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "按玩家已有要求，不运行测试或试玩，仅阅读源码、修改表现层并打包。",
+  "pages_published": false
+}
