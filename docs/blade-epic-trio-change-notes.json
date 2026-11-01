@@ -1,0 +1,64 @@
+{
+  "change": "Only three purple epic items and reduced coin drops",
+  "baseline_commit": "2e324d9a5931e20f89c216a91ce3c3e733b6fcd1",
+  "branch": "reconstruct/latest-from-conversation",
+  "catalogue": [
+    {
+      "id": "redMoonBlade",
+      "name": "赤月誓刃",
+      "rarity": "epic",
+      "icon_background": "purple"
+    },
+    {
+      "id": "solarEdge",
+      "name": "曜金裁决",
+      "rarity": "epic",
+      "icon_background": "purple"
+    },
+    {
+      "id": "stoneCleaver",
+      "name": "玄岩巨斧",
+      "rarity": "epic",
+      "icon_background": "purple"
+    }
+  ],
+  "removed_shop_items": 15,
+  "removed_effects": [
+    "retired attack modifiers and triggers",
+    "defense effects",
+    "footwear effects",
+    "chain lightning"
+  ],
+  "normal_coin_drop_chance": {
+    "before": 0.6,
+    "after": 0.25
+  },
+  "elite_and_boss_coin_drop_chance": 1,
+  "save_version": 13,
+  "migration": {
+    "versions": [
+      10,
+      11,
+      12
+    ],
+    "retain_epic_ranks_and_order": true,
+    "retired_held_gear_credit": "full original investment once",
+    "accounting": "wallet += credit; spent -= credit; earned and refunded unchanged",
+    "retain_hp_ratio_and_run_progress": true
+  },
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 9518112,
+    "sha256": "a96e3cd51c3f3dcdc783a0d4966fa493fd4b781e8d1a971f61bc012a42754d7a"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "reason": "玩家要求：做好后不用测试。仅打包离线文件。",
+  "pages_published": false
+}

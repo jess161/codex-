@@ -4,7 +4,7 @@ import type { BladeApp } from './main';
 import { GROUNDS, groundPreview } from './grounds';
 import { shopEquipmentStats, loadName } from './equipment';
 import { passiveProgress } from './passives';
-import { GEAR, GEAR_IDS, GEAR_CAP, GEAR_SLOTS, chainLightningTargets, chainLightningDamage, gearBlockReason, gearSellPrice, GEAR_CATEGORIES, RUN_DURATION, SURVIVAL_DURATION, COIN_VALUES, coinDropChance, freshGear, gearDetail, gearPrice, type GearId, type GearCategory } from './gear';
+import { GEAR, GEAR_IDS, GEAR_CAP, GEAR_SLOTS, gearBlockReason, gearSellPrice, GEAR_CATEGORIES, RUN_DURATION, SURVIVAL_DURATION, COIN_VALUES, coinDropChance, freshGear, gearDetail, gearPrice, type GearId, type GearCategory } from './gear';
 import { gearIcon, coinIcon } from './gear-art';
 import type { BladeInspector } from './inspector';
 import { combatPower } from './power';
@@ -111,15 +111,13 @@ export class BladeUI {
     const list = node.querySelector<HTMLElement>('.shop-items'), scroll = list?.scrollTop ?? 0;
     const active = node.contains(document.activeElement) ? document.activeElement as HTMLElement : undefined;
     const focusAction = active?.dataset.action, focusValue = active?.dataset.value;
-    const filters = [{id:'all',name:'全部'},...Object.entries(GEAR_CATEGORIES).map(([id,c])=>({id,name:c.name.replace('类','')}))];
-    node.innerHTML = `<header class="shop-heading"><div><h2 id="shop-title">装备商店</h2><span>${icon('pause')}战斗已暂停</span></div><div class="shop-gold">${coinIcon()}<b data-shop-wallet>${e.wallet}</b></div><button data-shop-close data-action="shop" class="icon-button" aria-label="关闭商店">${icon('close')}</button></header>
-      <nav class="shop-tabs" aria-label="装备类型">${filters.map(c=>`<button data-action="shop-category" data-value="${c.id}" aria-pressed="${this.shopCategory===c.id}">${c.name}</button>`).join('')}</nav>
-      <div class="shop-items" role="group" aria-label="装备目录，向下滑动浏览">${GEAR_IDS.filter(id=>this.shopCategory==='all'||GEAR[id].category===this.shopCategory).map(id=>{
+    node.innerHTML = `<header class="shop-heading"><div><h2 id="shop-title">装备商店</h2><span>${icon('pause')}史诗品质 · 战斗已暂停</span></div><div class="shop-gold">${coinIcon()}<b data-shop-wallet>${e.wallet}</b></div><button data-shop-close data-action="shop" class="icon-button" aria-label="关闭商店">${icon('close')}</button></header>
+      <div class="shop-items" role="group" aria-label="三件史诗装备目录">${GEAR_IDS.map(id=>{
         const rank=e.gear[id], selected=this.selectedGear===id;
-        return `<button class="shop-item${selected?' selected':''}${rank?' owned':''}" data-action="gear-detail" data-value="${id}" data-gear="${id}" aria-pressed="${selected}" aria-label="查看${GEAR[id].name}${rank?`，已装备${rank}级`:''}"><span class="shop-item-art">${gearIcon(id)}${rank?`<small class="shop-item-rank">${rank}级</small>`:''}</span><b class="shop-item-name">${GEAR[id].name}</b><span class="shop-item-price">${rank===GEAR_CAP?'已满级':`${coinIcon()}${gearPrice(id,rank)}`}</span></button>`;
+        return `<button class="shop-item epic${selected?' selected':''}${rank?' owned':''}" data-action="gear-detail" data-value="${id}" data-gear="${id}" aria-pressed="${selected}" aria-label="查看${GEAR[id].name}${rank?`，已装备${rank}级`:''}"><span class="shop-item-art">${gearIcon(id)}<small class="shop-item-rarity">史诗</small>${rank?`<small class="shop-item-rank">${rank}级</small>`:''}</span><b class="shop-item-name">${GEAR[id].name}</b><span class="shop-item-price">${rank===GEAR_CAP?'已满级':`${coinIcon()}${gearPrice(id,rank)}`}</span></button>`;
       }).join('')}</div>
       ${this.shopDetail()}
-      <footer class="shop-footer"><span>已装备 ${e.order.length}/${GEAR_SLOTS}<small>足具限一件 · 出售返还 75%</small></span><button data-action="shop" data-shop-resume>继续战斗 ${icon('play')}</button></footer>`;
+      <footer class="shop-footer"><span>已装备 ${e.order.length}/${GEAR_SLOTS}<small>史诗品质 · 出售返还 75%</small></span><button data-action="shop" data-shop-resume>继续战斗 ${icon('play')}</button></footer>`;
     const nextList = node.querySelector<HTMLElement>('.shop-items')!; nextList.scrollTop = scroll;
     if (focusAction) {
       const target=Array.from(node.querySelectorAll<HTMLElement>('[data-action]')).find(el=>el.dataset.action===focusAction&&el.dataset.value===focusValue);
@@ -128,13 +126,10 @@ export class BladeUI {
   }
   private shopDetail() {
     const id=this.selectedGear,e=this.app.run!.state.economy!;
-    if (!id) return '<section class="shop-detail empty"><span>上下滑动浏览 · 点击图标查看属性</span></section>';
+    if (!id) return '<section class="shop-detail empty"><span>点击史诗装备查看属性</span></section>';
     const rank=e.gear[id],full=rank===GEAR_CAP,reason=gearBlockReason(e,id),price=gearPrice(id,rank),verb=full?'已满级':rank?'升级':'购买';
-    const run=this.app.run!,previewRank=Math.max(1,rank);
-    const signatureItem=id==='redMoonBlade'||id==='solarEdge'||id==='stoneCleaver';
-    const note=signatureItem?`${GEAR[id].note}${rank&&!full?` 升级后：${gearDetail(id,rank+1)}`:''}`:rank&&!full?`升级后：${gearDetail(id,rank+1)}`:GEAR[id].note;
-    const chainInfo=id==='chainLightning'?` 当前等级可命中 ${chainLightningTargets(run.state.level)} 个目标，首段伤害 ${chainLightningDamage(run.state.level,shopEquipmentStats(run.state.level,run.tier,{...e.gear,chainLightning:previewRank}).damage,previewRank)}。${rank?`盈能 ${run.state.build!.chainCharge}/100。`:''}`:'';
-    return `<section class="shop-detail" aria-label="装备详情"><div class="shop-detail-heading">${gearIcon(id)}<div><h3>${GEAR[id].name}<small>${rank?`已装备 ${rank}/${GEAR_CAP} 级`:'未拥有'}</small></h3><p>${rank?gearDetail(id,rank):GEAR[id].effect}</p></div></div><p class="shop-detail-note">${note}${chainInfo}</p><div class="shop-actions"><small data-purchase-status>${reason || (rank?'升级不占位置':'所有武器通用')}</small>${rank?`<button class="sell-gear" data-action="sell-gear" data-value="${id}" aria-label="出售${GEAR[id].name}，返还${gearSellPrice(id,rank)}金币">出售 ${gearSellPrice(id,rank)}</button>`:''}<button class="buy-gear" data-action="buy-gear" data-value="${id}" title="${reason}" ${reason?'disabled':''} aria-label="${verb}${GEAR[id].name}${full?'':`，${price}金币`}"><b>${verb}</b>${full?'':`<span>${coinIcon()}${price}</span>`}</button></div></section>`;
+    const note=`${GEAR[id].note}${rank&&!full?` 升级后：${gearDetail(id,rank+1)}`:''}`;
+    return `<section class="shop-detail" aria-label="装备详情"><div class="shop-detail-heading">${gearIcon(id)}<div><h3>${GEAR[id].name}<small class="epic-label">史诗 · ${rank?`已装备 ${rank}/${GEAR_CAP} 级`:'未拥有'}</small></h3><p>${rank?gearDetail(id,rank):GEAR[id].effect}</p></div></div><p class="shop-detail-note">${note}</p><div class="shop-actions"><small data-purchase-status>${reason || (rank?'升级不占位置':'所有武器通用')}</small>${rank?`<button class="sell-gear" data-action="sell-gear" data-value="${id}" aria-label="出售${GEAR[id].name}，返还${gearSellPrice(id,rank)}金币">出售 ${gearSellPrice(id,rank)}</button>`:''}<button class="buy-gear" data-action="buy-gear" data-value="${id}" title="${reason}" ${reason?'disabled':''} aria-label="${verb}${GEAR[id].name}${full?'':`，${price}金币`}"><b>${verb}</b>${full?'':`<span>${coinIcon()}${price}</span>`}</button></div></section>`;
   }
   private toastTimer = 0;
   private deferredToast = '';
@@ -232,7 +227,7 @@ export class BladeUI {
   private header(kicker: string, title: string, subtitle: string) { return `<div class="panel-header"><span class="eyebrow">${kicker}</span><h2>${title}</h2><p>${subtitle}</p></div>`; }
   private relicInventory() {
     const run = this.app.run!, e = run.state.economy;
-    return `<section class="gear-inventory small-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('YOUR EVERYDAY KIT', '这一局的装备', '所有装备通用于刀、剑、弓、矛，最多六件，足具限一件。通过暴击、特效、治疗与生命收益自由搭配。')}${(Object.keys(GEAR_CATEGORIES) as GearCategory[]).map(category => `<section class="owned-gear-category"><h3>${GEAR_CATEGORIES[category].name}</h3>${(e?.order ?? []).filter(id => GEAR[id].category === category).map(id => `<article>${gearIcon(id)}<div><b>${GEAR[id].name} · Lv.${e!.gear[id]}</b><p>${gearDetail(id, e!.gear[id])}</p></div></article>`).join('') || '<p class="gear-empty">本类暂未购买装备</p>'}</section>`).join('')}<p class="gear-inventory-note">本局已拾取 ${e?.earned ?? 0} 金币 · 已花费 ${e?.spent ?? 0} · 出售返还 ${e?.refunded ?? 0} · 剩余 ${e?.wallet ?? 0}。回到战场后点“商店”购买，打开商店会暂停战斗，关闭后继续。</p></section>`;
+    return `<section class="gear-inventory small-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('YOUR EVERYDAY KIT', '这一局的装备', '仅保留三件史诗装备，通用于刀、剑、弓、矛；每件最高三级。')}${(Object.keys(GEAR_CATEGORIES) as GearCategory[]).map(category => `<section class="owned-gear-category"><h3>${GEAR_CATEGORIES[category].name}</h3>${(e?.order ?? []).filter(id => GEAR[id].category === category).map(id => `<article>${gearIcon(id)}<div><b>${GEAR[id].name} · Lv.${e!.gear[id]}</b><p>${gearDetail(id, e!.gear[id])}</p></div></article>`).join('') || '<p class="gear-empty">本类暂未购买装备</p>'}</section>`).join('')}<p class="gear-inventory-note">本局已拾取 ${e?.earned ?? 0} 金币 · 已花费 ${e?.spent ?? 0} · 出售返还 ${e?.refunded ?? 0} · 剩余 ${e?.wallet ?? 0}。回到战场后点“商店”购买，打开商店会暂停战斗，关闭后继续。</p></section>`;
   }
   private powerPanel() {
     const run = this.app.run!, p = combatPower(run);
@@ -298,7 +293,7 @@ export class BladeUI {
       const items = run?.gearOrder ?? [], strip = document.querySelector<HTMLElement>('#equipment-strip')!, signature = items.map(id => `${id}:${s!.economy!.gear[id]}`).join('|');
       if (signature !== this.gearKey) {
         const scroll = strip.scrollLeft, previous = strip.childElementCount; this.gearKey = signature;
-        strip.innerHTML = items.map(id => `<button class="equipment-chip" data-action="gear-detail" data-value="${id}" aria-label="${GEAR[id].name}，等级 ${s!.economy!.gear[id]}" title="${GEAR[id].name} · ${gearDetail(id, s!.economy!.gear[id])}">${gearIcon(id)}${id==='chainLightning'?'<i class="gear-energy" aria-hidden="true"><em></em></i>':''}<small>${s!.economy!.gear[id]}</small></button>`).join('');
+        strip.innerHTML = items.map(id => `<button class="equipment-chip epic" data-action="gear-detail" data-value="${id}" aria-label="${GEAR[id].name}，等级 ${s!.economy!.gear[id]}" title="${GEAR[id].name} · ${gearDetail(id, s!.economy!.gear[id])}">${gearIcon(id)}<small>${s!.economy!.gear[id]}</small></button>`).join('');
         strip.scrollLeft = items.length > previous ? strip.scrollWidth : scroll;
       }
       const dockVisible = !!s && items.length > 0 && panel !== 'title' && !end;
@@ -317,9 +312,7 @@ export class BladeUI {
     document.querySelector('.health-cluster')!.classList.toggle('low', state.hp < state.maxHp * .3);
     text('coin-balance', String(state.economy?.wallet ?? 0));
     const build=state.build;
-    const energyChip=document.querySelector<HTMLElement>('.equipment-chip[data-value="chainLightning"]');
-    if(energyChip){energyChip.classList.toggle('energized',build?.chainCharge===100);energyChip.querySelector<HTMLElement>('.gear-energy em')!.style.width=`${build?.chainCharge??0}%`;energyChip.setAttribute('aria-label',`闪电连锁，等级 ${state.economy!.gear.chainLightning}，盈能 ${build?.chainCharge??0}/100`);}
-    text('build-state', state.economy ? [state.economy.gear.chainLightning?(build?.chainCharge===100?'盈能已满 · 下次普攻连锁':'盈能 '+(build?.chainCharge??0)+'/100'):'',build?.heat?'热力 '+build.heat+'/4':'',build?.shield?'护盾 '+Math.ceil(build.shield):'',build?.bloodShield?'血契盾 '+Math.ceil(build.bloodShield):'',build?.empowered?'瞬步强化就绪':''].filter(Boolean).join(' · ') : '');
+    text('build-state',state.economy&&build?.bloodShield?'血契盾 '+Math.ceil(build.bloodShield):'');
     text('level-label', `Lv.${state.level}`); percent('xp-fill', state.level === MAX_LEVEL ? 1 : state.xp / run.xpNeeded);
     text('next-form', run.holdingXp ? `磨合 ${Math.ceil(run.formRemaining)}s · 经验已存` : state.level === MAX_LEVEL ? '极境 · 满级' : stage === MASTERIES.length - 1 ? '觉醒 · 极境之路' : `${MASTERIES[stage + 1]} Lv.${TIER_LEVELS[stage + 1]}`);
     text('clock', formatTime(state.bossStarted ? Math.ceil(run.bossDuration - state.bossTime) : state.time));

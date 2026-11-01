@@ -132,7 +132,7 @@ export class BattleScene extends Phaser.Scene {
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='gear-proc'){
         const limit=this.simplified?8:16;
-        if(event.gearId==='chainLightning'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
+        if(event.procKind==='cleave'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
         else if(this.buildFx.length<limit)this.buildFx.push({event,age:0});
       }
       if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);

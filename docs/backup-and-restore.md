@@ -1,6 +1,6 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮从已备份的 `14bd777` 闪电连锁版，新增赤月誓刃、曜金裁决和玄岩巨斧及原创图标。设计见 [三件装备](gdd/blade-evolution-three-relics-v1.8.md)，交付记录见 [本轮说明](blade-three-relics-change-notes.json)。按玩家要求未运行测试或试玩。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮从已备份的 `2e324d9` 三件新装备版，收敛为三件紫色背景史诗装备，取消其余商店装备，普通怪金币掉率降为 25%。设计见 [史诗三件](gdd/blade-evolution-epic-trio-v1.9.md)，交付记录见 [本轮说明](blade-epic-trio-change-notes.json)。按玩家要求未运行测试或试玩。
 
 [原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages 发布分支；旧网页不能代表本轮调整版。历史静态发布分支为 `preview/mobile-20261031`。
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-本轮工作区备份使用 `blade-three-relics-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。工作区文件需要另存到自己的设备，才能在环境删除后独立恢复。
+本轮工作区备份使用 `blade-epic-trio-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。工作区文件需要另存到自己的设备，才能在环境删除后独立恢复。
 
 ```bash
 mkdir -p /workspace/backups
@@ -29,6 +29,6 @@ npm ci
 npm run dev -- --port 4173
 ```
 
-`npm run build` 生成 `dist/blade-evolution.html`，自带代码和图片。离线检查使用实际 HTML 字节在内存页面中提供游戏并禁网；环境浏览器禁用 `file://`，未宣称测试过手机文件管理器。
+本轮使用 `node node_modules/vite/bin/vite.js build` 与 `node scripts/standalone.mjs` 生成 `dist/blade-evolution.html`，自带代码和图片。遵照玩家要求，没有运行测试、浏览器试玩或独立类型检查。
 
-存储键继续使用 `blade-evolution-save-v1`，新结构 v12。v10/v11 的本局装备、金币、等级、世界与触发状态原样保留，只补入新增装备和血契护盾字段。v9 及更早的补偿沿用旧规则。历史源码和旧验收报告仍保留在 Git 中。
+存储键继续使用 `blade-evolution-save-v1`，结构 v13。v10—v12 保留三件史诗装备、等级、世界、金币、战绩和生命比例；移除的持有装备按当时价格一次性退还，并撤销对应累计消费。已出售装备不重复退款，v13 再读不重复迁移。历史源码和报告保留在 Git 中。

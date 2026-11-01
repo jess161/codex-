@@ -54,20 +54,14 @@ export function swingMoveFactor(stats: EquipmentStats, swing: SwingTiming | null
 export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '稳重' : mass < 3.2 ? '沉重' : '巨刃';
 
 // The new catalogue is weapon-neutral. No historical relic or set is consulted.
-export function shopEquipmentStats(level: number, blade: number, gear: import('./gear').GearInventory, heat = 0) {
-  const t = TIERS[blade], mastery = tierForLevel(level), base = equipmentStats(1, freshPerks(), blade, freshRelics());
-  const pace = 1.10 / (1 + .12 * gear.clockGrip + .03 * gear.clockGrip * heat + .10 * gear.stormCoil + .08 * gear.pickupBoots + .15 * gear.chainLightning);
-  const range = Math.min(isBow(blade) ? 900 : 420, t.range * .90 * (1 + .10 * mastery) * (1 + .10 * gear.clearLens));
-  const windup = base.windup * pace, strike = base.strike * pace, recovery = base.recovery * pace;
-  return {...base,
-    damage: Math.round(((13 + level - 1) * t.multiplier * (1 + .10 * mastery) * (1 + .02 * (level - 1)) + 20 * gear.chainLightning + 25 * gear.redMoonBlade + 30 * gear.solarEdge + 15 * gear.stoneCleaver) * (1 + .12 * gear.sugarCore + .08 * gear.bloodFang + .06 * gear.tideFang)),
-    interval: Math.max(windup + strike + recovery + .015, base.interval * pace),
-    windup, strike, recovery, range, lengthScale: (range - 10) / (t.range - 10),
-    widthScale: 1 + .09 * mastery, arc: Math.min(t.id === 'sword' ? 110 : 250, t.arc + 9 * mastery),
-    thrustWidth: 6 * Math.sqrt(1 + .09 * mastery), mass: base.mass, burden: 0,
-    moveSpeed: 210 * (1 + .09 * gear.breezeBoots), acceleration: 2800 * (1 + .14 * gear.breezeBoots),
-    magnet: 84 * (1 + .15 * gear.pickupBoots), damageReduction: .04 * gear.bubbleGuard + .05 * gear.thornArmor,
-    critChance: Math.min(1,.15 * gear.sugarCore + .20 * gear.solarEdge), critMultiplier: 1.75 + .20 * gear.clearLens + .30 * gear.solarEdge,
-    dashCooldown: Math.max(3, 5 - .55 * gear.springBoots), waveEvery: 0,
-  };
+export function shopEquipmentStats(level:number,blade:number,gear:import('./gear').GearInventory){
+ const t=TIERS[blade],mastery=tierForLevel(level),base=equipmentStats(1,freshPerks(),blade,freshRelics()),pace=1.10;
+ const range=Math.min(isBow(blade)?900:420,t.range*.90*(1+.10*mastery));
+ const windup=base.windup*pace,strike=base.strike*pace,recovery=base.recovery*pace;
+ return {...base,
+  damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+25*gear.redMoonBlade+30*gear.solarEdge+15*gear.stoneCleaver),
+  interval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
+  widthScale:1+.09*mastery,arc:Math.min(t.id==='sword'?110:250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
+  moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:Math.min(1,.20*gear.solarEdge),critMultiplier:1.75+.30*gear.solarEdge,dashCooldown:5,waveEvery:0,
+ };
 }
