@@ -2,14 +2,16 @@ import type { Enemy, Point } from './simulation';
 import type { EquipmentStats } from './equipment';
 
 export const FIRST_BOW = 12;
-export const isBow = (index: number) => index >= FIRST_BOW && index < FIRST_BOW + 3;
+export const isBow = (index: number) => index === 17 || index >= FIRST_BOW && index < FIRST_BOW + 3;
 export const BOW_IDS = ['wind-bow', 'frost-bow', 'ember-bow'] as const;
 export const BOW_PROFILES = [
   {kind:'wind',speed:700,pierce:2,mass:.7,windup:.075},
   {kind:'ice',speed:560,pierce:1,mass:.9,windup:.12},
   {kind:'fire',speed:500,pierce:1,mass:1.25,windup:.36},
+  {kind:'arrow',speed:720,pierce:1,mass:.75,windup:.075},
 ] as const;
-export type ArrowKind = 'wind' | 'ice' | 'fire';
+export const bowProfile = (index: number) => BOW_PROFILES[index === 17 ? 3 : index - FIRST_BOW];
+export type ArrowKind = 'wind' | 'ice' | 'fire' | 'arrow';
 export interface BowArrow extends Point {
   id:number;shot:number;kind:ArrowKind;angle:number;speed:number;remaining:number;width:number;
   damage:number;burn:number;pierce:number;hit:number[];dealt:number[];active:boolean;blast:number;blastDamage:number;
@@ -28,14 +30,14 @@ export function bowGeometry(stats:EquipmentStats,mastery:number,scope=0) {
     area:Math.min(2.1,Math.sqrt(stats.widthScale)*(1+.04*mastery)),spread:Math.min(.4,.16+.02*mastery+.015*(stats.widthScale-1))};
 }
 function arrow(h:BowHost,angle:number,damage:number,shot:number,active=false,options:Partial<BowArrow>={}) {
-  const a=h.archery,p=BOW_PROFILES[h.index-FIRST_BOW],shape=bowGeometry(h.stats,h.mastery,h.scope);
+  const a=h.archery,p=bowProfile(h.index),shape=bowGeometry(h.stats,h.mastery,h.scope);
   if(a.arrows.length>=128)return;
   a.arrows.push({id:h.nextId(),shot,x:h.player.x,y:h.player.y,kind:p.kind,angle,speed:p.speed,
-    remaining:shape.range,width:shape.width,damage:Math.max(1,Math.round(damage)),burn:Math.max(1,Math.round(damage*.075*h.elemental)),pierce:Math.min(24,p.pierce+Math.floor(h.mastery/2)+h.scope),hit:[],dealt:[],active,
+    remaining:shape.range,width:shape.width,damage:Math.max(1,Math.round(damage)),burn:Math.max(1,Math.round(damage*.075*h.elemental)),pierce:p.kind==='arrow'?1:Math.min(24,p.pierce+Math.floor(h.mastery/2)+h.scope),hit:[],dealt:[],active,
     blast:p.kind==='fire'?65*shape.area:0,blastDamage:damage*.65,...options});
 }
 export function shootBow(h:BowHost,angle:number) {
-  const shot=h.nextId(),p=BOW_PROFILES[h.index-FIRST_BOW],s=h.archery,shape=bowGeometry(h.stats,h.mastery,h.scope);
+  const shot=h.nextId(),p=bowProfile(h.index),s=h.archery,shape=bowGeometry(h.stats,h.mastery,h.scope);
   s.shots++;
   arrow(h,angle,h.stats.damage,shot);
   if(p.kind==='ice')for(const sign of [-1,1])arrow(h,angle+sign*shape.spread,h.stats.damage*.55,shot);
@@ -120,7 +122,7 @@ export function validArchery(value:unknown):value is ArcheryState {
   const id=(v:unknown)=>n(v)&&Number.isInteger(v)&&Number(v)>0;
   const xy=(v:Point)=>v&&Number.isFinite(v.x)&&Number.isFinite(v.y);
   return n(s.shots,1e6)&&Number.isInteger(s.shots)&&Array.isArray(s.arrows)&&s.arrows.length<=128
-    &&s.arrows.every(a=>xy(a)&&id(a.id)&&id(a.shot)&&['wind','ice','fire'].includes(a.kind)&&Number.isFinite(a.angle)&&n(a.speed,1500)&&a.speed>0&&n(a.remaining,1400)&&n(a.width,40)&&a.width>0&&n(a.damage)&&a.damage>0&&n(a.burn)&&id(a.pierce)&&a.pierce<=24&&typeof a.active==='boolean'&&n(a.blast,600)&&n(a.blastDamage)&&Array.isArray(a.hit)&&a.hit.length<=a.pierce&&a.hit.every(id)&&new Set(a.hit).size===a.hit.length&&Array.isArray(a.dealt)&&a.dealt.length===a.hit.length&&a.dealt.every(v=>n(v)))
+    &&s.arrows.every(a=>xy(a)&&id(a.id)&&id(a.shot)&&['wind','ice','fire','arrow'].includes(a.kind)&&Number.isFinite(a.angle)&&n(a.speed,1500)&&a.speed>0&&n(a.remaining,1400)&&n(a.width,40)&&a.width>0&&n(a.damage)&&a.damage>0&&n(a.burn)&&id(a.pierce)&&a.pierce<=24&&typeof a.active==='boolean'&&n(a.blast,600)&&n(a.blastDamage)&&Array.isArray(a.hit)&&a.hit.length<=a.pierce&&a.hit.every(id)&&new Set(a.hit).size===a.hit.length&&Array.isArray(a.dealt)&&a.dealt.length===a.hit.length&&a.dealt.every(v=>n(v)))
     &&new Set(s.arrows.map(a=>a.id)).size===s.arrows.length
     &&Array.isArray(s.bursts)&&s.bursts.length<=3&&s.bursts.every(b=>n(b.delay,.241)&&Number.isFinite(b.angle)&&n(b.damage)&&b.damage>0&&n(b.range,1400)&&b.range>0&&n(b.width,40)&&b.width>0&&id(b.pierce)&&b.pierce<=24&&n(b.spread,1))
     &&Array.isArray(s.rains)&&s.rains.length<=1&&s.rains.every(r=>xy(r)&&n(r.life,2.401)&&n(r.tick,.401)&&n(r.ticks,6)&&Number.isInteger(r.ticks)&&n(r.radius,600)&&r.radius>0&&n(r.damage)&&r.damage>0)

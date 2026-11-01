@@ -1,8 +1,12 @@
 import { isBow } from './bows';
-import { TIERS } from './config';
+import { TIERS, isBasicWeapon } from './config';
 
 export type BladeId = typeof TIERS[number]['id'];
 export const PASSIVES: Record<BladeId, { name: string; story: string; description: string }> = {
+  knife: { name: '横扫', story: '宽扇形近战', description: '自动横扫前方多个敌人，攻击范围较宽。' },
+  sword: { name: '快斩', story: '高频近战', description: '自动连续快斩，出手与收势更快，覆盖角度较窄。' },
+  bow: { name: '自动射击', story: '单箭远程', description: '自动瞄准射程内可见的敌人，每次射出一支箭；命中首个敌人后消失。' },
+  spear: { name: '直线贯穿', story: '长距离直刺', description: '自动向前直刺，贯穿窄直线上的所有敌人，不扫向侧面与身后。' },
   scrap: { name: '百炼初锋', story: '取意于无名小刀在实战中磨出锋芒。', description: '每击杀 5 名敌人，近战伤害 +6%，最多 3 层；本局保留。' },
   'dark-dagger': { name: '袖里藏锋', story: '取意于韦小宝的机敏与匕首破坚。', description: '瞬步后 3 秒内，下一次命中的近战伤害 +80%；近战对甲壳额外伤害 +30%。' },
   'well-moon': { name: '井中八法', story: '取意于寇仲临阵应变、八法相衔的刀道。', description: '每 8 次有效近战，额外放出三道金月刀气；各造成 80% 近战伤害，射程 220、穿透 2 人。' },
@@ -53,7 +57,8 @@ const pct = (n: number) => `${Math.round(n * 100)}%`;
 const num = (n: number) => Number(n.toFixed(2));
 export function passiveForTier(tier: number, mastery = 0) {
   const base = PASSIVES[TIERS[tier].id], r = passiveRules(mastery);
-  let description: string;
+  if (isBasicWeapon(tier)) return base;
+  let description: string = base.description;
   switch (TIERS[tier].id) {
     case 'scrap': description = `每击杀 5 名敌人，近战伤害 +${pct(r.scrapBonus)}，最多 ${r.scrapCap} 层；本局保留，熟练后可继续叠层。`; break;
     case 'dark-dagger': description = `瞬步后 ${num(r.daggerTime)} 秒内，下一次命中的近战伤害 +${pct(r.daggerBonus)}；近战对甲壳额外伤害 +${pct(r.armorBonus)}。`; break;
@@ -75,6 +80,7 @@ export function passiveForTier(tier: number, mastery = 0) {
 }
 export function passiveGrowth(tier: number, mastery: number) {
   const r = passiveRules(mastery);
+  if (isBasicWeapon(tier)) return '提升基础伤害与尺寸，保持原有攻击方式';
   if(tier===12)return `连矢 ${pct(.45+.05*mastery)} · 穿透 ${2+Math.floor(mastery/2)} 人`;
   if(tier===13)return `寒意 ${num(1.5+.2*mastery)}s · 冻结 ${num(.65+.1*mastery)}s`;
   if(tier===14)return `余烬 ${num(2+.15*mastery)}s · 爆炸范围成长`;
@@ -96,6 +102,10 @@ export function passiveGrowth(tier: number, mastery: number) {
 export function passiveProgress(id: BladeId, p: PassiveState, dashCooldown: number, mastery = 0) {
   const r = passiveRules(mastery);
   switch (id) {
+    case 'knife': return '宽幅横扫 · 前方清群';
+    case 'sword': return '连续快斩 · 灵活走位';
+    case 'bow': return '自动瞄准 · 一次一箭';
+    case 'spear': return '前方直刺 · 沿线贯穿';
     case 'scrap': return p.stacks >= r.scrapCap ? `磨刃已满 · 近战 +${pct(p.stacks * r.scrapBonus)}` : `磨刃 ${p.stacks}/${r.scrapCap} · 击败 ${p.kills % 5}/5`;
     case 'dark-dagger': return p.empowered > 0 ? `藏锋就绪 ${p.empowered.toFixed(1)}s` : '瞬步后强化下一斩';
     case 'well-moon': return `八法蓄势 ${p.hits}/${r.moonCycle}`;

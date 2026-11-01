@@ -3,7 +3,7 @@ import { BladeRun, restoreSnapshot, validSnapshot } from '../src/blade/simulatio
 import { BOSS_DURATION, GAME_DURATION, MIN_FORM_TIME, MASTERIES, TIER_LEVELS, sectorHits, xpNext, xpToLevel } from '../src/blade/config';
 const input = { x: 0, y: 0, dash: false };
 const step = (r: BladeRun, seconds: number) => { for (let i = 0; i < Math.round(seconds * 60); i++) r.step(1 / 60, input); };
-const empty = (seed = 1234) => { const r = new BladeRun(seed); r.state.enemies = []; return r; };
+const empty = (seed = 1234) => { const r = new BladeRun(seed, undefined, 0); r.state.enemies = []; return r; };
 const resolveUpgrades=(r:BladeRun)=>{r.step(1/60,input);};
 
 describe('Blade Evolution combat and progression', () => {

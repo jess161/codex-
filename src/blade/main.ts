@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import './style.css';
-import { ACHIEVEMENTS, FIXED_STEP, MASTERIES, TIERS, TIER_LEVELS, encounterDensity } from './config';
+import { ACHIEVEMENTS, toBasicWeapon, isBasicWeapon, FIXED_STEP, MASTERIES, TIERS, TIER_LEVELS, encounterDensity } from './config';
 import { BladeRun, type MoveInput } from './simulation';
 import { BattleScene } from './scene';
 import { BladeStorage, type Settings } from './storage';
@@ -162,7 +162,7 @@ export class BladeApp {
   start(resume = false) {
     if (!this.ready) { this.ui.toast('刀锋即将就绪，请稍候。'); return; }
     this.clearInputs();
-    this.run = new BladeRun(Date.now() >>> 0, resume ? this.storage.data.run ?? undefined : undefined, this.selectedBlade);
+    this.run = new BladeRun(Date.now() >>> 0, resume ? this.storage.data.run ?? undefined : undefined, toBasicWeapon(this.selectedBlade));
     const chosen = this.run.tier;
     this.selectedBlade = chosen; this.storage.data.settings.blade = chosen;
     if (!this.storage.data.meta.seenBlades.includes(chosen)) this.storage.data.meta.seenBlades.push(chosen);
@@ -196,7 +196,7 @@ export class BladeApp {
     if (action === 'fullscreen') { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.().catch(() => this.ui.toast('当前浏览器未开放全屏。')); return; }
     if (action === 'blade-pick') {
       const blade = Number(value);
-      if (Number.isInteger(blade) && blade >= 0 && blade < TIERS.length) {
+      if (Number.isInteger(blade) && isBasicWeapon(blade)) {
         if (this.panel !== 'loadout') this.backPanel = this.panel;
         this.selectedBlade = blade; this.panel = 'loadout'; this.clearInputs(); this.ui.render(true);
       }
@@ -220,7 +220,7 @@ export class BladeApp {
       if (action === 'save-title') this.save();
       this.run = undefined; this.scene.activeRun = false; this.scene.pausedRun = false; this.panel = 'title'; this.clearInputs(); this.ui.render(true); return;
     }
-    if(action==='active'){if(this.panel==='none'&&this.run?.state.mode==='playing'&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
+    if(action==='active'){if(this.panel==='none'&&this.run?.state.mode==='playing'&&this.run.hasActiveSkill&&this.run.active.cooldown<=.000001){this.activeQueued=true;this.audio.unlock();}return;}
     if (action === 'dash') { if (this.panel === 'none' && this.run?.state.mode === 'playing') this.dashQueued = true; return; }
   }
   setSetting(key: string, value: boolean) {
@@ -308,7 +308,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:{name:this.run!.activeInfo.name,...this.run!.active}, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:this.run!.hasActiveSkill?{name:this.run!.activeInfo?.name,...this.run!.active}:null, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

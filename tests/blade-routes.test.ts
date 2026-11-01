@@ -28,7 +28,7 @@ describe('parallel blade routes and exaggerated forging', () => {
     });
     // Different archetypes trade speed, reach and damage; neither stat follows catalogue order.
     expect(intervals[5]).toBeGreaterThan(intervals[1]); expect(damage[5]).toBeGreaterThan(damage[11]);
-    expect(new BladeRun(71, undefined, 99).tier).toBe(0);
+    expect(new BladeRun(71, undefined, 99).tier).toBe(15);
   });
   it('banks XP at mastery boundaries without interrupting movement or changing blades',()=>{
     const r=isolated(9,5);r.grantXp(500);expect(r.state.level).toBe(5);r.state.time=MIN_FORM_TIME-.1;step(r,.05);expect(r.state.level).toBe(5);step(r,.1);
@@ -59,7 +59,7 @@ describe('parallel blade routes and exaggerated forging', () => {
     expect(reduced.mass).toBeCloseTo(large.mass * .86 ** 10); expect(reduced.windup).toBeLessThan(large.windup);
   });
   it('awakening strengthens all twelve own passives and communicates every mastery step', () => {
-    TIERS.forEach((_, blade) => {
+    TIERS.slice(0,15).forEach((_, blade) => {
       const descriptions = MASTERIES.map((__, mastery) => passiveForTier(blade, mastery).description);
       expect(new Set(descriptions).size).toBe(5); expect(passiveForTier(blade, 0).name).toBe(passiveForTier(blade, 4).name);
     });

@@ -37,6 +37,11 @@ export class BladeAudio {
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
   slash(tier: number, mass = 1) {
+    if (tier >= 15) {
+      const frequency = tier === 16 ? 490 : tier === 18 ? 310 : 235;
+      this.tone(frequency, tier === 16 ? .065 : .13, 'triangle', .11, tier === 16 ? 180 : 75);
+      return;
+    }
     const weight = Math.min(4, Math.max(0, mass - 1));
     this.tone((250 + tier * 110) / (1 + weight * .24), .12 + weight * .025, 'triangle', .12, 70 + tier * 16);
     if (weight > .7) this.tone(90 / (1 + weight * .12), .16, 'triangle', .08, 44);

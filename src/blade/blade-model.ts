@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SVGLoader } from 'three/addons/loaders/SVGLoader.js';
 import { BLADE_ART, BLADE_DESIGNS } from './blade-art';
+import { BASIC_BOW_PATH } from './basic-weapon-art';
 import { isBow } from './bows';
 import { BOW_LIMB_PATH } from './assets/bows/bow-shapes';
 
@@ -29,11 +30,11 @@ export async function createBladeModel(index: number) {
 }
 async function createBowModel(index:number){
   const group=new THREE.Group();group.name=`bow-${index}`;
-  const parsed=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${BOW_LIMB_PATH}"/></svg>`);
+  const parsed=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${index === 17 ? BASIC_BOW_PATH : BOW_LIMB_PATH}"/></svg>`);
   const geometry=new THREE.ExtrudeGeometry(parsed.paths.flatMap(p=>SVGLoader.createShapes(p)),{depth:6,bevelEnabled:true,bevelSize:1.2,bevelThickness:1,bevelSegments:3,curveSegments:24});
   geometry.scale(.5,-.5,1);geometry.translate(-128,128,-3);
   const side=new THREE.MeshStandardMaterial({color:'#263d54',roughness:.65});
-  const face=new THREE.MeshStandardMaterial({color:['#74e0bf','#bdefff','#ffd277'][index-12],roughness:.55});
+  const face=new THREE.MeshStandardMaterial({color:index === 17 ? '#b68a53' : ['#74e0bf','#bdefff','#ffd277'][index-12],roughness:.55});
   group.add(new THREE.Mesh(geometry,[face,side]));
   const grip=new THREE.Mesh(new THREE.BoxGeometry(17.5,31,8),new THREE.MeshStandardMaterial({color:'#f1cd7d',roughness:.6}));grip.position.x=31.75;group.add(grip);
   const string=new THREE.Mesh(new THREE.CylinderGeometry(.65,.65,187,8),new THREE.MeshStandardMaterial({color:'#dfedf3'}));string.position.x=-31.5;group.add(string);

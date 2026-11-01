@@ -1,4 +1,5 @@
-import { SAVE_KEY, TIERS, TIER_LEVELS } from './config';
+import { DEFAULT_WEAPON, SAVE_KEY, TIERS, TIER_LEVELS, isBasicWeapon, toBasicWeapon } from './config';
+import { migrateBasicWeapon } from './weapon-migration';
 import { restoreSnapshot, type RunState } from './simulation';
 import { isGroundId, type GroundId } from './grounds';
 export interface Settings { sound: boolean; monsterSound: boolean; simplified: boolean; motion: boolean; shake: boolean; hitPause: boolean; haptics: boolean; color: number; ground: GroundId; blade: number }
@@ -9,7 +10,7 @@ export class BladeStorage {
   data: SaveData;
   warning = '';
   constructor() {
-    this.data = { version: 8, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, hitPause: true, haptics: false, color: 0, ground: 'grid', blade: 0 }, run: null };
+    this.data = { version: 8, meta: freshMeta(), settings: { sound: true, monsterSound: true, simplified: false, motion: !matchMedia('(prefers-reduced-motion: reduce)').matches, shake: true, hitPause: true, haptics: false, color: 0, ground: 'grid', blade: DEFAULT_WEAPON }, run: null };
     try {
       const raw = localStorage.getItem(SAVE_KEY); if (!raw) return;
       const saved = JSON.parse(raw);
@@ -34,12 +35,17 @@ export class BladeStorage {
         for (const key of ['sound', 'monsterSound', 'simplified', 'motion', 'shake', 'hitPause', 'haptics'] as const) if (typeof saved.settings[key] === 'boolean') this.data.settings[key] = saved.settings[key];
         if (Number.isInteger(saved.settings.color) && saved.settings.color >= 0 && saved.settings.color < 3) this.data.settings.color = saved.settings.color;
         if (isGroundId(saved.settings.ground)) this.data.settings.ground = saved.settings.ground;
-        if (Number.isInteger(saved.settings.blade) && saved.settings.blade >= 0 && saved.settings.blade < TIERS.length) this.data.settings.blade = saved.settings.blade;
+        if (Number.isInteger(saved.settings.blade) && saved.settings.blade >= 0 && saved.settings.blade < TIERS.length) this.data.settings.blade = toBasicWeapon(saved.settings.blade);
       }
       if (saved.run) {
         if ([1, 2, 3, 4, 5, 6, 7, 8].includes(saved.version)) this.data.run = restoreSnapshot(saved.run);
+        if (this.data.run && !isBasicWeapon(this.data.run.blade)) {
+          this.data.run = migrateBasicWeapon(this.data.run);
+          this.warning = '旧武器已换为普通武器，对局进度与道具已保留。';
+        }
         if (!this.data.run) this.warning = '上次对局无法恢复，已保留图鉴与战绩。';
       }
+      this.data.meta.seenBlades = [...new Set(this.data.meta.seenBlades.map(toBasicWeapon))];
     } catch { this.warning = '存档无法读取，将开始新的试炼。'; }
   }
   write(run?: RunState | null) {

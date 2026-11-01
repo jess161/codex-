@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import { TIERS } from './config';
+import { TIERS, BLADE_CATALOGUE, BASIC_WEAPON_INDICES, isBasicWeapon } from './config';
 import { BLADE_ART, BLADE_FINISHES } from './blade-art';
 import { createBladeModel, disposeBladeModel } from './blade-model';
 
@@ -28,7 +28,7 @@ export class BladeInspector {
   constructor() {
     this.root.className = 'blade-inspector'; this.root.hidden = true;
     this.root.setAttribute('role', 'dialog'); this.root.setAttribute('aria-modal', 'true'); this.root.setAttribute('aria-labelledby', 'inspector-title');
-    this.root.innerHTML = `<section class="inspector-panel"><header class="inspector-header"><div><span class="eyebrow">THE BLADE ATELIER</span><h2 id="inspector-title"></h2><small id="inspector-source"></small></div><button data-inspect="close" class="inspector-close" aria-label="关闭刀具鉴赏">✕</button></header><div class="inspector-layout"><div class="inspector-display"><div class="inspector-surface" tabindex="0" role="application" aria-label="刀具鉴赏区域，拖动旋转，滚轮或双指缩放，方向键旋转，R 复位"><div class="inspector-orbit"></div><img class="inspector-flat" alt=""><span id="inspector-mode">正在展开刀锋</span></div><div class="inspector-controls"><button data-inspect="auto" aria-pressed="false">⟳ 自动转台</button><button data-inspect="reset">↺ 复位</button><span></span><button data-inspect="out" aria-label="缩小刀具">−</button><output id="inspector-zoom">100%</output><button data-inspect="in" aria-label="放大刀具">＋</button></div><p class="inspector-hint">拖动任意旋转 · 滚轮 / 双指缩放 · 双击复位</p></div><article class="inspector-notes"><span class="eyebrow">CRAFT & DETAIL</span><h3 id="inspector-finish"></h3><p id="inspector-craft"></p><div class="inspector-materials"><span>清晰刀面</span><span>糖果色块</span><span>深蓝轮廓</span></div><p id="inspector-lore"></p><small>造型与工艺为本作艺术演绎</small><nav class="inspector-switch"><button data-inspect="prev" aria-label="鉴赏上一把刀">←</button><select id="inspector-choice" aria-label="选择鉴赏的刀">${TIERS.map((t, i) => `<option value="${i}">${t.name}</option>`).join('')}</select><button data-inspect="next" aria-label="鉴赏下一把刀">→</button></nav></article></div></section>`;
+    this.root.innerHTML = `<section class="inspector-panel"><header class="inspector-header"><div><span class="eyebrow">THE BLADE ATELIER</span><h2 id="inspector-title"></h2><small id="inspector-source"></small></div><button data-inspect="close" class="inspector-close" aria-label="关闭武器鉴赏">✕</button></header><div class="inspector-layout"><div class="inspector-display"><div class="inspector-surface" tabindex="0" role="application" aria-label="武器鉴赏区域，拖动旋转，滚轮或双指缩放，方向键旋转，R 复位"><div class="inspector-orbit"></div><img class="inspector-flat" alt=""><span id="inspector-mode">正在展开刀锋</span></div><div class="inspector-controls"><button data-inspect="auto" aria-pressed="false">⟳ 自动转台</button><button data-inspect="reset">↺ 复位</button><span></span><button data-inspect="out" aria-label="缩小武器">−</button><output id="inspector-zoom">100%</output><button data-inspect="in" aria-label="放大武器">＋</button></div><p class="inspector-hint">拖动任意旋转 · 滚轮 / 双指缩放 · 双击复位</p></div><article class="inspector-notes"><span class="eyebrow">CRAFT & DETAIL</span><h3 id="inspector-finish"></h3><p id="inspector-craft"></p><div class="inspector-materials"><span>清晰刀面</span><span>钢刃木柄</span><span>深蓝轮廓</span></div><p id="inspector-lore"></p><small>造型与工艺为本作艺术演绎</small><nav class="inspector-switch"><button data-inspect="prev" aria-label="鉴赏上一把刀">←</button><select id="inspector-choice" aria-label="选择鉴赏的刀">${BLADE_CATALOGUE.map(({blade:t, index:i}) => `<option value="${i}">${t.name}</option>`).join('')}</select><button data-inspect="next" aria-label="鉴赏下一把刀">→</button></nav></article></div></section>`;
     document.body.append(this.root); this.surface = this.root.querySelector('.inspector-surface')!;
     this.root.addEventListener('click', event => {
       if (event.target === this.root) { this.close(); return; }
@@ -37,7 +37,7 @@ export class BladeInspector {
       if (command === 'auto') { this.auto = !this.auto; this.updateControls(); this.requestFrame(); }
       if (command === 'reset') this.reset();
       if (command === 'in' || command === 'out') this.setZoom(this.zoom * (command === 'in' ? 1.2 : 1 / 1.2));
-      if (command === 'prev' || command === 'next') void this.load((this.index + (command === 'next' ? 1 : -1) + TIERS.length) % TIERS.length);
+      if (command === 'prev' || command === 'next') void this.load(BASIC_WEAPON_INDICES[(BASIC_WEAPON_INDICES.findIndex(i => i === this.index) + (command === 'next' ? 1 : -1) + BASIC_WEAPON_INDICES.length) % BASIC_WEAPON_INDICES.length]);
     });
     this.root.querySelector('select')!.addEventListener('change', event => void this.load(Number((event.target as HTMLSelectElement).value)));
     window.addEventListener('keydown', event => { if (this.active) this.key(event); }, { capture: true });
@@ -66,7 +66,7 @@ export class BladeInspector {
     this.surface.addEventListener('dblclick', () => this.reset());
   }
   async open(index: number) {
-    if (!Number.isInteger(index) || index < 0 || index >= TIERS.length) return;
+    if (!Number.isInteger(index) || !isBasicWeapon(index)) return;
     if (this.active) { await this.load(index); return; }
     this.opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined;
     this.root.hidden = false; document.querySelector<HTMLElement>('#app')!.inert = true;
@@ -94,7 +94,7 @@ export class BladeInspector {
     const t = TIERS[index], finish = BLADE_FINISHES[index];
     this.root.style.setProperty('--tier', t.color);
     this.root.querySelector('#inspector-title')!.textContent = t.name; this.root.querySelector('#inspector-source')!.textContent = `${t.source} · ${t.bearer}`;
-    this.root.querySelector('.inspector-materials span')?.replaceChildren(document.createTextNode(index>=12?'清晰弓臂':'清晰刀面'));
+    this.root.querySelector('.inspector-materials span')?.replaceChildren(document.createTextNode(index===17?'清晰弓臂':'清晰钢刃'));
     this.root.querySelector('#inspector-finish')!.textContent = finish.title; this.root.querySelector('#inspector-craft')!.textContent = finish.note; this.root.querySelector('#inspector-lore')!.textContent = t.lore;
     (this.root.querySelector('#inspector-choice') as HTMLSelectElement).value = String(index);
     const image = this.root.querySelector<HTMLImageElement>('.inspector-flat')!; image.src = BLADE_ART[`blade-${index + 1}`]; image.alt = t.name;

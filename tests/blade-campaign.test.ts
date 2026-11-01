@@ -53,7 +53,7 @@ it.each(TIERS.map((blade, i) => [i, blade.name] as const))('completes a full cam
   if (blade === 0) { expect(r.state.level).toBe(30);  }
   expect(r.state.bossTime).toBeLessThan(r.bossDuration); expect(r.state.totalXp).toBeGreaterThanOrEqual(xpToLevel(r.state.level));
   expect(r.state.enemies.length).toBeLessThanOrEqual(280);
-  expect(r.active.casts).toBeGreaterThan(10);expect(r.state.relicLoot.picked).toBeGreaterThanOrEqual(5);
+  if (r.hasActiveSkill) expect(r.active.casts).toBeGreaterThan(10); else expect(r.active.casts).toBe(0);expect(r.state.relicLoot.picked).toBeGreaterThanOrEqual(r.hasActiveSkill ? 5 : 1);
   expect(formTimes[0]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01);
   formTimes.slice(1).forEach((time, i) => expect(time - formTimes[i]).toBeGreaterThanOrEqual(MIN_FORM_TIME - .01));
   if((globalThis as unknown as {process?:{env?:Record<string,string>}}).process?.env?.BLADE_CAMPAIGN_METRICS)console.info('CAMPAIGN_METRICS '+JSON.stringify({blade:TIERS[blade].name,time:r.state.time+r.state.bossTime,level:r.state.level,kills:r.state.kills,dropped:r.state.relicLoot.totalDropped,picked:r.state.relicLoot.picked,owned:r.relicOrder.length,highestRank:Math.max(...Object.values(r.state.relics)),casts:r.active.casts,mode:r.state.mode}));

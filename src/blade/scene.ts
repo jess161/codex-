@@ -1,9 +1,10 @@
+import { drawBasicMelee } from './basic-weapon-art';
 import { drawArchery } from './bow-art';
 import Phaser from 'phaser';
 import { drawActiveFields, drawActiveBurst } from './active-art';
 import { ASSETS } from './assets';
 import { RELICS,RARITIES } from './relics';
-import { ENEMIES, TIERS } from './config';
+import { ENEMIES, TIERS, isBasicWeapon } from './config';
 import { BladeRun, type RunEvent } from './simulation';
 import { GROUND_MAX_DENSITY, GROUND_TILE_SIZE, groundDensity, groundInfo, groundPattern, type GroundId } from './grounds';
 import { swingPhase } from './equipment';
@@ -315,7 +316,10 @@ export class BattleScene extends Phaser.Scene {
       g.lineStyle(9, 0x5dc9d6, .13).lineBetween(s.player.x, s.player.y, s.player.x - s.direction.x * 58, s.player.y - s.direction.y * 58);
       g.lineStyle(3, 0x54becc, .4).lineBetween(s.player.x, s.player.y, s.player.x - s.direction.x * 45, s.player.y - s.direction.y * 45);
     }
-    if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else{
+    if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else if (isBasicWeapon(run.tier)) {
+      this.blade.setVisible(false); this.hilt.setVisible(false);
+      drawBasicMelee(g, run, (...args) => this.sprite(...args));
+    }else{
     const speed=Math.hypot(s.velocity.x,s.velocity.y);
     const direction=moving?(s.dashTime>0?s.direction:{x:s.velocity.x/(speed||1),y:s.velocity.y/(speed||1)}):undefined;
     const rest=this.drag.pose(fxDt,direction,stats.mass,this.reducedMotion,{speed:s.dashTime>0?500:speed,range:stats.range});

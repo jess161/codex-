@@ -9,8 +9,8 @@ function target(r:BladeRun,x=120,y=0,kind:'armor'|'blob'|'boss'|'elite'='armor')
 describe('three real ranged loadouts',()=>{
  it('appends bows without renumbering the original twelve and exposes their complete catalogue',()=>{
   expect(TIERS.slice(0,12).map(t=>t.id)).toEqual(['scrap','dark-dagger','well-moon','deer-cutter','full-moon','dragon-slayer','snow-drinker','wado','shusui','enma','ryujin','tensa']);
-  expect(TIERS.slice(12).map(t=>t.id)).toEqual(['wind-bow','frost-bow','ember-bow']);expect(BLADE_CATALOGUE).toHaveLength(15);
-  for(const i of [12,13,14]){const r=run(i);expect(r.isRanged).toBe(true);expect(r.passiveInfo.name).toBeTruthy();expect(r.activeInfo.name).toBeTruthy();expect(r.stats.waveEvery).toBe(0);expect(r.stats.moveSpeed).toBeGreaterThan(190);expect(validSnapshot(r.snapshot())).toBe(true);}
+  expect(TIERS.slice(12,15).map(t=>t.id)).toEqual(['wind-bow','frost-bow','ember-bow']);expect(BLADE_CATALOGUE).toHaveLength(4);
+  for(const i of [12,13,14]){const r=run(i);expect(r.isRanged).toBe(true);expect(r.passiveInfo.name).toBeTruthy();expect(r.activeInfo!.name).toBeTruthy();expect(r.stats.waveEvery).toBe(0);expect(r.stats.moveSpeed).toBeGreaterThan(190);expect(validSnapshot(r.snapshot())).toBe(true);}
  });
  it.each([12,13,14])('automatically fires weapon %i at a distant live target while moving',index=>{
   const r=run(index),e=target(r,180);advance(r,90,{x:0,y:1,dash:false});expect(e.hp).toBeLessThan(e.maxHp);expect(r.archery.shots).toBeGreaterThan(0);expect(r.state.player.y).toBeGreaterThan(150);expect(r.state.mode).toBe('playing');

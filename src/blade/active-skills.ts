@@ -1,6 +1,7 @@
+import type { BasicWeaponKind } from './config';
 import type { BladeId } from './passives';
 
-export const ACTIVE_SKILLS: Record<BladeId, {name:string;cooldown:number;description:string}> = {
+export const ACTIVE_SKILLS: Record<Exclude<BladeId, BasicWeaponKind>, {name:string;cooldown:number;description:string}> = {
   scrap:{name:'百炼风暴',cooldown:12,description:'横扫身周敌人，随后 4 秒挥刀间隔缩短 25%。'},
   'dark-dagger':{name:'袖里惊雷',cooldown:10,description:'朝附近敌人连续刺出三击，对甲壳额外增伤 50%。'},
   'well-moon':{name:'金月引潮',cooldown:12,description:'在附近怪群落下金月阵，持续 2.4 秒聚拢并切割普通怪；首领不受拉拽。'},

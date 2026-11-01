@@ -15,7 +15,7 @@ export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolea
  g.lineStyle(1,0xf0fbff,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
  if(s.swing&&!s.swing.resolved){const tip=point(size*.31,0);g.lineStyle(3,0x263d54,.95).lineBetween(nock.x,nock.y,tip.x,tip.y).lineStyle(1.3,0xffedbb,1).lineBetween(nock.x,nock.y,tip.x,tip.y);if(run.tier===14)g.fillStyle(0xffd177,.2+drawing*.5).fillCircle(tip.x,tip.y,3+drawing*4);}
  for(const a of run.archery.arrows){
-  const c=a.kind==='wind'?0x62d5b1:a.kind==='ice'?0x8ddcfa:0xffb15b;
+  const c=a.kind==='wind'?0x62d5b1:a.kind==='ice'?0x8ddcfa:a.kind==='arrow'?0xc9c2ad:0xffb15b;
   const dx=Math.cos(a.angle),dy=Math.sin(a.angle),width=a.width,length=19+width*2;
   const tx=a.x-dx*length,ty=a.y-dy*length;
   g.lineStyle(width*.9+2,0x263d54,.95).lineBetween(tx,ty,a.x,a.y).lineStyle(width*.6,c,1).lineBetween(tx,ty,a.x,a.y);

@@ -6,14 +6,14 @@ const idle={x:0,y:0,dash:false};
 const run=(blade=0)=>{const r=new BladeRun(418,undefined,blade);r.state.enemies=[];r.state.spawnBudget=-100000;r.state.attackTimer=100000;return r;};
 function target(r:BladeRun,x=45,y=0,kind:Enemy['kind']='armor'){const e=r.spawnEnemy(kind,x,y);e.hp=e.maxHp=100000;e.speed=0;e.cooldown=100000;return e;}
 function step(r:BladeRun,n=1){for(let i=0;i<n;i++)r.step(1/60,idle);}
-describe('independent manual weapon skills',()=>{
+describe('historical manual weapon skill compatibility',()=>{
  it('defines a different named, one-button skill for each of the twelve blades',()=>{
-  expect(new Set(Object.values(ACTIVE_SKILLS).map(s=>s.name)).size).toBe(TIERS.length);
-  for(const t of TIERS){expect(ACTIVE_SKILLS[t.id].description.length).toBeGreaterThan(10);expect(ACTIVE_SKILLS[t.id].cooldown).toBeGreaterThanOrEqual(10);}
+  expect(new Set(Object.values(ACTIVE_SKILLS).map(s=>s.name)).size).toBe(15);
+  for(const t of TIERS.slice(0,15)){expect(ACTIVE_SKILLS[t.id as keyof typeof ACTIVE_SKILLS].description.length).toBeGreaterThan(10);expect(ACTIVE_SKILLS[t.id as keyof typeof ACTIVE_SKILLS].cooldown).toBeGreaterThanOrEqual(10);}
  });
- it.each(TIERS.map((_,i)=>i))('weapon %i never casts by itself and consumes one activation only on demand',blade=>{
+ it.each(TIERS.slice(0,15).map((_,i)=>i))('weapon %i never casts by itself and consumes one activation only on demand',blade=>{
   const r=run(blade);step(r,120);expect(r.active).toEqual(freshActive());
-  expect(r.activateSkill()).toBe(true);expect(r.active.casts).toBe(1);expect(r.active.cooldown).toBe(r.activeInfo.cooldown);
+  expect(r.activateSkill()).toBe(true);expect(r.active.casts).toBe(1);expect(r.active.cooldown).toBe(r.activeInfo!.cooldown);
   const before=r.snapshot();expect(r.activateSkill()).toBe(false);expect(r.snapshot()).toEqual(before);
  });
  it.each(['relic','evolving','boss-intro','relic-trim','dead','won'] as RunMode[])('rejects activation in %s',mode=>{

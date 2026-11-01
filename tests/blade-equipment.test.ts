@@ -96,7 +96,7 @@ describe('blade size, handling and paced growth', () => {
     expect(restored.version).toBe(8); expect(restored.xp).toBe(21); expect(restored.formStartedAt).toBe(111); expect(restored.totalXp).toBe(500);
     for (const key of ['long', 'broad', 'giant', 'hollow', 'grip', 'stride'] as PerkId[]) expect(restored.perks[key]).toBe(0);
     expect(restoreSnapshot({ ...old, bossStarted: true, time: 420 })!.time).toBe(600);
-    const maxed = equipmentStats(30, Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>);
+    const maxed = equipmentStats(30, Object.fromEntries(Object.entries(PERKS).map(([k, p]) => [k, k === 'heal' ? 0 : p.cap])) as Record<PerkId, number>, 0);
     expect(maxed.range).toBe(420); expect(10 + 62 * maxed.lengthScale).toBeCloseTo(maxed.range);
   });
 });

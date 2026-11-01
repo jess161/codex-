@@ -1,32 +1,18 @@
-# 源码提交与恢复
+# 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`，手机网页为 https://jess161.github.io/codex-/ 。本聊天已获授权更新现有网页；发布使用 `preview/mobile-20261031` 静态分支。页面旁的 `version.json` 记录准确源码提交与游戏 HTML 的 SHA-256，可核对已部署的版本。下述 `687c109` 是早期重建节点，当前版本已在其基础上继续迭代。
+当前源码分支是 `reconstruct/latest-from-conversation`。本轮从已确认备份的 `6080d8d`（十二把刀＋三把弓）实现四种普通武器，设计与验证见 [重构说明](gdd/blade-evolution-basic-weapons-v1.2.md) 和 [验收记录](blade-basic-weapons-verification.json)。
 
-重建功能已保存为本地提交 `687c109`，分支 `reconstruct/latest-from-conversation`。原三选一道具基线为 `3e8eb0e`，仍保留在 `feature/passive-item-groups`。
+[已发布试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮仅备份源码和生成离线游戏，没有更新 Pages 静态发布分支；不能把旧试玩当成本轮新版。历史发布使用 `preview/mobile-20261031`，`version.json` 可用于核对线上源码提交和 HTML 校验值。
 
-本地 Git 提交和同一云机器里的压缩包，不等于 GitHub 远端备份。发布环境配置也不等于提交源码。源码需推送；现有网页由静态分支更新触发 Pages 部署，不自动发布其他分支的修改。
-
-后续修改可以在仓库目录提交：
+本地提交、工作区 ZIP 和 Git bundle 不等于远端备份。需推送源码，再用 `git ls-remote` 或 GitHub 分支页核对远端提交。
 
 ```bash
 git status
-git add src/blade art/reconstructed scripts tests docs README.md package.json
-git commit -m "Describe the game changes"
+git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
+git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-需要备份到用户自己的 GitHub 仓库时，手动运行：
-
-```bash
-git push origin HEAD:reconstruct/latest-from-conversation
-```
-
-推送成功后，再到 GitHub 查看该分支的提交及文件。无需合并到主分支或发布网页，即可保留远端源码。
-
-本次另外在 `/workspace/backups/` 生成源码 ZIP、离线游戏 ZIP 和包含完整 Git 历史的 bundle。它们是工作区文件；本聊天没有可将这些路径转换为公网试玩或附件下载地址的导出工具。
-
-战场掉落版的备份使用 `blade-loot-<源码短提交>` 文件名前缀；`loot-deployment.json` 记录准备、推送和线上校验状态。发布后需同时确认网页 `version.json` 的源码提交与实际首页 HTML 的 SHA-256，不能仅根据推送成功宣布新版已可玩。
-
-以后可重新生成已提交源码的备份：
+提交后可生成独立备份：
 
 ```bash
 mkdir -p /workspace/backups
@@ -35,7 +21,7 @@ git bundle create /workspace/backups/blade-history.bundle --all
 git bundle verify /workspace/backups/blade-history.bundle
 ```
 
-`git archive` 只打包已提交内容，修改后应先提交再打包。备份文件还需下载到自己的设备或其他存储位置，才能在云环境被删除后独立恢复。
+本轮使用 `blade-basic-weapons-<源码短提交>` 文件名前缀，包含源码 ZIP、单文件离线 HTML 和 Git bundle，旁边的 JSON 清单记录提交、远端校验和文件 SHA-256。ZIP 只包含已提交文件；Git bundle 包含本地历史。工作区文件需要下载到自己的设备或其他存储位置，才能在云环境删除后独立恢复。
 
 从 bundle 恢复：
 
@@ -43,9 +29,9 @@ git bundle verify /workspace/backups/blade-history.bundle
 git clone --branch reconstruct/latest-from-conversation blade-history.bundle recovered-game
 cd recovered-game
 npm ci
-npm run dev -- --port 5173
+npm run dev -- --port 4173
 ```
 
-本次是按对话需求重新实现的版本，并非恢复旧环境中已经无法读取的逐字源码。
+恢复后仍需构建新版才能部署：`npm run build`。`dist/blade-evolution.html` 是自带资源的单文件离线游戏。当前环境浏览器禁用 `file://` 导航，离线验收以本地文件内容在内存中提供页面并禁网完成，未宣称对手机文件管理器做过实测。
 
-三把弓箭版的备份使用 `blade-bows-<源码短提交>` 前缀，`bows-deployment.json` 记录发布与线上文件校验结果。原刀具索引与 v8 存储键保留；旧局无需重置。
+旧存档沿用原键和 v8 结构，保留世界进度、道具和战绩，并在读取时转换旧武器。更早的重建、掉落版和三弓版报告保留在 `docs/`，仅记录对应历史版本。

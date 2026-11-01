@@ -2,7 +2,7 @@ import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type Ar
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
 import { THREATS, type Hazard } from './threats';
-import { CLASSIC_TIMING, classicXpNext, BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
+import { DEFAULT_WEAPON, isBasicWeapon, CLASSIC_TIMING, classicXpNext, BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, thrustHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { BASE_RELIC_IDS, LEGACY_RELICS, RELIC_CAP, LEGACY_RELIC_SLOTS, RELIC_IDS, RELICS, eligibleRelics, ownedRelics, weightedRelic, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { FOODS, foodForRoll, isFoodId, type FoodId } from './food';
 import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
@@ -61,8 +61,8 @@ export class BladeRun {
   private passiveFxCount = 0;
   private rulesMastery = -1;
   private cachedRules = passiveRules();
-  constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade = 0) {
-    if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = 0;
+  constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade: number = DEFAULT_WEAPON) {
+    if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = DEFAULT_WEAPON;
     this.state = snapshot ? structuredClone(snapshot) : {
       version: 8, classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
@@ -95,7 +95,8 @@ export class BladeRun {
   }
   get bladeId() { return TIERS[this.tier].id; }
   get active() { return this.state.active!; }
-  get activeInfo() { return ACTIVE_SKILLS[this.bladeId]; }
+  get hasActiveSkill() { return !isBasicWeapon(this.tier); }
+  get activeInfo() { return isBasicWeapon(this.tier) ? null : ACTIVE_SKILLS[this.bladeId as keyof typeof ACTIVE_SKILLS]; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
   get passiveSize() { return passiveSize(this.stats, this.rules); }
   get stats() { return this.statsForRelics(this.state.relics); }
@@ -127,22 +128,22 @@ export class BladeRun {
       emit:(type,p,radius)=>this.events.push({type,x:p.x,y:p.y,radius,tier:this.tier})};
   }
   activateSkill() {
-    const s=this.state,a=this.active;
-    if(s.mode!=='playing'||a.cooldown>.000001)return false;
+    const s=this.state,a=this.active, ability=this.activeInfo;
+    if(!ability || !this.hasActiveSkill||s.mode!=='playing'||a.cooldown>.000001)return false;
     const reach=Math.max(260,Math.hypot(this.view.width,this.view.height)/2);
     const nearby=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&this.targetOnScreen(e)&&Math.hypot(e.x-s.player.x,e.y-s.player.y)<=reach)
       .sort((x,y)=>Math.hypot(x.x-s.player.x,x.y-s.player.y)-Math.hypot(y.x-s.player.x,y.y-s.player.y)||x.id-y.id);
     const target=(this.bladeId==='shusui'||this.isRanged?nearby.find(e=>e.kind==='boss'||e.kind==='elite'):undefined)??nearby[0];
     const angle=target?Math.atan2(target.y-s.player.y,target.x-s.player.x):s.aim;
     if(this.isRanged){
-      a.cooldown=this.activeInfo.cooldown;a.casts++;
+      a.cooldown=ability.cooldown;a.casts++;
       const tx=target?.x??s.player.x+Math.cos(angle)*this.stats.range,ty=target?.y??s.player.y+Math.sin(angle)*this.stats.range;
       s.aim=angle;activateBow(this.bowHost(),angle,{x:tx,y:ty});
       this.events.push({type:'active',activePhase:'cast',skill:this.bladeId,x:s.player.x,y:s.player.y,angle,tier:this.tier});
       stepArchery(this.bowHost(),0);return true;
     }
     const plan=activePlan(this.bladeId,this.mastery,this.stats.damage,this.passiveSize.meleeRadius,angle);
-    a.cooldown=this.activeInfo.cooldown;a.casts++;a.buff=plan.buff;a.pending=plan.pulses;a.fields=plan.fields;
+    a.cooldown=ability.cooldown;a.casts++;a.buff=plan.buff;a.pending=plan.pulses;a.fields=plan.fields;
     const tx=target?.x??s.player.x+Math.cos(angle)*120,ty=target?.y??s.player.y+Math.sin(angle)*120;
     for(const f of a.fields){f.x=tx;f.y=ty;}
     if(plan.targeted)for(const p of a.pending){p.x=tx;p.y=ty;}
@@ -522,7 +523,7 @@ export class BladeRun {
   }
   private resolveMelee(angle: number) {
     const s = this.state, stats = this.stats, id = this.bladeId, p = s.passive;
-    const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && sectorHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.arc));
+    const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && (id === 'spear' ? thrustHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.thrustWidth) : sectorHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.arc)));
     if (!targets.length) return 0;
     const rules = this.rules;
     const cycle = id === 'well-moon' ? rules.moonCycle : id === 'full-moon' ? rules.ringCycle : id === 'enma' ? rules.enmaCycle : 0;
@@ -798,6 +799,10 @@ export class BladeRun {
     s.attackTimer -= dt;
     if (s.swing) {
       s.swing.age += dt;
+      if (this.bladeId === 'spear' && !s.swing.resolved) {
+        const target = s.enemies.find(e => e.id === s.targetId && e.hp > 0 && e.spawn <= 0 && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
+        if (target) s.aim = s.swing.angle = Math.atan2(target.y - s.player.y, target.x - s.player.x);
+      }
       if(!this.isRanged && s.swing.age >= s.swing.windup && s.swing.age-dt < s.swing.windup) this.events.push({type:'slash',x:s.player.x,y:s.player.y,tier:this.tier});
       if (s.swing.age >= s.swing.windup + s.swing.strike * .45 && !s.swing.resolved) {
         s.swing.resolved = true;
@@ -815,7 +820,7 @@ export class BladeRun {
     }
     if (s.attackTimer <= 0 && !s.swing) {
       const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && this.targetOnScreen(e) && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
-      targets.sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y));
+      targets.sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y) || a.id - b.id);
       let target = targets[0]; const existing = targets.find(e => e.id === s.targetId);
       if (existing && target && Math.hypot(existing.x - s.player.x, existing.y - s.player.y) < Math.hypot(target.x - s.player.x, target.y - s.player.y) * 1.25) target = existing;
       if (target) {
