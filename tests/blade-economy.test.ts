@@ -13,9 +13,9 @@ function strike(r: BladeRun) {const t = r.stats; r.state.swing = {id: r.state.ne
 
 describe('coin drops, proximity and purchase conservation', () => {
   it('replaces old equipment with exactly three universal categories and no set requirements', () => {
-    expect(GEAR_IDS).toHaveLength(14);
-    expect(['defense','attack','footwear'].map(category=>GEAR_IDS.filter(id=>GEAR[id].category===category).length)).toEqual([5,6,3]);
-    const r = arena(); expect(r.state.version).toBe(10); expect(r.state.relics).toEqual(freshRelics()); expect(r.availableRelics).toEqual([]);
+    expect(GEAR_IDS).toHaveLength(15);
+    expect(['defense','attack','footwear'].map(category=>GEAR_IDS.filter(id=>GEAR[id].category===category).length)).toEqual([5,7,3]);
+    const r = arena(); expect(r.state.version).toBe(11); expect(r.state.relics).toEqual(freshRelics()); expect(r.availableRelics).toEqual([]);
     expect(r.addRelicDrop('stone', 0, 0)).toBeUndefined(); expect(r.state.relicDrops).toEqual([]);
   });
   it.each(Object.keys(COIN_VALUES) as Enemy['kind'][])('keeps the correct %s denomination when its seeded kill drops coins', kind => {
@@ -114,7 +114,7 @@ describe('ten-minute pacing, persistent economy and historical conversion', () =
   it('refunds retired carried equipment once, converts ground items to coins and removes all old sets', () => {
     const r = arena(0); r.state.time = 180; r.state.level = 10; r.state.maxHp = 133; r.state.hp = 66.5; r.state.relics.heart = 1; r.state.relics.stone = 2; r.state.relicState.heartPeak = 1; r.state.perks.long = 2;
     r.addRelicDrop('crystal', 200, 300); const before = r.snapshot(); expect(validSnapshot(before)).toBe(true); const s = migrateEconomy(restoreSnapshot(before)!);
-    expect(s.version).toBe(10); expect(s.time).toBe(270); expect(s.level).toBe(10); expect(s.economy!.wallet).toBe(144); expect(s.relics).toEqual(freshRelics()); expect(s.perks).toEqual(freshPerks()); expect(s.relicState).toEqual(freshRelicState());
+    expect(s.version).toBe(11); expect(s.time).toBe(270); expect(s.level).toBe(10); expect(s.economy!.wallet).toBe(144); expect(s.relics).toEqual(freshRelics()); expect(s.perks).toEqual(freshPerks()); expect(s.relicState).toEqual(freshRelicState());
     expect(s.orbs.find(o => o.kind === 'coin')).toMatchObject({x: 200, y: 300, value: 20}); expect(s.relicDrops).toEqual([]); expect(s.hp / s.maxHp).toBe(.5); expect(validSnapshot(s)).toBe(true);
     expect(migrateEconomy(structuredClone(s))).toEqual(s); expect(r.snapshot()).toEqual(before);
   });

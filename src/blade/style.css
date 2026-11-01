@@ -123,6 +123,7 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 .relic-result-items .gear-icon{width:24px;height:24px}
 .build-state{position:absolute;left:28px;top:100px;max-width:calc(100vw - 240px);font-size:11px;line-height:1.7;color:#6e91aa;pointer-events:none}
 .build-state:empty{display:none}
+.gear-energy{position:absolute;left:7px;right:19px;bottom:5px;height:3px;background:#29475d30;border-radius:2px;overflow:hidden;pointer-events:none}.gear-energy>em{display:block;height:100%;background:#68bce9;border-radius:inherit}.equipment-chip.energized{border-color:#72bde4;box-shadow:0 0 9px #85cfea80}.equipment-chip.energized .gear-energy>em{background:#e3faff}
 @media(max-width:800px){.build-state{left:18px;top:195px;max-width:190px;font-size:9px}}
 @media(max-height:430px){.build-state{top:171px;left:18px;max-width:180px;font-size:8px}}
 

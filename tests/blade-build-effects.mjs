@@ -27,7 +27,7 @@ try{
   if(build==='reflect')check('reflect: receiving damage emits the native reflection effect',seen[build].includes('reflect'));
   if(build==='critical')check('critical: dash charge emits its own native first-hit effect',seen[build].includes('surge'));
   await p.locator('#shop-button').click();
-  check(`${build}: six purchased identities appear in the free catalogue without a build preset`,await p.locator('.shop-item.owned').count()===6&&await p.locator('.shop-item').count()===14&&await p.locator('#build-choice,.build-guide').count()===0);
+  check(`${build}: six purchased identities appear in the free catalogue without a build preset`,await p.locator('.shop-item.owned').count()===6&&await p.locator('.shop-item').count()===15&&await p.locator('#build-choice,.build-guide').count()===0);
   await p.screenshot({path:`${out}/${build}.png`});await p.close();
  }
  check('all five builds render in WebGL without runtime errors',errors.length===0);

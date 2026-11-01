@@ -21,6 +21,7 @@ export const GEAR = {
   clearLens: {name:'碎星透镜',category:'attack',price:65,effect:'攻击距离 +10%；暴击伤害 +20%',note:'每级距离 +10%、暴击倍率 +0.20。没有暴击率时不会凭空暴击，可搭配糖晶战刃。'},
   tideFang: {name:'破潮尖牙',category:'attack',price:70,effect:'攻击 +6%；普攻附加目标当前生命伤害',note:'每级攻击 +6%。普攻附加目标当前生命 3.75%/5%/6.25% 的伤害，单目标上限为本次基础攻击伤害的 50%/65%/80%。对首领同样生效。'},
   stormCoil: {name:'疾电线圈',category:'attack',price:65,effect:'攻速 +10%；每四次有效普攻连锁闪电',note:'每级攻速 +10%。每四次有效普攻释放连锁电击，最多 3 个目标，每目标造成 45%/55%/65% 普攻伤害。多目标命中不重复计数。'},
+  chainLightning: {name:'闪电连锁',category:'attack',price:150,effect:'攻击力 +20；攻击速度 +15%',note:'盈能：每次有效普攻积攒 20 点，满 100 点后的下一次普攻命中释放连锁闪电，最多命中 4～8 个不同目标，随英雄等级提升。闪电随等级与攻击力成长，每跳伤害递减 10%。每级再增加 20 攻击力、15% 攻速，并提高闪电伤害。'},
   bloodFang: {name:'血莓獠牙',category:'attack',price:60,effect:'攻击 +8%；普攻吸血 +6%',note:'每级攻击 +8%、普攻吸血 +6%。按实际造成的伤害回复；每秒最多恢复最大生命 5%，治疗增幅也提高此上限，防止横扫无限吸血。'},
   breezeBoots: {name:'轻云疾行靴',category:'footwear',price:45,effect:'移速 +9%；灵活走位',note:'每级移速 +9%，同步改善起步。与远距离、暴击或续航装备自由混搭。足具只能穿一件。'},
   springBoots: {name:'回响步靴',category:'footwear',price:50,effect:'瞬步冷却 −0.55 秒；瞬步强化下一次命中',note:'每级缩短瞬步冷却 0.55 秒；瞬步后 3 秒内，下一次普攻的首个命中额外造成 25%/50%/75% 伤害。足具只能穿一件。'},
@@ -55,6 +56,7 @@ export function gearDetail(id: GearId, rank: number) {
     case 'clearLens':return `攻击距离 +${10*rank}%；暴击倍率 +${(.2*rank).toFixed(2)}`;
     case 'tideFang':return `攻击 +${6*rank}%；附加当前生命 ${(2.5+1.25*rank).toFixed(2)}% 伤害，上限 ${35+15*rank}% 基础攻击`;
     case 'stormCoil':return `攻速 +${10*rank}%；每四次有效普攻电击 3 人，各 ${35+10*rank}% 普攻伤害`;
+    case 'chainLightning':return `攻击力 +${20*rank}；攻击速度 +${15*rank}%；盈能攻击连锁 4～8 个目标`;
     case 'bloodFang':return `攻击 +${8*rank}%；普攻吸血 ${6*rank}%，每秒上限 5% 最大生命，可被治疗增幅提高`;
     case 'breezeBoots':return `移速 +${9*rank}%；起步与转向同步改善`;
     case 'springBoots':return `瞬步冷却 ${(5-.55*rank).toFixed(2)} 秒；瞬步后首个命中 +${25*rank}% 伤害`;
@@ -66,6 +68,10 @@ export const COIN_VALUES: Record<EnemyKind, number> = {
   brood: 1, spiker: 5, poison: 4, bomber: 4, stalker: 5, elite: 25, boss: 100,
 };
 export const NORMAL_COIN_DROP_CHANCE = .60;
+export const CHAIN_CHARGE_MAX = 100;
+export const CHAIN_CHARGE_PER_ATTACK = 20;
+export const chainLightningTargets = (level:number) => Math.min(8,4+Math.floor((Math.max(1,level)-1)/7));
+export const chainLightningDamage = (level:number,attack:number,rank:number) => Math.round((25+2*level+.35*attack)*(1+.20*(rank-1)));
 export const coinDropChance = (kind: EnemyKind) => kind === 'elite' || kind === 'boss' ? 1 : NORMAL_COIN_DROP_CHANCE;
 export interface EconomyState {wallet:number;earned:number;spent:number;refunded:number;gear:GearInventory;order:GearId[];regen:number}
 export const freshEconomy = (coins=0):EconomyState => ({wallet:coins,earned:coins,spent:0,refunded:0,gear:freshGear(),order:[],regen:0});
@@ -80,4 +86,12 @@ export function validEconomy(value:unknown):value is EconomyState {
     && e.order.length===GEAR_IDS.filter(id=>e.gear[id]>0).length&&e.order.every(id=>e.gear[id]>0)
     && e.order.filter(id=>GEAR[id].category==='footwear').length<=1
     && Number.isFinite(e.regen)&&e.regen>=0&&e.regen<5.000001;
+}
+// v10 had fourteen items at the same prices, with no chain-lightning entry.
+export function validPreviousEconomy(value:unknown):boolean {
+  if (!value || typeof value!=='object') return false;
+  const e=value as EconomyState;
+  return !!e.gear && Object.keys(e.gear).length===GEAR_IDS.length-1
+    && !Object.hasOwn(e.gear,'chainLightning')
+    && validEconomy({...e,gear:{...e.gear,chainLightning:0}});
 }

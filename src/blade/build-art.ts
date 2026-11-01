@@ -7,6 +7,11 @@ export function drawBuildBody(g:Phaser.GameObjects.Graphics,run:BladeRun) {
     const r=88+8*gear.emberPlate;
     g.fillStyle(0xffbc76,.035).fillCircle(s.player.x,s.player.y,r).lineStyle(1.5,0xdf9958,.35).strokeCircle(s.player.x,s.player.y,r);
   }
+  if (gear.chainLightning) {
+    const full=b.chainCharge===100;
+    g.lineStyle(2,0x29475d,.2).strokeCircle(s.player.x,s.player.y,24);
+    if(b.chainCharge)g.lineStyle(full?3:2,full?0xb5edff:0x6cb9ed,.9).beginPath().arc(s.player.x,s.player.y,24,-Math.PI/2,-Math.PI/2+Math.PI*2*b.chainCharge/100).strokePath();
+  }
   if (b.shield>0) g.fillStyle(0x8cd7ed,.12).fillCircle(s.player.x,s.player.y,31).lineStyle(2.5,0x6fc3da,.85).strokeCircle(s.player.x,s.player.y,31);
   if (b.empowered>0) g.lineStyle(2,0xffce72,.85).strokeCircle(s.player.x,s.player.y,27);
 }
@@ -14,8 +19,10 @@ export function drawBuildProc(g:Phaser.GameObjects.Graphics,e:RunEvent,age:numbe
   const x=e.x??0,y=e.y??0,alpha=Math.max(0,1-age/.32),radius=e.radius??25;
   if (e.procKind==='lightning') {
     const tx=e.toX??x,ty=e.toY??y,dx=tx-x,dy=ty-y;
-    g.lineStyle(5,0x29475d,alpha*.5).lineBetween(x,y,tx,ty).lineStyle(2,0xb5dffb,alpha);
+    const energized=e.gearId==='chainLightning';
+    g.lineStyle(energized?7:5,0x29475d,alpha*.55).lineBetween(x,y,tx,ty).lineStyle(energized?3.5:2,energized?0x72ceff:0xb5dffb,alpha);
     g.beginPath().moveTo(x,y).lineTo(x+dx*.35-dy*.05,y+dy*.35+dx*.05).lineTo(x+dx*.65+dy*.05,y+dy*.65-dx*.05).lineTo(tx,ty).strokePath();
+    if(energized)g.lineStyle(1,0xf3ffff,alpha).lineBetween(x,y,tx,ty).fillStyle(0xe4fcff,alpha*.8).fillCircle(tx,ty,3+alpha*3);
   } else {
     const color=e.procKind==='leech'?0xe48ca9:e.procKind==='reflect'?0x9dbca1:e.procKind==='shield'?0x8ccde7:0xf0b66d;
     g.lineStyle(e.procKind==='aura'?2:3,color,alpha*.65).strokeCircle(x,y,radius*(.85+.15*(1-alpha)));

@@ -130,7 +130,11 @@ export class BattleScene extends Phaser.Scene {
       const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active' || event.source==='gear');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
-      if(event.type==='gear-proc'&&this.buildFx.length<(this.simplified?8:16))this.buildFx.push({event,age:0});
+      if(event.type==='gear-proc'){
+        const limit=this.simplified?8:16;
+        if(event.gearId==='chainLightning'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
+        else if(this.buildFx.length<limit)this.buildFx.push({event,age:0});
+      }
       if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
       if((event.type==='active'&&event.activePhase!=='heal'||event.type==='bow-blast')&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });

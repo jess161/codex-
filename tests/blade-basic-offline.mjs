@@ -32,7 +32,7 @@ try {
     await p.locator('[data-action="begin"]').click();
     check(`offline ${name}: correct weapon starts and old skill button stays hidden`, await p.locator('#current-name').textContent() === name && !await p.locator('#active-button').isVisible());
     await p.locator('#shop-button').click();
-    check(`offline ${name}: all fourteen icon-and-name items load without build presets`, await p.locator('.shop-tabs button').count() === 4 && await p.locator('#build-choice,.build-guide').count() === 0 && await p.locator('.shop-item .gear-icon').evaluateAll(images => images.length === 14 && images.every(i => i.complete && i.naturalWidth === 128)));
+    check(`offline ${name}: all fifteen icon-and-name items load without build presets`, await p.locator('.shop-tabs button').count() === 4 && await p.locator('#build-choice,.build-guide').count() === 0 && await p.locator('.shop-item .gear-icon').evaluateAll(images => images.length === 15 && images.every(i => i.complete && i.naturalWidth === 128)));
     await p.locator('[data-action="shop-category"][data-value="defense"]').click();
     await p.locator('.shop-item[data-value="jellyVest"]').click();
     check(`offline ${name}: paused shop requires actual coins to buy`,await p.locator('.buy-gear').count()===1 && await p.locator('.buy-gear').evaluateAll(buttons => buttons.every(b => b.disabled)) && await p.locator('#clock-goal').textContent() === '/ 10:00');

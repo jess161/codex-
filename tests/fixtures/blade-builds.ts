@@ -6,4 +6,5 @@ export const BUILDS = {
   sustain:{name:'吸血续航',hint:'吸血 × 治疗增幅，生命与护盾支撑持续输出',core:['bloodFang','honeyCharm'],items:['bloodFang','honeyCharm','clockGrip','jellyVest','bubbleGuard','pickupBoots']},
   burn:{name:'重装灼烧',hint:'最大生命提升灼烧伤害，也增强低血护盾',core:['emberPlate','jellyVest'],items:['emberPlate','jellyVest','honeyCharm','bubbleGuard','bloodFang','breezeBoots']},
   reflect:{name:'受击反伤',hint:'生命、减伤与恢复让反伤持续发挥',core:['thornArmor','jellyVest'],items:['thornArmor','jellyVest','honeyCharm','bubbleGuard','bloodFang','breezeBoots']},
+  energized:{name:'盈能连锁测试',hint:'先购买闪电连锁，再验证攻速与防护搭配',core:['chainLightning','clockGrip'],items:['chainLightning','clockGrip','sugarCore','bubbleGuard','honeyCharm','pickupBoots']},
 } as const satisfies Record<string,{name:string;hint:string;core:readonly GearId[];items:readonly GearId[]}>;

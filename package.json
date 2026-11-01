@@ -29,7 +29,8 @@
     "test:basic-offline": "node tests/blade-basic-offline.mjs",
     "test:economy": "node tests/blade-item-builds.mjs",
     "test:item-builds": "node tests/blade-item-builds.mjs",
-    "test:build-effects": "node tests/blade-build-effects.mjs"
+    "test:build-effects": "node tests/blade-build-effects.mjs",
+    "test:chain-lightning": "node tests/blade-chain-lightning.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
