@@ -6,7 +6,7 @@ import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type Ar
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
 import { THREATS, type Hazard } from './threats';
-import { DEFAULT_WEAPON, isBasicWeapon, CLASSIC_TIMING, classicXpNext, BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, thrustHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
+import { DEFAULT_WEAPON, isBasicWeapon, CLASSIC_TIMING, classicXpNext, BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { BASE_RELIC_IDS, LEGACY_RELICS, RELIC_CAP, LEGACY_RELIC_SLOTS, RELIC_IDS, RELICS, eligibleRelics, ownedRelics, weightedRelic, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { FOODS, foodForRoll, isFoodId, type FoodId } from './food';
 import { shopEquipmentStats, equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
@@ -67,7 +67,7 @@ export class BladeRun {
   private rulesMastery = -1;
   private cachedRules = passiveRules();
   constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade: number = DEFAULT_WEAPON) {
-    if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = DEFAULT_WEAPON;
+    if (!Number.isInteger(blade) || !isBasicWeapon(blade)) blade = DEFAULT_WEAPON;
     this.state = snapshot ? structuredClone(snapshot) : {
       version: isBasicWeapon(blade) ? 14 : 8, ...(isBasicWeapon(blade) ? {economy: freshEconomy(), build: freshGearCombat()} : {}), classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
@@ -597,7 +597,7 @@ export class BladeRun {
   }
   private resolveMelee(angle: number) {
     const s = this.state, stats = this.stats, id = this.bladeId, p = s.passive;
-    const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && (id === 'spear' ? thrustHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.thrustWidth) : sectorHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.arc)));
+    const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && sectorHits(e.x - s.player.x, e.y - s.player.y, e.radius, angle, stats.range, stats.arc));
     if (!targets.length) return 0;
     const rules = this.rules;
     const cycle = id === 'well-moon' ? rules.moonCycle : id === 'full-moon' ? rules.ringCycle : id === 'enma' ? rules.enmaCycle : 0;
@@ -873,10 +873,6 @@ export class BladeRun {
     s.attackTimer -= dt;
     if (s.swing) {
       s.swing.age += dt;
-      if (this.bladeId === 'spear' && !s.swing.resolved) {
-        const target = s.enemies.find(e => e.id === s.targetId && e.hp > 0 && e.spawn <= 0 && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
-        if (target) s.aim = s.swing.angle = Math.atan2(target.y - s.player.y, target.x - s.player.x);
-      }
       if(!this.isRanged && s.swing.age >= s.swing.windup && s.swing.age-dt < s.swing.windup) this.events.push({type:'slash',x:s.player.x,y:s.player.y,tier:this.tier});
       if (s.swing.age >= s.swing.windup + s.swing.strike * .45 && !s.swing.resolved) {
         s.swing.resolved = true;

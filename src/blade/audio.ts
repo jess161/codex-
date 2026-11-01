@@ -37,9 +37,9 @@ export class BladeAudio {
     osc.onended = () => { osc.disconnect(); gain.disconnect(); };
   }
   slash(tier: number, mass = 1) {
-    if (tier >= 15) {
-      const frequency = tier === 16 ? 490 : tier === 18 ? 310 : 235;
-      this.tone(frequency, tier === 16 ? .065 : .13, 'triangle', .11, tier === 16 ? 180 : 75);
+    if (tier === 15) {
+      this.tone(260,.11,'triangle',.10,85);
+      this.tone(560,.035,'sine',.025,240,.025);
       return;
     }
     const weight = Math.min(4, Math.max(0, mass - 1));
@@ -63,7 +63,10 @@ export class BladeAudio {
   pickup() { const t = performance.now(); if (t - this.lastPickup < 90) return; this.lastPickup = t; this.tone(780 + this.melody++ % 4 * 90, .07, 'sine', .10); }
   dash() { this.tone(470, .16, 'triangle', .13, 75); }
   hurt() { this.tone(110, .18, 'sawtooth', .10, 40); }
-  arrow(tier:number){this.tone(tier===14?165:410,.08,'triangle',.10,tier===14?85:170);this.tone(760,.045,'sine',.035,260,.025);}
+  arrow(tier:number){
+    if(tier===17){this.tone(530,.075,'triangle',.08,190);this.tone(860,.035,'sine',.025,430,.02);return;}
+    this.tone(tier===14?165:410,.08,'triangle',.10,tier===14?85:170);this.tone(760,.045,'sine',.035,260,.025);
+  }
   evolve(tier: number) { [0, 4, 7, 12].forEach((note, i) => this.tone(330 * 2 ** ((note + tier * 2) / 12), .45, 'sine', .18, undefined, i * .07)); }
   boss() { [0, .16, .32].forEach(delay => this.tone(110, .4, 'triangle', .25, 55, delay)); }
   win() { [0, 4, 7, 12, 16, 19, 24].forEach((note, i) => this.tone(330 * 2 ** (note / 12), .55, 'sine', .2, undefined, i * .11)); }

@@ -1,0 +1,66 @@
+{
+  "change": "Carrot knife and banana bow as the only playable weapons",
+  "baseline_commit": "4ed060e3bbf682178304f71e7dad9136b579f342",
+  "branch": "reconstruct/latest-from-conversation",
+  "playable_weapons": [
+    {
+      "id": "knife",
+      "index": 15,
+      "name": "胡萝卜刀",
+      "attack": "automatic broad sweep",
+      "art": "orange carrot root and green leaf grip",
+      "feedback": "orange sweep, small leaf flecks and fresh swish"
+    },
+    {
+      "id": "bow",
+      "index": 17,
+      "name": "香蕉弓",
+      "attack": "automatic single-target seed arrow",
+      "art": "yellow banana limbs, brown fruit tips and green fiber grip",
+      "feedback": "drawn fiber string, seed projectile, pale yellow trail and light string sound"
+    }
+  ],
+  "removed_from_play": [
+    "sword",
+    "spear"
+  ],
+  "updated_surfaces": [
+    "home",
+    "weapon selection",
+    "codex",
+    "tutorial",
+    "held weapon",
+    "projectile",
+    "3D inspector",
+    "weapon descriptions",
+    "equipment compatibility text",
+    "page description"
+  ],
+  "shared_art_paths": true,
+  "equipment_upgrade_tree_retained": true,
+  "weapon_base_damage_timing_and_range_retained": true,
+  "normal_coin_drop_chance": 0.25,
+  "run_minutes": 10,
+  "save_policy": "Clear older content-version saves on opening updated game; same version can resume",
+  "artwork_exports": [
+    "docs/images/carrot-knife.svg",
+    "docs/images/banana-bow.svg",
+    "docs/images/seed-arrow.svg",
+    "docs/images/fruit-weapons.svg"
+  ],
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 9526646,
+    "sha256": "9a613a39e4d2f2c22b05b00eb67fb415e6edafaafcdf338ef4724e49cd853e3a"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "沿用玩家要求：做好后不用测试。仅打包，原稿静态导出。",
+  "pages_published": false
+}

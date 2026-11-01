@@ -17,12 +17,12 @@ export type GearId='ironBlade'|'crimsonBlade'|'gleamBlade'|'ridgeBlade'|'redMoon
 interface GearDefinition {name:string;category:GearCategory;rarity:GearRarity;price:number;upgradeCost:number;from:GearId|null;effect:string;note:string}
 // price is the total investment; upgradeCost is the gold paid at this step.
 export const GEAR:Record<GearId,GearDefinition>={
- ironBlade:{name:'铁芯短刃',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条路线共用的起点，通用于刀、剑、弓、矛。可购买多件，分别升级为不同分支；升级后替换当前短刃，不额外占位置。'},
+ ironBlade:{name:'铁芯短刃',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条路线共用的起点，通用于胡萝卜刀与香蕉弓。可购买多件，分别升级为不同分支；升级后替换当前短刃，不额外占位置。'},
  crimsonBlade:{name:'赤纹利刃',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'ironBlade',effect:'攻击力 +15；生命偷取 +6%',note:'铁芯短刃补 55 金币升级而成。普攻回复实际伤害的 6%，每秒回复不超过最大生命的 5%。继续补 80 金币可升级为赤月誓刃，解锁溢出治疗护盾。'},
- gleamBlade:{name:'鎏光锋刃',category:'attack',rarity:'rare',price:95,upgradeCost:60,from:'ironBlade',effect:'攻击力 +18；暴击率 +10%',note:'铁芯短刃补 60 金币升级而成。刀、剑、箭与矛均可暴击。继续补 85 金币可升级为曜金裁决，提高暴击率并解锁额外暴击伤害。'},
+ gleamBlade:{name:'鎏光锋刃',category:'attack',rarity:'rare',price:95,upgradeCost:60,from:'ironBlade',effect:'攻击力 +18；暴击率 +10%',note:'铁芯短刃补 60 金币升级而成。胡萝卜横扫与瓜子箭均可暴击。继续补 85 金币可升级为曜金裁决，提高暴击率并解锁额外暴击伤害。'},
  ridgeBlade:{name:'岩脊战刃',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'ironBlade',effect:'攻击力 +10；最大生命 +35',note:'铁芯短刃补 55 金币升级而成。继续补 85 金币可升级为玄岩巨斧，获得更多生命，并解锁生命附伤与裂岩溅射。'},
  redMoonBlade:{name:'赤月誓刃',category:'attack',rarity:'epic',price:170,upgradeCost:80,from:'crimsonBlade',effect:'攻击力 +25；生命偷取 +12%',note:'血契：普攻吸血溢出的治疗转为护盾，上限为最大生命的 15%，持续 6 秒，溢出吸血时刷新。治疗与蓄盾共享每秒最大生命 5% 的预算。此路线的最终装备。'},
- solarEdge:{name:'曜金裁决',category:'attack',rarity:'epic',price:180,upgradeCost:85,from:'gleamBlade',effect:'攻击力 +30；暴击率 +20%；暴击伤害 +30%',note:'破晓：普攻暴击倍率额外 +0.30。刀、剑、箭与矛均可触发。此路线的最终装备。'},
+ solarEdge:{name:'曜金裁决',category:'attack',rarity:'epic',price:180,upgradeCost:85,from:'gleamBlade',effect:'攻击力 +30；暴击率 +20%；暴击伤害 +30%',note:'破晓：普攻暴击倍率额外 +0.30。胡萝卜横扫与瓜子箭均可触发。此路线的最终装备。'},
  stoneCleaver:{name:'玄岩巨斧',category:'attack',rarity:'epic',price:175,upgradeCost:85,from:'ridgeBlade',effect:'攻击力 +15；最大生命 +70；普攻附带裂岩溅射',note:'裂岩：普攻附加最大生命 1.5% 伤害；每轮命中再向目标周围溅射一次，伤害随攻击力与最大生命成长。溅射不暴击、不吸血、不触发其他普攻特效。此路线的最终装备。'},
 };
 export const GEAR_BRANCHES=[['crimsonBlade','redMoonBlade'],['gleamBlade','solarEdge'],['ridgeBlade','stoneCleaver']] as const satisfies readonly (readonly [GearId,GearId])[];

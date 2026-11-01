@@ -16,18 +16,18 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const widthScale = (1 + .09 * mastery) * (1 + .35 * p.broad + .28 * p.giant);
   const bow=isBow(blade)?bowProfile(blade):undefined;
   const kind = basicWeaponKind(blade);
-  const baseMass = kind === 'knife' ? 1 : kind === 'sword' ? .65 : kind === 'spear' ? 1.05 : bow?bow.mass:(t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
+  const baseMass = kind === 'knife' ? 1 : bow?bow.mass:(t.range / 72) ** .7 * (t.effect === 'heavy' ? 1.24 : t.effect === 'ink' ? 1.12 : 1);
   const mass = baseMass * (lengthScale * widthScale) ** .78 * .86 ** p.hollow;
   const load = Math.max(0, mass - 1), handling = .82 ** p.grip;
   const burden = clamp(load / 2.8, 0, 1) * handling;
-  const windup = (kind === 'sword' ? .025 : kind === 'spear' ? .085 : kind === 'knife' ? .065 : bow?.windup??.04) + Math.min(.16, load * .045) * handling;
-  const strike = (kind === 'sword' ? .065 : kind === 'knife' ? .16 : kind === 'spear' ? .12 : .10) + Math.min(.08, load * .022);
-  const recovery = (kind === 'sword' ? .065 : kind === 'spear' ? .16 : kind === 'knife' ? .14 : .10) + Math.min(.18, load * .05) * handling;
+  const windup = (kind === 'knife' ? .065 : bow?.windup??.04) + Math.min(.16, load * .045) * handling;
+  const strike = (kind === 'knife' ? .16 : .10) + Math.min(.08, load * .022);
+  const recovery = (kind === 'knife' ? .14 : .10) + Math.min(.18, load * .05) * handling;
   return {
     damage: Math.round((20 + (level - 1)) * t.multiplier * (1 + .10 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1) * (1 + .025 * items.crown * ownedRelics(items).length) * (1 + .25 * items.redmoon)),
     interval: Math.max(windup + strike + recovery + .015, Math.max(.26, t.interval * .92 ** p.quick) * (1 + Math.min(.5, load * .13) * handling)),
     range,
-    arc: Math.min(kind === 'sword' ? 110 : 250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
+    arc: Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
     thrustWidth: Math.min(22, 6 * Math.sqrt(widthScale)),
     magnet: 84 * (1 + .35 * p.magnet + .25 * items.magnet), knockback: 18 * (1 + .35 * p.force + .15 * p.broad + .22 * p.giant) * (groups.forge >= 3 ? 1.15 : 1),
     lengthScale, widthScale, mass, burden, windup, strike, recovery,
@@ -61,7 +61,7 @@ export function shopEquipmentStats(level:number,blade:number,gear:import('./gear
  return {...base,
   damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+6*gear.ironBlade+15*gear.crimsonBlade+18*gear.gleamBlade+10*gear.ridgeBlade+25*gear.redMoonBlade+30*gear.solarEdge+15*gear.stoneCleaver),
   interval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
-  widthScale:1+.09*mastery,arc:Math.min(t.id==='sword'?110:250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
+  widthScale:1+.09*mastery,arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
   moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:Math.min(1,.10*gear.gleamBlade+.20*gear.solarEdge),critMultiplier:1.75+.30*gear.solarEdge,dashCooldown:5,waveEvery:0,
  };
 }

@@ -210,3 +210,12 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 @media(max-width:540px){.equipment-shop{max-height:calc(100dvh - 28px)}.shop-items.shop-tree{padding:8px 10px 14px}.shop-tree-hint{font-size:9px}.shop-detail-route{font-size:9px}.shop-item-rank{right:-3px;font-size:8px}.shop-detail{max-height:240px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}}
 @media(max-width:350px){.shop-items.shop-tree{padding:6px 8px 12px}.shop-tree .shop-item-art{width:56px;height:56px}.shop-tree .shop-item-art>.gear-icon{width:50px;height:50px}.shop-tree .shop-item-name{font-size:11px}.shop-tree-hint{margin-bottom:6px}}
 @media(max-height:430px) and (min-width:500px){.shop-items.shop-tree{grid-row:2;grid-column:1;padding:5px 10px 10px;min-height:0}.shop-tree .shop-item{gap:3px}.shop-tree .shop-item-art{width:45px;height:45px}.shop-tree .shop-item-art>.gear-icon{width:41px;height:41px}.shop-tree .shop-item-name{font-size:10px}.shop-tree .shop-item-rarity{font-size:7px}.shop-tree-fork{height:24px}.shop-tree-links{height:20px}.shop-tree-hint{font-size:9px;margin-bottom:5px}.shop-detail{overflow-y:auto}.shop-detail-route{font-size:9px}.shop-detail-note{max-height:none;flex:1}.shop-actions>small{font-size:9px}}
+
+/* Two fruit weapons: a wide carrot and a curved banana bow. */
+.rail-blades{grid-template-columns:repeat(2,minmax(0,1fr))}.rail-blade img{height:70px;max-width:175px}
+.blade-options{grid-template-columns:repeat(2,minmax(0,1fr))}.blade-option>img{height:72px}.blade-option>b{font-size:17px;letter-spacing:1px}
+.loadout-weapon.fruit-knife{height:80px;object-fit:contain}.loadout-weapon.fruit-bow{height:110px;object-fit:contain}
+.title-weapon.fruit-bow{width:220px;height:220px;left:-26px;top:-57px;transform:rotate(-12deg);transform-origin:62.5% 50%}
+.codex-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.codex-card .codex-art img{height:100px}
+@media(max-width:800px){.rail-blade img{height:62px}.blade-option>img{height:64px}.blade-option>b{font-size:16px}.loadout-weapon.fruit-bow{height:90px}.loadout-weapon.fruit-knife{height:62px}.codex-grid{grid-template-columns:1fr}.codex-card .codex-art img{height:88px}.title-weapon.fruit-bow{width:190px;height:190px;left:-18px;top:-47px}}
+@media(max-width:360px){.blade-option>b{font-size:14px}.blade-option>span{font-size:9px}.rail-blade b{font-size:10px}}

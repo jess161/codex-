@@ -3,9 +3,9 @@ import { TIERS, isBasicWeapon } from './config';
 
 export type BladeId = typeof TIERS[number]['id'];
 export const PASSIVES: Record<BladeId, { name: string; story: string; description: string }> = {
-  knife: { name: '横扫', story: '宽扇形近战', description: '自动横扫前方多个敌人，攻击范围较宽。' },
+  knife: { name: '胡萝卜横扫', story: '鲜脆近战', description: '握住绿色叶柄，胡萝卜自动横扫前方多个敌人，覆盖宽扇形范围。' },
   sword: { name: '快斩', story: '高频近战', description: '自动连续快斩，出手与收势更快，覆盖角度较窄。' },
-  bow: { name: '自动射击', story: '单箭远程', description: '自动瞄准射程内可见的敌人，每次射出一支箭；命中首个敌人后消失。' },
+  bow: { name: '瓜子连射', story: '香蕉弓远程', description: '香蕉弓自动瞄准射程内可见敌人，每次射出一枚瓜子箭，命中首个敌人后消失。' },
   spear: { name: '直线贯穿', story: '长距离直刺', description: '自动向前直刺，贯穿窄直线上的所有敌人，不扫向侧面与身后。' },
   scrap: { name: '百炼初锋', story: '取意于无名小刀在实战中磨出锋芒。', description: '每击杀 5 名敌人，近战伤害 +6%，最多 3 层；本局保留。' },
   'dark-dagger': { name: '袖里藏锋', story: '取意于韦小宝的机敏与匕首破坚。', description: '瞬步后 3 秒内，下一次命中的近战伤害 +80%；近战对甲壳额外伤害 +30%。' },
@@ -102,9 +102,9 @@ export function passiveGrowth(tier: number, mastery: number) {
 export function passiveProgress(id: BladeId, p: PassiveState, dashCooldown: number, mastery = 0) {
   const r = passiveRules(mastery);
   switch (id) {
-    case 'knife': return '宽幅横扫 · 前方清群';
+    case 'knife': return '胡萝卜横扫 · 前方清群';
     case 'sword': return '连续快斩 · 灵活走位';
-    case 'bow': return '自动瞄准 · 一次一箭';
+    case 'bow': return '香蕉弓连射 · 一次一枚瓜子';
     case 'spear': return '前方直刺 · 沿线贯穿';
     case 'scrap': return p.stacks >= r.scrapCap ? `磨刃已满 · 近战 +${pct(p.stacks * r.scrapBonus)}` : `磨刃 ${p.stacks}/${r.scrapCap} · 击败 ${p.kills % 5}/5`;
     case 'dark-dagger': return p.empowered > 0 ? `藏锋就绪 ${p.empowered.toFixed(1)}s` : '瞬步后强化下一斩';

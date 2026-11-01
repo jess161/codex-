@@ -1,6 +1,6 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `e216019`，增加一件普通与三件稀有装备，商店用连线展示普通→稀有→史诗的三条路线。设计见 [升级树](gdd/blade-evolution-upgrade-tree-v2.0.md)，交付记录见 [本轮说明](blade-upgrade-tree-change-notes.json)。按玩家要求未运行测试或试玩。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `4ed060e`，开局收为胡萝卜刀与香蕉弓两种，重画战斗与鉴赏造型，剑与矛退出选择和启动入口。设计见 [果蔬双武器](gdd/blade-evolution-fruit-duo-v2.1.md)，交付记录见 [本轮说明](blade-fruit-duo-change-notes.json)。按玩家要求未运行测试或试玩。
 
 [原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages；旧网页不能代表本轮调整版。
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-工作区备份使用 `blade-upgrade-tree-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
+工作区备份使用 `blade-fruit-duo-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
 
 恢复完整历史：
 

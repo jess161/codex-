@@ -10,11 +10,21 @@ export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolea
  const distance=23-(reduced?0:recoil*2),x=s.player.x+Math.cos(angle)*distance,y=s.player.y+Math.sin(angle)*distance;
  const point=(lx:number,ly:number)=>({x:x+Math.cos(angle)*lx-Math.sin(angle)*ly,y:y+Math.sin(angle)*lx+Math.cos(angle)*ly});
  sprite('held-bow',`bow-limbs-${run.tier+1}`,x,y,size,28).setOrigin(.625,.5).setRotation(angle).setDisplaySize(size*(1-(reduced?0:drawing*.035)),size);
- const top=point(-.245*size,-.365*size),bottom=point(-.245*size,.365*size),nock=point(-(.245+drawing*.18)*size,0);
+ const anchor=run.tier===17?181/512-.625:-.245;
+ const top=point(anchor*size,-.3671875*size),bottom=point(anchor*size,.3671875*size),nock=point((anchor-drawing*.18)*size,0);
  g.lineStyle(2.6,0x263d54,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
  g.lineStyle(1,0xf0fbff,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
- if(s.swing&&!s.swing.resolved){const tip=point(size*.31,0);g.lineStyle(3,0x263d54,.95).lineBetween(nock.x,nock.y,tip.x,tip.y).lineStyle(1.3,0xffedbb,1).lineBetween(nock.x,nock.y,tip.x,tip.y);if(run.tier===14)g.fillStyle(0xffd177,.2+drawing*.5).fillCircle(tip.x,tip.y,3+drawing*4);}
+ if(s.swing&&!s.swing.resolved){
+  if(run.tier===17)sprite('nocked-seed','fruit-arrow',nock.x,nock.y,19,29).setOrigin(.25,.5).setRotation(angle).setDisplaySize(19,19*24/64);
+  else{const tip=point(size*.31,0);g.lineStyle(3,0x263d54,.95).lineBetween(nock.x,nock.y,tip.x,tip.y).lineStyle(1.3,0xffedbb,1).lineBetween(nock.x,nock.y,tip.x,tip.y);if(run.tier===14)g.fillStyle(0xffd177,.2+drawing*.5).fillCircle(tip.x,tip.y,3+drawing*4);}
+ }
  for(const a of run.archery.arrows){
+  if(run.tier===17){
+   const dx=Math.cos(a.angle),dy=Math.sin(a.angle),length=22+a.width*1.5;
+   g.lineStyle(2,0xffdf80,.3).lineBetween(a.x-dx*(length+10),a.y-dy*(length+10),a.x-dx*length,a.y-dy*length);
+   sprite('seed-'+a.id,'fruit-arrow',a.x,a.y,length,26).setOrigin(61/64,.5).setRotation(a.angle).setDisplaySize(length,length*24/64);
+   continue;
+  }
   const c=a.kind==='wind'?0x62d5b1:a.kind==='ice'?0x8ddcfa:a.kind==='arrow'?0xc9c2ad:0xffb15b;
   const dx=Math.cos(a.angle),dy=Math.sin(a.angle),width=a.width,length=19+width*2;
   const tx=a.x-dx*length,ty=a.y-dy*length;

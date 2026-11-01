@@ -28,20 +28,19 @@ export const TIERS = [
   { id: 'frost-bow', name: '霜月长弓', title: '月落凝霜', source: '本作原创', bearer: '踏雪游侠', lore: '一轮圆月凝在冰蓝弓臂之间，三道碎冰划开夜色。让急追的怪群慢下来，再从容寻找下一条路。', technique: '碎冰三矢', effect: 'frost', slash: 5, color: '#62bde7', hex: 0x62bde7, range: 250, arc: 38, interval: .9, multiplier: 1.1, waveEvery: 0, waveRange: 0, pierce: 0, role: '远程 · 散射控场', description: '三箭散射叠寒意，冻结普通怪，冰雨压住怪群。' },
   { id: 'ember-bow', name: '焰星重弓', title: '流星破阵', source: '本作原创', bearer: '逐星猎手', lore: '厚实弓臂托起一颗温暖的星。弦上聚起光，箭头拖着焰尾落入怪群，在最密处绽开。', technique: '爆燃重箭', effect: 'flame', slash: 3, color: '#ee9154', hex: 0xee9154, range: 300, arc: 32, interval: 1.25, multiplier: 2.1, waveEvery: 0, waveRange: 0, pierce: 0, role: '远程 · 蓄力爆炸', description: '移动蓄力的重箭命中爆炸，余烬持续灼烧。' },
   // Append new identities: indices 0–14 remain reserved for reading historical saves.
-  { id: 'knife', name: '刀', title: '宽刃横扫', source: '普通武器', bearer: '每位冒险者', lore: '一把朴素的宽刃刀。靠近怪群，横扫前方大片敌人，斩出移动的空隙。', technique: '横扫', effect: 'steel', slash: 1, color: '#638ca9', hex: 0x638ca9, range: 90, arc: 170, interval: .70, multiplier: 1.4, waveEvery: 0, waveRange: 0, pierce: 0, role: '横扫 · 扇形清群', description: '宽幅横扫，同时命中前方多个敌人。' },
+  { id: 'knife', name: '胡萝卜刀', title: '鲜脆横扫', source: '果蔬武器', bearer: '菜园冒险者', lore: '握住绿叶柄，抡起一根饱满的胡萝卜。橙色萝卜身横扫前方怪群，脆生生地打开一条路。', technique: '胡萝卜横扫', effect: 'steel', slash: 1, color: '#e48a42', hex: 0xe48a42, range: 90, arc: 170, interval: .70, multiplier: 1.4, waveEvery: 0, waveRange: 0, pierce: 0, role: '近战 · 宽幅横扫', description: '胡萝卜自动朝敌人横扫，一次命中前方多个目标。' },
   { id: 'sword', name: '剑', title: '轻锋快斩', source: '普通武器', bearer: '每位冒险者', lore: '一把轻巧的直剑。出手快、收势短，连续快斩适合边移动边切开贴近的敌人。', technique: '快斩', effect: 'steel', slash: 2, color: '#59a79b', hex: 0x59a79b, range: 80, arc: 76, interval: .34, multiplier: .95, waveEvery: 0, waveRange: 0, pierce: 0, role: '快斩 · 高频近战', description: '窄幅快斩，攻击间隔约为刀的一半。' },
-  { id: 'bow', name: '弓', title: '自动射击', source: '普通武器', bearer: '每位冒险者', lore: '一把木弓。自动瞄准射程内可见的敌人，一次射出一支箭；保持距离，用走位争取射击时间。', technique: '自动射击', effect: 'steel', slash: 1, color: '#b48a50', hex: 0xb48a50, range: 340, arc: 28, interval: .58, multiplier: 1.3, waveEvery: 0, waveRange: 0, pierce: 0, role: '射击 · 自动瞄准', description: '自动射出单支直线箭，命中首个敌人后消失。' },
+  { id: 'bow', name: '香蕉弓', title: '弯弯有劲', source: '果蔬武器', bearer: '菜园冒险者', lore: '弯弯的香蕉绷起一根植物纤维弦，深色果蒂就是弓梢。自动瞄准怪物，弹出一枚带浅色纹路的瓜子箭。', technique: '瓜子连射', effect: 'steel', slash: 1, color: '#dcb447', hex: 0xdcb447, range: 340, arc: 28, interval: .58, multiplier: 1.3, waveEvery: 0, waveRange: 0, pierce: 0, role: '远程 · 自动射击', description: '自动瞄准可见敌人，每次射出一枚瓜子箭，命中首个目标后消失。' },
   { id: 'spear', name: '矛', title: '直线贯穿', source: '普通武器', bearer: '每位冒险者', lore: '一把木杆铁尖的长矛。朝前方直刺，贯穿同一直线上的所有敌人；侧面与身后需要靠移动照顾。', technique: '直刺', effect: 'steel', slash: 1, color: '#9b7968', hex: 0x9b7968, range: 150, arc: 12, interval: .80, multiplier: 1.5, waveEvery: 0, waveRange: 0, pierce: 0, role: '贯穿 · 直线多目标', description: '长距离窄幅直刺，贯穿沿线多个敌人。' },
 ] as const;
-export const BASIC_WEAPON_INDICES = [15, 16, 17, 18] as const;
+export const BASIC_WEAPON_INDICES = [15, 17] as const;
 export const DEFAULT_WEAPON = BASIC_WEAPON_INDICES[0];
-export type BasicWeaponKind = 'knife' | 'sword' | 'bow' | 'spear';
+export type BasicWeaponKind = 'knife' | 'bow';
 export const isBasicWeapon = (index: number) => BASIC_WEAPON_INDICES.some(i => i === index);
 export const basicWeaponKind = (index: number): BasicWeaponKind | undefined => isBasicWeapon(index) ? TIERS[index].id as BasicWeaponKind : undefined;
 export const toBasicWeapon = (index: number): number => {
   if (isBasicWeapon(index)) return index;
   if (index >= 12 && index <= 14) return 17;
-  if ([1, 7, 8, 9, 11].includes(index)) return 16;
   return DEFAULT_WEAPON;
 };
 export const BLADE_CATALOGUE = BASIC_WEAPON_INDICES.map(index => ({ blade: TIERS[index], index }));
