@@ -1,0 +1,40 @@
+{
+  "change": "Carrot spine with one-third rest face, faster scratches, 45-degree sweep and banana range 140",
+  "baseline_commit": "a74904c55c0ee77ffbad934544c499e7df99c549",
+  "branch": "reconstruct/latest-from-conversation",
+  "carrot_view": {
+    "rest_face_fraction": 0.3333333333333333,
+    "strike_face_fraction": 1,
+    "spine": "orange shaded thickness derived from A-group silhouette",
+    "smooth_unfold_and_fold": true,
+    "grounded_tip_retained": true,
+    "mark_width_uses_full_size": true
+  },
+  "scratches": {
+    "color": "#f49a43",
+    "lifetime_seconds": 1.1,
+    "width_formula": "clamp(full displayed height * 0.075, 1.6, 8)"
+  },
+  "combat": {
+    "carrot_total_sweep_degrees": 45,
+    "banana_actual_range": 140,
+    "mastery_does_not_expand_these_parameters": true,
+    "weapon_description_and_stat_display_updated": true
+  },
+  "save_policy": "Updated content revision clears older saved game",
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 11768845,
+    "sha256": "a8537c51b2e7779e35fb546f58e3bff31b196448e3278ff4e473f481dd3b6b02"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "按玩家已有要求，不运行测试或试玩，仅阅读源码、修改和打包。",
+  "pages_published": false
+}

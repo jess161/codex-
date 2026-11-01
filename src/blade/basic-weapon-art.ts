@@ -4,10 +4,13 @@ import { swingPhase, type EquipmentStats, type SwingTiming } from './equipment';
 import type { BladeRun } from './simulation';
 import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 import type { DragContact } from './blade-drag';
+import { drawCarrotBack } from './carrot-back';
 
 export const CARROT_DRAG_ANGLE=Math.PI/4;
 export const CARROT_GROUND_INCLINATION=Math.PI/4;
 export const CARROT_GROUND_COLOR=0xf49a43;
+export const CARROT_REST_FACE_VISIBLE=1/3;
+export const CARROT_MARK_LIFETIME=1.1;
 export const carrotMarkWidth=(displayHeight:number)=>Math.max(1.6,Math.min(8,displayHeight*.075));
 // Project vertical height into the game's ground view while keeping the rest pose readable.
 const HEIGHT_PROJECTION=.45;
@@ -46,7 +49,7 @@ export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|
  if(swing){const {phase,progress}=swingPhase(swing),eased=progress*progress*(3-2*progress);lifted=phase==='strike'?1:phase==='windup'?eased:1-eased;}
  const grounded=1-lifted,hand=16,length=stats.range-hand;
  const restX=Math.cos(GROUND_YAW)*hand,restY=13+Math.sin(GROUND_YAW)*hand-length*GROUND_HEIGHT;
- return {...pose,hand,reach:stats.range,inclination:CARROT_GROUND_INCLINATION*grounded,
+ return {...pose,hand,reach:stats.range,inclination:CARROT_GROUND_INCLINATION*grounded,faceScale:CARROT_REST_FACE_VISIBLE*grounded+lifted,
   handX:restX*grounded+Math.cos(pose.angle)*hand*lifted,handY:restY*grounded+Math.sin(pose.angle)*hand*lifted,
   lengthProjection:GROUNDED_LENGTH*grounded+lifted};
 }
@@ -54,12 +57,15 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
  const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+pose.handX,y=s.player.y+pose.handY;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
- const width=art.width*scale*pose.lengthProjection,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
+ const width=art.width*scale*pose.lengthProjection,fullHeight=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
+ const height=fullHeight*pose.faceScale;
+ drawCarrotBack(g,{x,y,angle:a,width,fullHeight,faceScale:pose.faceScale});
  sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
-  g.lineStyle(15*Math.sqrt(stats.widthScale),0xf2a04f,pose.opacity*.18).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,a).strokePath();
-  g.lineStyle(2.5,0xffe2a4,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,a).strokePath();
+  const trailEnd=swingPhase(s.swing).phase==='strike'?a:s.swing.angle+arc/2;
+  g.lineStyle(15*Math.sqrt(stats.widthScale),0xf2a04f,pose.opacity*.18).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
+  g.lineStyle(2.5,0xffe2a4,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
   for(let i=0;i<3;i++){
    const leaf=a-.12-i*.1,r=stats.range*(.72+i*.07);
    g.fillStyle(i===1?0xffc16b:0x79b65c,pose.opacity*.7).fillEllipse(s.player.x+Math.cos(leaf)*r,s.player.y+Math.sin(leaf)*r,4.5,2.5);
@@ -69,6 +75,6 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
   // Use the same pivot, scaling and rotation as the painted sprite's actual tip.
   const tipX=(art.tip[0]-art.grip[0])*width/art.width;
   const tipY=(art.tip[1]-art.grip[1])*height/art.height;
-  return {x:x+dx*tipX-dy*tipY,y:y+dy*tipX+dx*tipY,player:{...s.player},range:stats.range,widthScale:stats.widthScale,mass:stats.mass,color:CARROT_GROUND_COLOR,markWidth:carrotMarkWidth(height)};
+  return {x:x+dx*tipX-dy*tipY,y:y+dy*tipX+dx*tipY,player:{...s.player},range:stats.range,widthScale:stats.widthScale,mass:stats.mass,color:CARROT_GROUND_COLOR,markWidth:carrotMarkWidth(fullHeight),markLife:CARROT_MARK_LIFETIME};
  }
 }

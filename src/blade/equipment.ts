@@ -11,7 +11,7 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
   const p = { ...perks, sharp: perks.sharp + items.stone * 1.5, long: perks.long + items.ruler * 1.5,
     broad: perks.broad + items.anvil * 1.5, hollow: perks.hollow + items.feather, stride: perks.stride + items.bell,
     quick: perks.quick + items.hourglass, grip: perks.grip + items.wrap + (groups.wind >= 2 ? 2 : 0) };
-  const range = Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range) * (groups.forge >= 3 ? 1.1 : 1));
+  const range = isBasicWeapon(blade)&&isBow(blade)?t.range:Math.min(420, (10 + (t.range - 10) * (1 + .14 * mastery) * (1 + .22 * p.long + .18 * p.giant)) * (1 + .08 * p.range) * (groups.forge >= 3 ? 1.1 : 1));
   const lengthScale = (range - 10) / (t.range - 10);
   const widthScale = (1 + .09 * mastery) * (1 + .35 * p.broad + .28 * p.giant);
   const bow=isBow(blade)?bowProfile(blade):undefined;
@@ -27,7 +27,7 @@ export function equipmentStats(level: number, perks: Record<PerkId, number> = fr
     damage: Math.round((20 + (level - 1)) * t.multiplier * (1 + .10 * mastery) * (1 + .12 * p.sharp + .10 * p.broad + .16 * p.giant) * (groups.forge >= 2 ? 1.08 : 1) * (1 + .025 * items.crown * ownedRelics(items).length) * (1 + .25 * items.redmoon)),
     interval: Math.max(windup + strike + recovery + .015, Math.max(.26, t.interval * .92 ** p.quick) * (1 + Math.min(.5, load * .13) * handling)),
     range,
-    arc: Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
+    arc: kind==='knife'?t.arc:Math.min(250, t.arc + 9 * mastery + 8 * p.broad + 5 * p.giant),
     thrustWidth: Math.min(22, 6 * Math.sqrt(widthScale)),
     magnet: 84 * (1 + .35 * p.magnet + .25 * items.magnet), knockback: 18 * (1 + .35 * p.force + .15 * p.broad + .22 * p.giant) * (groups.forge >= 3 ? 1.15 : 1),
     lengthScale, widthScale, mass, burden, windup, strike, recovery,
@@ -56,12 +56,12 @@ export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '�
 // The new catalogue is weapon-neutral. No historical relic or set is consulted.
 export function shopEquipmentStats(level:number,blade:number,gear:import('./gear').GearInventory){
  const t=TIERS[blade],mastery=tierForLevel(level),base=equipmentStats(1,freshPerks(),blade,freshRelics()),pace=1.10;
- const range=Math.min(isBow(blade)?900:420,t.range*.90*(1+.10*mastery));
+ const range=isBow(blade)?t.range:Math.min(420,t.range*.90*(1+.10*mastery));
  const windup=base.windup*pace,strike=base.strike*pace,recovery=base.recovery*pace;
  return {...base,
   damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+6*gear.ironBlade+15*gear.crimsonBlade+18*gear.gleamBlade+10*gear.ridgeBlade+25*gear.redMoonBlade+30*gear.solarEdge+15*gear.stoneCleaver),
   interval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
-  widthScale:1+.09*mastery,arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
+  widthScale:1+.09*mastery,arc:t.id==='knife'?t.arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
   moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:Math.min(1,.10*gear.gleamBlade+.20*gear.solarEdge),critMultiplier:1.75+.30*gear.solarEdge,dashCooldown:5,waveEvery:0,
  };
 }
