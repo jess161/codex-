@@ -1,6 +1,6 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `a74904c`，加入刀背为主、约三分之一刀面的胡萝卜拖动视角，刀痕改为 1.1 秒淡去，横扫角度固定 45°，香蕉弓实际射程固定 140。设计见 [刀背视角与攻击范围](gdd/blade-evolution-carrot-edge-v2.4.md)，交付记录见 [本轮说明](blade-carrot-edge-change-notes.json)。按玩家要求未运行测试或试玩。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `c93bf4b`，撤回胡萝卜刀的固定 45° 贴地投影与刀背视角，恢复完整刀面，并把开局胡萝卜刀和香蕉弓都缩小约四分之一。保留 1.1 秒橙色刀痕、45° 横扫和香蕉弓实际射程 140。设计见 [完整刀面与小型开局武器](gdd/blade-evolution-compact-weapons-v2.5.md)，交付记录见 [本轮说明](blade-compact-weapons-change-notes.json)。按玩家要求未运行测试或试玩。
 
 [原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages；旧网页不能代表本轮调整版。
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-工作区备份使用 `blade-carrot-edge-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
+工作区备份使用 `blade-compact-weapons-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
 
 恢复完整历史：
 

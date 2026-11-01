@@ -1,0 +1,47 @@
+{
+  "change": "Restore full-face carrot and reduce starting carrot knife and banana bow sizes",
+  "baseline_commit": "c93bf4b3fd94abfa37373dc5a0874e4ebd47dcb3",
+  "branch": "reconstruct/latest-from-conversation",
+  "carrot_view": {
+    "full_face_at_rest_and_during_swing": true,
+    "fixed_45_degree_ground_projection_removed": true,
+    "spine_overlay_removed": true,
+    "rest_angle": "aim + 0.9 radians"
+  },
+  "starting_sizes": {
+    "carrot_base_range_before": 90,
+    "carrot_base_range_after": 72,
+    "carrot_actual_level_one_range_before": 81,
+    "carrot_actual_level_one_range_after": 64.8,
+    "carrot_grip_to_tip_length_before": 65,
+    "carrot_grip_to_tip_length_after": 48.8,
+    "carrot_visible_size_ratio": 0.7507692307692307,
+    "banana_height_before": 64,
+    "banana_height_after": 48,
+    "banana_string_and_nocked_seed_scale_with_bow": true
+  },
+  "retained": {
+    "approved_art_group": "A",
+    "carrot_total_sweep_degrees": 45,
+    "banana_actual_range": 140,
+    "scratch_color": "#f49a43",
+    "scratch_lifetime_seconds": 1.1,
+    "scratch_width_scales_with_carrot": true
+  },
+  "save_policy": "Updated content revision clears older saved game",
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 11766970,
+    "sha256": "fefe7dbffe096282391a96dbc264ecca9518fbf8fb42dc11e8f026c193f29b85"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "按玩家已有要求，不运行测试或试玩，仅阅读源码、修改和打包。",
+  "pages_published": false
+}

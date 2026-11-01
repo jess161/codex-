@@ -5,7 +5,8 @@ type Graphics=Phaser.GameObjects.Graphics;
 type Sprite=(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image;
 export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolean){
  const s=run.state,stats=run.stats,angle=s.aim;
- const size=64*Math.min(1.8,Math.sqrt(stats.lengthScale))*Math.min(1.2,stats.widthScale**.1);
+ const baseSize=run.tier===17?48:64;
+ const size=baseSize*Math.min(1.8,Math.sqrt(stats.lengthScale))*Math.min(1.2,stats.widthScale**.1);
  const drawing=s.swing&&s.swing.age<s.swing.windup?Math.min(1,s.swing.age/s.swing.windup):0;
  const recoil=s.swing&&s.swing.resolved?Math.max(0,1-(s.swing.age-s.swing.windup)/.14):0;
  const distance=23-(reduced?0:recoil*2),x=s.player.x+Math.cos(angle)*distance,y=s.player.y+Math.sin(angle)*distance;
@@ -22,7 +23,7 @@ export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolea
  g.lineStyle(2.6,0x263d54,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
  g.lineStyle(1,0xffe8b9,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
  if(s.swing&&!s.swing.resolved){
-  if(run.tier===17)sprite('nocked-seed','fruit-arrow',nock.x,nock.y,19,29).setOrigin(.25,.5).setRotation(angle).setDisplaySize(19,19*24/64);
+  if(run.tier===17){const seedSize=19*size/64;sprite('nocked-seed','fruit-arrow',nock.x,nock.y,seedSize,29).setOrigin(.25,.5).setRotation(angle).setDisplaySize(seedSize,seedSize*24/64);}
   else{const tip=point(size*.31,0);g.lineStyle(3,0x263d54,.95).lineBetween(nock.x,nock.y,tip.x,tip.y).lineStyle(1.3,0xffedbb,1).lineBetween(nock.x,nock.y,tip.x,tip.y);if(run.tier===14)g.fillStyle(0xffd177,.2+drawing*.5).fillCircle(tip.x,tip.y,3+drawing*4);}
  }
  for(const a of run.archery.arrows){
