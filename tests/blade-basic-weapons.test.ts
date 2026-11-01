@@ -68,7 +68,7 @@ describe('four ordinary starting weapons', () => {
   it('spear deals one full hit to every enemy in a line, with normal kill and XP credit', () => {
     const r = arena(18); const enemies = Array.from({length: 8}, (_, i) => target(r, 40 + i * 14));
     enemies.forEach(e => e.hp = 1); strike(r);
-    expect(r.state.kills).toBe(8); expect(r.state.bestCleave).toBe(8); expect(r.state.orbs).toHaveLength(8);
+    expect(r.state.kills).toBe(8); expect(r.state.bestCleave).toBe(8); expect(r.state.orbs.filter(o => o.kind === 'xp')).toHaveLength(8); expect(r.state.orbs.filter(o => o.kind === 'coin')).toHaveLength(8);
     expect(r.state.waves).toEqual([]); expect(r.state.passive.stacks).toBe(0);
   });
   it.each(BASIC_WEAPON_INDICES)('keeps weapon %i basic through mastery, dash and active input', blade => {
@@ -133,7 +133,7 @@ describe('shared attack visuals and resumable basics', () => {
     try {
       const storage = new BladeStorage(); expect(storage.data.settings.blade).toBe(17); expect(storage.data.run!.blade).toBe(17);
       expect(storage.data.meta.seenBlades).toEqual([15, 16, 17]); expect(storage.data.meta.bestScore).toBe(1234);
-      expect(storage.warning).toContain('进度与道具已保留'); expect(storage.write()).toBe(true);
+      expect(storage.warning).toContain('旧装备折算为金币'); expect(storage.write()).toBe(true);
     } finally {vi.unstubAllGlobals();}
   });
 });

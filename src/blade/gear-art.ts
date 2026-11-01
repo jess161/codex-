@@ -1,0 +1,19 @@
+import { GEAR, type GearId } from './gear';
+const navy = '#29475d';
+const svg = (body: string) => `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="pink" x2=".3" y2="1"><stop stop-color="#ffc7e0"/><stop offset="1" stop-color="#e585ae"/></linearGradient><linearGradient id="mint" x2=".3" y2="1"><stop stop-color="#c5f8e7"/><stop offset="1" stop-color="#6acbbb"/></linearGradient><linearGradient id="gold" x2=".3" y2="1"><stop stop-color="#fff0a3"/><stop offset="1" stop-color="#f3b950"/></linearGradient><linearGradient id="blue" x2=".3" y2="1"><stop stop-color="#c2ecff"/><stop offset="1" stop-color="#76b9ed"/></linearGradient><linearGradient id="violet" x2=".3" y2="1"><stop stop-color="#e8d7ff"/><stop offset="1" stop-color="#b197e0"/></linearGradient></defs><g stroke="${navy}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">${body}</g></svg>`)}`;
+const shine = '<path d="M37 30q10-8 20-6" fill="none" stroke="white" stroke-width="5" opacity=".9"/>';
+const shapes: Record<GearId, string> = {
+  jellyVest: '<path d="M35 21l17 8h24l17-8 18 23-16 15v44H33V59L17 44z" fill="url(#pink)"/><path d="M64 49c-19-21-38 6 0 31 38-25 19-52 0-31z" fill="#fff1d2"/>' + shine,
+  bubbleGuard: '<path d="M64 14l40 17v30c0 29-24 44-40 52-16-8-40-23-40-52V31z" fill="url(#mint)"/><path d="M64 34l20 10v18c0 14-11 23-20 28-9-5-20-14-20-28V44z" fill="#ecfff7"/><path d="M53 61l8 8 15-19" fill="none"/>' + shine,
+  honeyCharm: '<path d="M51 12h26v21c0 8 27 25 27 47 0 42-80 42-80 0 0-22 27-39 27-47z" fill="url(#mint)"/><rect x="48" y="12" width="32" height="16" rx="5" fill="url(#gold)"/><path d="M64 54l18 22-18 22-18-22z" fill="#ffec9d"/><path d="M37 78q0-11 9-19" fill="none" stroke="white"/>' ,
+  sugarCore: '<path d="M43 16h42l25 36-46 61L18 52z" fill="url(#violet)"/><path d="M43 16l-5 36 26 61 26-61-5-36M18 52h92M43 16l21 36 21-36" fill="none"/><path d="M40 35l-4 10h19" fill="none" stroke="white"/>' ,
+  clockGrip: '<path d="M25 43l18-23h42l18 23v41l-18 24H43L25 84z" fill="url(#gold)"/><circle cx="64" cy="64" r="28" fill="url(#pink)"/><path d="M64 46v20l13 10" fill="none"/><path d="M40 39q10-9 25-8" fill="none" stroke="white"/>' ,
+  clearLens: '<path d="M79 78l28 29q3 8-5 9L74 89z" fill="url(#gold)"/><circle cx="57" cy="55" r="39" fill="url(#blue)"/><circle cx="57" cy="55" r="26" fill="#d9fbff"/><path d="M41 47q5-11 17-11" fill="none" stroke="white"/>' ,
+  breezeBoots: '<path d="M40 19h39v48l22 11q13 7 10 21-2 10-15 10H29Q14 103 19 88l15-17z" fill="url(#blue)"/><path d="M34 49h39M35 62h37M29 95h76" fill="none"/><path d="M47 29h21" fill="none" stroke="white"/>' ,
+  springBoots: '<path d="M39 20h40v47l23 10q13 8 9 20H25Q15 87 25 72l10-9z" fill="url(#gold)"/><path d="M27 101l14 10 15-10 15 10 15-10 16 10" fill="none"/><path d="M53 36l-6 16h17l-6 14 17-24H60l7-6z" fill="#fff7d1" stroke-width="3"/>' ,
+  pickupBoots: '<path d="M39 19h40v48l23 10q14 7 9 22-3 10-16 10H29Q14 103 20 86l14-16z" fill="url(#violet)"/><path d="M49 36v15q0 21 23 21t23-21V36H83v15q0 9-11 9t-11-9V36z" fill="url(#pink)"/><path d="M36 93h59" fill="none" stroke="white"/>' ,
+};
+export const GEAR_ART = Object.fromEntries(Object.entries(shapes).map(([id, body]) => [id, svg(body)])) as Record<GearId, string>;
+export const COIN_ART = svg('<circle cx="64" cy="64" r="49" fill="url(#gold)"/><circle cx="64" cy="64" r="36" fill="none" stroke="#d69440" stroke-width="4"/><path d="M64 39v50m12-39H59q-14 0-14 11t17 11h7q14 0 14 10t-15 11H51" fill="none" stroke-width="6"/><path d="M29 49q8-20 28-22" fill="none" stroke="white" stroke-width="6"/>');
+export const gearIcon = (id: GearId) => `<img class="gear-icon" src="${GEAR_ART[id]}" alt="${GEAR[id].name}" draggable="false">`;
+export const coinIcon = () => `<img class="coin-icon" src="${COIN_ART}" alt="" draggable="false">`;

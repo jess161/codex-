@@ -1,3 +1,4 @@
+import { COIN_VALUES, GEAR_CAP, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
 import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type ArcheryState,type BowHost} from './bows';
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
@@ -5,7 +6,7 @@ import { THREATS, type Hazard } from './threats';
 import { DEFAULT_WEAPON, isBasicWeapon, CLASSIC_TIMING, classicXpNext, BOSS_DURATION, ELITE_INTERVAL, ENEMIES, EVOLUTION_HEAL, GAME_DURATION, MAX_LEVEL, MIN_FORM_TIME, XP_DROP_TIME, PERKS, TIERS, TIER_LEVELS, angleDelta, encounterDensity, encounterKind, lateGameDifficulty, freshPerks, legacyXpNext, sectorHits, thrustHits, tierForLevel, xpNext, type EnemyKind, type PerkId } from './config';
 import { BASE_RELIC_IDS, LEGACY_RELICS, RELIC_CAP, LEGACY_RELIC_SLOTS, RELIC_IDS, RELICS, eligibleRelics, ownedRelics, weightedRelic, freshRelics, freshRelicState, isRelicId, relicGroups, validRelics, type RelicId, type RelicInventory, type RelicState } from './relics';
 import { FOODS, foodForRoll, isFoodId, type FoodId } from './food';
-import { equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
+import { shopEquipmentStats, equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
 import { PASSIVE_SIZE_LIMITS, passiveSize, waveDimensions } from './passive-size';
 import { freshEnemyEffects, freshPassive, passiveForTier, passiveRules, type BladeId, type EnemyEffects, type PassiveState } from './passives';
 
@@ -15,14 +16,14 @@ export interface Enemy extends Point, EnemyEffects {
   hit: number; spawn: number; age: number; cooldown: number; action: 'idle' | 'windup' | 'charge' | 'recover';
   timer: number; angle: number; move: number; targetX: number; targetY: number; knockX: number; knockY: number;
 }
-export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal'; dropTimer?: number; food?:FoodId }
+export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'heal' | 'coin'; dropTimer?: number; food?:FoodId }
 export interface Bullet extends Point { id: number; vx: number; vy: number; life: number; kind?: 'orb' | 'spine'; damage?: number }
 export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga'; radius?: number; hitRadius?: number; source?:'active'; boomerang?:boolean; returning?:boolean }
 export interface Shock extends Point { id: number; radius: number; gap: number }
 export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
 export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'relic-trim' | 'won' | 'dead';
 export interface RunState {
-  version: 8; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
+  version: 8 | 9; economy?: EconomyState; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
@@ -31,7 +32,7 @@ export interface RunState {
   hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'shot' | 'bow-blast' | 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' };
+export type RunEvent = { type: 'coin' | 'gear-buy' | 'shot' | 'bow-blast' | 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; gearId?: GearId; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' };
 export interface MoveInput { x: number; y: number; dash: boolean; active?:boolean }
 export class SpatialGrid {
   private cells = new Map<string, Enemy[]>();
@@ -64,7 +65,7 @@ export class BladeRun {
   constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade: number = DEFAULT_WEAPON) {
     if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = DEFAULT_WEAPON;
     this.state = snapshot ? structuredClone(snapshot) : {
-      version: 8, classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
+      version: isBasicWeapon(blade) ? 9 : 8, ...(isBasicWeapon(blade) ? {economy: freshEconomy()} : {}), classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
       player: { x: 0, y: 0 }, direction: { x: 0, y: -1 }, velocity: { x: 0, y: 0 }, hp: 100, maxHp: 100, invincible: .7, dashTime: 0, dashCooldown: 0,
       level: 1, xp: 0, totalXp: 0, formStartedAt: 0, perks: freshPerks(), pending: [], choices: [], evolutionTime: 0,
@@ -81,9 +82,9 @@ export class BladeRun {
     }
   }
   // `tier` is the existing art/passive key. Its value is the chosen blade, never its power rank.
-  get duration(){return this.state.classicTiming?CLASSIC_TIMING.game:GAME_DURATION;}
-  get bossDuration(){return this.state.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION;}
-  get practiceTime(){return this.state.classicTiming?CLASSIC_TIMING.practice:MIN_FORM_TIME;}
+  get duration(){return this.state.economy ? SURVIVAL_DURATION : this.state.classicTiming?CLASSIC_TIMING.game:GAME_DURATION;}
+  get bossDuration(){return this.state.economy ? FINALE_DURATION : this.state.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION;}
+  get practiceTime(){return this.state.economy ? 60 : this.state.classicTiming?CLASSIC_TIMING.practice:MIN_FORM_TIME;}
   get xpNeeded(){return this.state.classicTiming?classicXpNext(this.state.level):xpNext(this.state.level);}
   get relicOrder(){const order=this.state.relicLoot.order.filter(id=>this.state.relics[id]>0);return [...order,...ownedRelics(this.state.relics).filter(id=>!order.includes(id))];}
   get tier() { return this.state.blade; }
@@ -99,7 +100,7 @@ export class BladeRun {
   get activeInfo() { return isBasicWeapon(this.tier) ? null : ACTIVE_SKILLS[this.bladeId as keyof typeof ACTIVE_SKILLS]; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
   get passiveSize() { return passiveSize(this.stats, this.rules); }
-  get stats() { return this.statsForRelics(this.state.relics); }
+  get stats() { return this.state.economy ? shopEquipmentStats(this.state.level, this.tier, this.state.economy.gear) : this.statsForRelics(this.state.relics); }
   statsForRelics(items: RelicInventory) {
     const stats = equipmentStats(this.state.level, this.state.perks, this.tier, items);
     if(!this.state.classicTiming)stats.damage=Math.round(stats.damage*(1+.02*(this.state.level-1)));
@@ -117,6 +118,28 @@ export class BladeRun {
       stats.interval = Math.max(stats.windup + stats.strike + stats.recovery + .015, stats.interval * (1 - this.rules.hasteBonus));
     }
     return stats;
+  }
+  get gearOrder() { return this.state.economy?.order ?? []; }
+  get coinRange() { return 48 * (1 + .18 * (this.state.economy?.gear.pickupBoots ?? 0)); }
+  buyGear(value: unknown) {
+    const s = this.state, e = s.economy;
+    if (!e || s.mode !== 'playing' || !isGearId(value) || e.gear[value] >= GEAR_CAP) return false;
+    const price = gearPrice(value, e.gear[value]);
+    if (e.wallet < price) return false;
+    e.wallet -= price; e.spent += price;
+    if (e.gear[value] === 0) e.order.push(value);
+    e.gear[value]++;
+    if (value === 'jellyVest') { s.maxHp += 20; this.heal(20); }
+    if (value === 'springBoots') s.dashCooldown = Math.max(0, s.dashCooldown - .4);
+    if (value === 'honeyCharm' && e.gear[value] === 1) e.regen = 0;
+    this.events.push({type: 'gear-buy', gearId: value, rank: e.gear[value], amount: price});
+    return true;
+  }
+  private updateGear(dt: number) {
+    const e = this.state.economy;
+    if (!e || !e.gear.honeyCharm) return;
+    e.regen += dt;
+    while (e.regen >= 5 - 1e-9) { e.regen = Math.max(0, e.regen - 5); this.heal(2 * e.gear.honeyCharm); }
   }
   get isRanged(){return isBow(this.tier);}
   get archery(){return this.state.archery??=freshArchery();}
@@ -242,7 +265,7 @@ export class BladeRun {
   }
   grantXp(value: number) {
     if (!Number.isFinite(value) || value <= 0) return;
-    const s = this.state; value *= 1 + .06 * s.relics.star; s.totalXp += value; s.xp += value;
+    const s = this.state; value *= s.economy ? 1 : 1 + .06 * s.relics.star; s.totalXp += value; s.xp += value;
     this.processXp();
   }
   private processXp() {
@@ -268,10 +291,10 @@ export class BladeRun {
     this.convertSpentDrops();
   }
   get availableRelics() {
-    return dropCandidates(this.state.relics,this.state.level,this.stats.range);
+    return this.state.economy ? [] : dropCandidates(this.state.relics,this.state.level,this.stats.range);
   }
   addRelicDrop(relic:RelicId,x:number,y:number,group?:number) {
-    if(!isRelicId(relic)||!Number.isFinite(x)||!Number.isFinite(y))return;
+    if(this.state.economy||!isRelicId(relic)||!Number.isFinite(x)||!Number.isFinite(y))return;
     const s=this.state,drop:RelicDrop={id:s.nextId++,x,y,relic,spawn:.28,...(group?{group}:{})};
     s.relicDrops.push(drop);s.relicLoot.totalDropped++;
     this.events.push({type:'item-drop',x,y,relicId:relic});return drop;
@@ -291,7 +314,7 @@ export class BladeRun {
   }
   pickupRelic(dropId:number) {
     const s=this.state,d=s.relicDrops.find(d=>d.id===dropId);
-    if(s.mode!=='playing'||!d||d.spawn>0||Math.hypot(d.x-s.player.x,d.y-s.player.y)>22)return false;
+    if(s.economy||s.mode!=='playing'||!d||d.spawn>0||Math.hypot(d.x-s.player.x,d.y-s.player.y)>22)return false;
     s.relicDrops=s.relicDrops.filter(other=>other.id!==d.id&&(!d.group||other.group!==d.group));
     s.relicLoot.picked++;
     if(!this.availableRelics.includes(d.relic)){
@@ -308,10 +331,12 @@ export class BladeRun {
     this.convertSpentDrops();return true;
   }
   private convertSpentDrops() {
+    if (this.state.economy) return;
     const s=this.state,pool=this.availableRelics;
     s.relicDrops=s.relicDrops.filter(d=>{if(d.group||pool.includes(d.relic))return true;s.orbs.push({id:d.id,x:d.x,y:d.y,kind:'xp',value:10,dropTimer:XP_DROP_TIME});return false;});
   }
   private updateRelicDrops(dt:number) {
+    if (this.state.economy) return;
     const s=this.state;
     for(const d of s.relicDrops)d.spawn=Math.max(0,d.spawn-dt);
     for(const d of [...s.relicDrops])if(d.spawn<=0&&Math.hypot(d.x-s.player.x,d.y-s.player.y)<=22)this.pickupRelic(d.id);
@@ -329,6 +354,7 @@ export class BladeRun {
     const s=this.state;if(s.relics.mirror)this.createWave(s.aim,Math.round(this.stats.damage*.35*s.relics.mirror),180,3+s.relics.mirror);
   }
   private updateRelics(dt: number) {
+    if (this.state.economy) return;
     const s = this.state, p = s.relicState;
     p.leechCooldown=Math.max(0,p.leechCooldown-dt);
     if (relicGroups(s.relics).spirit >= 3 && !p.shield) {
@@ -340,6 +366,7 @@ export class BladeRun {
     }
   }
   private relicHit(e: Enemy) {
+    if (this.state.economy) return;
     const s = this.state, items = s.relics, bonus = (relicGroups(items).arcane >= 2 ? 1.2 : 1) * this.elementalBonus;
     if (items.ember) {
       if (e.burnTime <= 0) e.burnTick = .5;
@@ -358,6 +385,7 @@ export class BladeRun {
     }
   }
   private relicStrike(origin: Point) {
+    if (this.state.economy) return;
     const s = this.state, rank = s.relics.thunder;
     const items=s.relics,r=s.relicState,damage=this.stats.damage;
     if(items.echo && ++r.echo>=5){r.echo=0;this.createWave(s.aim,Math.round(damage*(.30+.15*items.echo)),this.stats.range,2+items.echo);}
@@ -502,6 +530,7 @@ export class BladeRun {
       for (const other of this.grid.query(e.x, e.y, radius + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= radius + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
       this.emitPassive('ryujin', e.x, e.y, radius);
     }
+    if (s.economy) this.addOrb(e.x, e.y, COIN_VALUES[e.kind], 'coin');
     if (e.kind === 'boss') { s.mode = 'won'; this.events.push({ type: 'win' }); return true; }
     this.tryRelicReward(e);
     if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal','bread'); }
@@ -570,7 +599,7 @@ export class BladeRun {
     this.relicStrike(targets[0]);
     return cleave;
   }
-  addOrb(x: number, y: number, value: number, kind: 'xp' | 'heal', food?:FoodId) {
+  addOrb(x: number, y: number, value: number, kind: 'xp' | 'heal' | 'coin', food?:FoodId) {
     if (!Number.isFinite(value) || value <= 0) return;
     // Every reward keeps its own world position and identity. Never merge or credit remotely.
     const s = this.state; s.orbs.push({ id: s.nextId++, x, y, value, kind, ...(food?{food}:{}), dropTimer: XP_DROP_TIME });
@@ -589,7 +618,7 @@ export class BladeRun {
   }
   private beginBoss() {
     const s = this.state;
-    s.bossStarted = true; s.mode = 'boss-intro'; s.transition = 1; s.bullets = []; s.enemies = []; s.waves = []; s.shocks = []; s.swing = null;
+    s.bossStarted = true; s.mode = s.economy ? 'playing' : 'boss-intro'; s.transition = s.economy ? 0 : 1; s.invincible = Math.max(s.invincible, 1); s.bullets = []; s.enemies = []; s.waves = []; s.shocks = []; s.swing = null;
     s.hazards = []; this.heal(15);
     this.spawnEnemy('boss', s.player.x, s.player.y - 190);
     this.events.push({ type: 'boss' });
@@ -747,11 +776,11 @@ export class BladeRun {
       if (s.transition <= 0) { s.mode = 'playing'; s.invincible = 1;  }
       return;
     }
-    if (s.bossStarted) { s.bossTime += dt; if (s.bossTime >= this.bossDuration) { s.mode = 'dead'; s.failure = '首领战时间耗尽'; return; } }
+    if (s.bossStarted) { s.bossTime = Math.min(this.bossDuration, s.bossTime + dt); if (s.bossTime >= this.bossDuration) { s.mode = 'dead'; s.failure = '首领战时间耗尽'; return; } }
     else { s.time = Math.min(this.duration, s.time + dt); if (s.time >= this.duration) { this.beginBoss(); return; } }
     this.processXp();
     s.invincible = Math.max(0, s.invincible - dt); s.dashCooldown = Math.max(0, s.dashCooldown - dt);
-    this.updatePassive(dt); this.updateRelics(dt); this.updateActive(dt);
+    this.updateGear(dt); this.updatePassive(dt); this.updateRelics(dt); this.updateActive(dt);
     if(s.mode!=='playing')return;
     if(input.active)this.activateSkill();
     if(s.mode!=='playing')return;
@@ -873,12 +902,19 @@ export class BladeRun {
       if ((orb.dropTimer ?? 0) > 0) { orb.dropTimer = Math.max(0, orb.dropTimer! - dt); if (orb.dropTimer > 0) continue; }
       if (Math.abs(orb.x - s.player.x) > Math.max(100, stats.magnet) || Math.abs(orb.y - s.player.y) > Math.max(100, stats.magnet)) continue;
       const dx = s.player.x - orb.x, dy = s.player.y - orb.y, distance = Math.hypot(dx, dy);
-      if (distance < stats.magnet || orb.kind === 'heal' && distance < 100) {
+      const pickupRange = orb.kind === 'coin' ? this.coinRange : stats.magnet;
+      if (distance < pickupRange || orb.kind === 'heal' && distance < 100) {
         const amount = Math.min(distance, (270 + (stats.magnet - distance) * 4) * dt);
         orb.x += dx / (distance || 1) * amount; orb.y += dy / (distance || 1) * amount;
       }
       if (Math.hypot(s.player.x - orb.x, s.player.y - orb.y) < 18) {
         if (orb.kind === 'xp') { this.grantXp(orb.value); this.events.push({ type: 'pickup', x: orb.x, y: orb.y, amount: orb.value }); }
+        else if (orb.kind === 'coin') {
+          const economy = s.economy;
+          if (!economy) continue;
+          economy.wallet += orb.value; economy.earned += orb.value;
+          this.events.push({type: 'coin', x: orb.x, y: orb.y, amount: orb.value});
+        }
         else {const amount=this.heal(orb.value*(1+.1*s.relics.food));this.events.push({type:'pickup',x:orb.x,y:orb.y,amount,food:orb.food??'bread'});}
         orb.value = 0; collected = true;
       }
@@ -901,12 +937,13 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (!value || typeof value !== 'object') return false;
   const s = value as RunState;
   const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  if (s.version !== (legacy || 8) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
+  if (s.version !== (legacy || (s.economy ? 9 : 8)) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
+  if (s.version === 9 && (!isBasicWeapon(s.blade) || !validEconomy(s.economy) || s.classicTiming || Object.values(s.perks ?? {}).some(v => v !== 0) || Object.values(s.relics ?? {}).some(v => v !== 0) || s.relicDrops?.length || s.waves?.length || s.active?.casts || s.active?.buff || s.active?.fields?.length || s.active?.pending?.length)) return false;
   if (!s.player || !finite(s.player.x) || !finite(s.player.y) || !s.direction || !finite(s.direction.x) || !finite(s.direction.y)) return false;
   if (!s.velocity || !finite(s.velocity.x) || !finite(s.velocity.y) || Math.hypot(s.velocity.x, s.velocity.y) > 1000) return false;
   for (const key of ['time', 'bossTime', 'hp', 'maxHp', 'level', 'xp', 'totalXp', 'formStartedAt', 'rng', 'seed', 'nextId', 'targetId', 'attackTimer', 'attackCount', 'dashTime', 'dashCooldown', 'invincible', 'aim', 'eliteIndex', 'spawnBudget', 'evolutionTime', 'transition', 'kills', 'eliteKills', 'bestCleave', 'bossHits', 'maxCombo'] as const) if (!finite(s[key])) return false;
   if (typeof s.bossStarted !== 'boolean') return false;
-  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy===5 ? 190 : legacy===6 ? 250 : legacy===7 ? 265 : 323) || s.time < 0 || s.time > (legacy||s.classicTiming?CLASSIC_TIMING.game:GAME_DURATION) || s.bossTime < 0 || s.bossTime > (legacy||s.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION)) return false;
+  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy===5 ? 190 : legacy===6 ? 250 : legacy===7 ? 265 : s.economy ? 258 : 323) || s.time < 0 || s.time > (s.economy ? SURVIVAL_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.game:GAME_DURATION) || s.bossTime < 0 || s.bossTime > (s.economy ? FINALE_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION)) return false;
   if (s.formStartedAt < 0 || s.formStartedAt > s.time + s.bossTime + .001 || s.xp < 0 || s.totalXp < 0) return false;
   if (!s.perks || !Object.keys(PERKS).every(k => Number.isInteger(s.perks[k as PerkId]) && s.perks[k as PerkId] >= 0 && s.perks[k as PerkId] <= PERKS[k as PerkId].cap)) return false;
   if(s.active!==undefined&&!validActive(s.active))return false;
@@ -950,7 +987,7 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if(!legacy && s.enemies.some(e=>e.poisonTime>2.501||e.poisonTick>.501))return false;
   if (s.hazards !== undefined && (!Array.isArray(s.hazards) || s.hazards.length > 12 || s.hazards.some(h => !h || !['poison', 'blast'].includes(h.kind) || ['id','x','y','radius','age','duration','damage'].some(k => !finite(h[k as keyof Hazard])) || h.radius <= 0 || h.radius > 80 || h.age < 0 || h.age > h.duration || h.duration <= 0 || h.duration > 3.201 || h.damage < 0 || h.damage > 18))) return false;
   if (s.enemies.some(e => e.reveal !== undefined && (!finite(e.reveal) || e.reveal < 0 || e.reveal > .851))) return false;
-  if (s.orbs.some(o => o.dropTimer !== undefined && (!finite(o.dropTimer) || o.dropTimer < 0 || o.dropTimer > XP_DROP_TIME + .001) || !finite(o.value) || o.value <= 0 || !['xp', 'heal'].includes(o.kind)||o.food!==undefined&&(!isFoodId(o.food)||o.kind!=='heal'))) return false;
+  if (s.orbs.some(o => o.dropTimer !== undefined && (!finite(o.dropTimer) || o.dropTimer < 0 || o.dropTimer > XP_DROP_TIME + .001) || !finite(o.value) || o.value <= 0 || !(s.economy ? ['xp', 'heal', 'coin'] : ['xp', 'heal']).includes(o.kind) || o.kind === 'coin' && (!Number.isSafeInteger(o.value) || o.value > 100)||o.food!==undefined&&(!isFoodId(o.food)||o.kind!=='heal'))) return false;
   if (s.bullets.some(b => !finite(b.vx) || !finite(b.vy) || !finite(b.life) || b.kind !== undefined && !['orb', 'spine'].includes(b.kind) || b.damage !== undefined && (!finite(b.damage) || b.damage <= 0 || b.damage > 30))) return false;
   if (s.waves.some(w => w.source!==undefined&&w.source!=='active' || w.boomerang!==undefined&&typeof w.boomerang!=='boolean' || w.returning!==undefined&&(typeof w.returning!=='boolean'||!w.boomerang) || !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
   if (s.waves.some(w => w.radius !== undefined && (!finite(w.radius) || w.radius <= 0 || w.radius > 252) || w.hitRadius !== undefined && (!finite(w.hitRadius) || w.hitRadius <= 0 || w.hitRadius > 60))) return false;

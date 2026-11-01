@@ -224,7 +224,7 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const orb of s.orbs) {
       if (Math.abs(orb.x - s.player.x) > run.view.width / 2 + 40 || Math.abs(orb.y - s.player.y) > run.view.height / 2 + 40) continue;
-      const size = orb.kind === 'heal' ? 30 : 12 + Math.min(7, Math.log2(orb.value + 1));
+      const size = orb.kind === 'coin' ? 18 + Math.min(10, Math.log2(orb.value + 1) * 2) : orb.kind === 'heal' ? 30 : 12 + Math.min(7, Math.log2(orb.value + 1));
       this.sprite(`o${orb.id}`, orb.kind==='heal'?`food-${orb.food??'bread'}`:orb.kind, orb.x, orb.y, size, 29).setRotation(orb.kind === 'xp' ? Math.sin(this.clock * 2 + orb.id) * .12 : 0);
     }
     for (const e of s.enemies) {

@@ -9,7 +9,7 @@ import { displayProfile } from '../src/blade/display';
 import { stalkerCloaked,THREATS } from '../src/blade/threats';
 import { TIERS,ENEMIES,encounterKind } from '../src/blade/config';
 const idle={x:0,y:0,dash:false};
-const run=()=>{const r=new BladeRun(88);r.state.enemies=[];r.state.spawnBudget=-100000;r.state.attackTimer=100000;return r;};
+const run=()=>{const r=new BladeRun(88,undefined,0);r.state.enemies=[];r.state.spawnBudget=-100000;r.state.attackTimer=100000;return r;};
 const steps=(r:BladeRun,n:number)=>{for(let i=0;i<n;i++)r.step(1/60,idle);};
 const strike=(r:BladeRun)=>{const t=r.stats;r.state.swing={id:r.state.nextId++,tier:r.tier,angle:0,age:t.windup+t.strike*.45,resolved:false,...{windup:t.windup,strike:t.strike,recovery:t.recovery}};steps(r,1);};
 const contact=(x:number,extra={})=>({x,y:30,player:{x,y:0},range:72,widthScale:1,mass:1,color:0x74b7ee,...extra});

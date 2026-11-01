@@ -52,3 +52,21 @@ export function swingMoveFactor(stats: EquipmentStats, swing: SwingTiming | null
   return 1 - stats.burden * (phase === 'strike' ? .55 : phase === 'windup' ? .34 : .25);
 }
 export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '稳重' : mass < 3.2 ? '沉重' : '巨刃';
+
+// The new catalogue is weapon-neutral. No historical relic or set is consulted.
+export function shopEquipmentStats(level: number, blade: number, gear: import('./gear').GearInventory) {
+  const t = TIERS[blade], mastery = tierForLevel(level), base = equipmentStats(1, freshPerks(), blade, freshRelics());
+  const pace = .92 ** gear.clockGrip;
+  const range = Math.min(isBow(blade) ? 900 : 420, t.range * (1 + .10 * mastery) * (1 + .12 * gear.clearLens));
+  const windup = base.windup * pace, strike = base.strike * pace, recovery = base.recovery * pace;
+  return {...base,
+    damage: Math.round((20 + level - 1) * t.multiplier * (1 + .10 * mastery) * (1 + .02 * (level - 1)) * (1 + .18 * gear.sugarCore)),
+    interval: Math.max(windup + strike + recovery + .015, base.interval * pace),
+    windup, strike, recovery, range, lengthScale: (range - 10) / (t.range - 10),
+    widthScale: 1 + .09 * mastery, arc: Math.min(t.id === 'sword' ? 110 : 250, t.arc + 9 * mastery),
+    thrustWidth: 6 * Math.sqrt(1 + .09 * mastery), mass: base.mass, burden: 0,
+    moveSpeed: 210 * (1 + .07 * gear.breezeBoots), acceleration: 2800 * (1 + .14 * gear.breezeBoots),
+    magnet: 84 * (1 + .18 * gear.pickupBoots), damageReduction: .06 * gear.bubbleGuard,
+    dashCooldown: Math.max(3, 5 - .4 * gear.springBoots), waveEvery: 0,
+  };
+}

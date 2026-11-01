@@ -31,6 +31,11 @@ try {
     }
     await p.locator('[data-action="begin"]').click();
     check(`offline ${name}: correct weapon starts and old skill button stays hidden`, await p.locator('#current-name').textContent() === name && !await p.locator('#active-button').isVisible());
+    await p.locator('#shop-button').click();
+    check(`offline ${name}: all three universal shop categories work with embedded candy icons`, await p.locator('.shop-tabs button').count() === 3 && await p.locator('.shop-row .gear-icon').evaluateAll(images => images.length === 3 && images.every(i => i.complete && i.naturalWidth === 128)));
+    await p.locator('[data-action="shop-category"][data-value="defense"]').click();
+    check(`offline ${name}: shop remains live and requires actual coins to buy`, await p.locator('.buy-gear').evaluateAll(buttons => buttons.every(b => b.disabled)) && await p.locator('#clock-goal').textContent() === '/ 10:00');
+    await p.locator('#shop-button').click();
     await p.keyboard.down('w'); await p.waitForTimeout(1200); await p.keyboard.up('w');
     check(`offline ${name}: real game clock advances`, await p.locator('#clock').textContent() !== '00:00');
     await p.getByRole('button', {name: '暂停', exact: true}).click(); const clock = await p.locator('#clock').textContent();

@@ -1,15 +1,14 @@
-import { ACHIEVEMENTS, BLADE_CATALOGUE, DEFAULT_WEAPON, isBasicWeapon, BOSS_DURATION, ENEMY_INFO, GAME_DURATION, LATE_GAME_LEVEL, MAX_LEVEL, MASTERIES, MIN_FORM_TIME, TIERS, TIER_LEVELS, formatTime, xpNext } from './config';
+import { ACHIEVEMENTS, BLADE_CATALOGUE, DEFAULT_WEAPON, isBasicWeapon, BOSS_DURATION, ENEMY_INFO, LATE_GAME_LEVEL, MAX_LEVEL, MASTERIES, TIERS, TIER_LEVELS, formatTime } from './config';
 import { ASSETS } from './assets';
 import type { BladeApp } from './main';
 import { GROUNDS, groundPreview } from './grounds';
 import { equipmentStats, loadName } from './equipment';
-import { passiveForTier, passiveProgress } from './passives';
-import { RELICS, RELIC_IDS, RELIC_CAP, RARITIES, ownedRelics, RELIC_GROUPS, relicGroups, relicDetail, type RelicId, type RelicGroup } from './relics';
-import { relicIcon } from './relic-art';
+import { passiveProgress } from './passives';
+import { GEAR, GEAR_IDS, GEAR_CAP, GEAR_CATEGORIES, RUN_DURATION, SURVIVAL_DURATION, COIN_VALUES, gearDetail, gearPrice, type GearId, type GearCategory } from './gear';
+import { gearIcon, coinIcon } from './gear-art';
 import type { BladeInspector } from './inspector';
 import { combatPower } from './power';
-import { FOODS } from './food';
-const bowItemText=(text:string)=>text.replaceAll('刀身长度','弓身与箭矢射程').replaceAll('刀长','箭矢射程').replaceAll('刀宽','箭体覆盖').replaceAll('挥刀','射击').replaceAll('挥砍','射击').replaceAll('刀身','弓身').replaceAll('刀重','弓重');
+
 
 const paths: Record<string, string> = {
   sword: '<path d="m5 19 9-9m-5 8-3-3m-2 5 2-2M14 4l6-1-1 6-7 7-5-5z"/>',
@@ -49,19 +48,48 @@ export class BladeUI {
     if (this.app.panel !== 'codex') return;
     this.inspector ??= new BladeInspector(); void this.inspector.open(blade);
   }
-  private itemDetail(id: RelicId, rank: number) {
-    const run = this.app.run, text = relicDetail(id, rank);
-    if (run?.isRanged && id === 'scope') return `箭矢射程 +${rank * 12}%；道具飞刃穿透 +${rank}。普通箭命中首个敌人后消失。`;
-    if (run?.isRanged) return bowItemText(text);
-    return run?.bladeId === 'spear' ? text.replaceAll('刀身', '矛身').replaceAll('刀长', '矛长').replaceAll('刀宽', '刺击宽度').replaceAll('挥刀', '直刺') : text;
-  }
+  shopOpen = false;
+  shopCategory: GearCategory = 'attack';
+  private shopKey = '';
   private key = '';
-  private relicKey='';
-  private pickupTimer=0;
-  showRelicPickup(id:RelicId,rank:number,overflow=false){
-    const node=document.querySelector<HTMLElement>('#pickup-note')!,item=RELICS[id],rarity=RARITIES[item.rarity];
-    node.innerHTML=`${relicIcon(id)}<span>${overflow?'多余道具转为 10 经验':`${item.name} · Lv.${rank}${rank===RELIC_CAP?' · 满级':''}`}</span>`;
-    node.style.setProperty('--relic',rarity.color);node.hidden=false;clearTimeout(this.pickupTimer);this.pickupTimer=window.setTimeout(()=>node.hidden=true,1700);
+  private gearKey = '';
+  private pickupTimer = 0;
+  toggleShop(category?: GearCategory) {
+    this.shopOpen = category ? true : !this.shopOpen;
+    if (category) this.shopCategory = category;
+    this.renderShop();
+  }
+  showGearPickup(id: GearId, rank: number) {
+    const node = document.querySelector<HTMLElement>('#pickup-note')!;
+    node.innerHTML = `${gearIcon(id)}<span>${GEAR[id].name} · Lv.${rank}${rank === GEAR_CAP ? ' · 满级' : ''}</span>`;
+    node.style.setProperty('--relic', GEAR_CATEGORIES[GEAR[id].category].color); node.hidden = false;
+    clearTimeout(this.pickupTimer); this.pickupTimer = window.setTimeout(() => node.hidden = true, 1500);
+  }
+  private renderShop() {
+    const node = document.querySelector<HTMLElement>('#equipment-shop')!, run = this.app.run, e = run?.state.economy;
+    if (this.app.panel !== 'none' || !run || ['won', 'dead'].includes(run.state.mode)) this.shopOpen = false;
+    node.hidden = !this.shopOpen || !e;
+    const opener = document.querySelector<HTMLElement>('#shop-button')!;
+    opener.setAttribute('aria-expanded', String(!node.hidden));
+    if (node.hidden || !e) return;
+    const key = `${this.shopCategory}:${GEAR_IDS.map(id => e.gear[id]).join(',')}:${run.state.mode}`;
+    if (key === this.shopKey) {
+      node.querySelector('[data-shop-wallet]')!.textContent = String(e.wallet);
+      for (const button of node.querySelectorAll<HTMLButtonElement>('[data-action="buy-gear"]')) {
+        const id = button.dataset.value as GearId;
+        button.disabled = e.gear[id] >= GEAR_CAP || e.wallet < gearPrice(id, e.gear[id]) || run.state.mode !== 'playing';
+      }
+      return;
+    }
+    this.shopKey = key;
+    const scroll = node.querySelector('.shop-items')?.scrollTop ?? 0;
+    const category = GEAR_CATEGORIES[this.shopCategory];
+    node.style.setProperty('--gear-color', category.color);
+    node.innerHTML = `<header><div><span class="eyebrow">SWEET SUPPLY</span><h2>补给商店 <small>${coinIcon()}<span data-shop-wallet>${e.wallet}</span></small></h2></div><button data-action="shop" class="icon-button" aria-label="关闭商店">${icon('close')}</button></header><nav class="shop-tabs" aria-label="装备分类">${(Object.keys(GEAR_CATEGORIES) as GearCategory[]).map(id => `<button data-action="shop-category" data-value="${id}" aria-pressed="${this.shopCategory === id}" class="${this.shopCategory === id ? 'selected' : ''}">${GEAR_CATEGORIES[id].name}</button>`).join('')}</nav><div class="shop-items">${GEAR_IDS.filter(id => GEAR[id].category === this.shopCategory).map(id => {
+      const rank = e.gear[id], full = rank === GEAR_CAP, cost = gearPrice(id, rank);
+      return `<article class="shop-row" data-gear="${id}">${gearIcon(id)}<div><h3>${GEAR[id].name}<small>${rank ? `Lv.${rank}/${GEAR_CAP}` : '未拥有'}</small></h3><p>${full ? gearDetail(id, rank) : GEAR[id].effect}</p><small>${full ? '已达满级' : rank ? `升级后：${gearDetail(id, rank + 1)}` : '刀 · 剑 · 弓 · 矛 通用'}</small></div><button class="buy-gear" data-action="buy-gear" data-value="${id}" ${full || e.wallet < cost || run.state.mode !== 'playing' ? 'disabled' : ''} aria-label="${full ? '已满级' : rank ? '升级' : '购买'}${GEAR[id].name}${full ? '' : `，${cost} 金币`}"><b>${full ? '满级' : rank ? '升级' : '购买'}</b>${full ? '' : `<span>${coinIcon()}${cost}</span>`}</button></article>`;
+    }).join('')}</div><footer>${icon('play')} 战斗继续 · 装备立即生效 · 无套装要求</footer>`;
+    const list = node.querySelector('.shop-items'); if (list) list.scrollTop = scroll;
   }
   private toastTimer = 0;
   private deferredToast = '';
@@ -71,16 +99,16 @@ export class BladeUI {
     document.querySelector('#app')!.innerHTML = `
       <header class="brandbar" id="brandbar"><a class="brand" href="#" aria-label="刃之进化首页"><span class="brand-mark">${icon('sword')}</span><span>刃之进化<small>BLADE EVOLUTION</small></span></a><nav><button class="nav-button" data-action="codex">${icon('book')}<span>武器图鉴</span></button><button class="icon-button" data-action="sound" aria-label="切换声音" id="title-sound">${icon('sound')}</button><button class="icon-button" data-action="settings" aria-label="设置">${icon('settings')}</button><button class="icon-button fullscreen-control" data-action="fullscreen" aria-label="全屏">${icon('full')}</button></nav></header>
       <div id="battle-hud" hidden>
-        <div class="hud-top"><div class="health-cluster"><span class="health-icon">${icon('heart')}</span><div class="health-track"><i id="health-fill"></i></div><b id="health-value">100 / 100</b></div><div class="battle-clock"><span id="stage-label">生存试炼</span><b id="clock">00:00</b><small id="clock-goal">/ ${formatTime(GAME_DURATION)}</small></div><div class="hud-buttons"><button class="icon-button" data-action="power" aria-label="战斗力（C）">${icon('star')}</button><button class="icon-button" data-action="sound" aria-label="切换声音" id="battle-sound">${icon('sound')}</button><button class="icon-button" data-action="pause" aria-label="暂停">${icon('pause')}</button></div></div>
+        <div class="hud-top"><div class="health-cluster"><span class="health-icon">${icon('heart')}</span><div class="health-track"><i id="health-fill"></i></div><b id="health-value">100 / 100</b></div><div class="battle-clock"><span id="stage-label">生存试炼</span><b id="clock">00:00</b><small id="clock-goal">/ ${formatTime(RUN_DURATION)}</small></div><div class="hud-buttons"><button class="icon-button" data-action="power" aria-label="战斗力（C）">${icon('star')}</button><button class="icon-button" data-action="sound" aria-label="切换声音" id="battle-sound">${icon('sound')}</button><button class="icon-button" data-action="pause" aria-label="暂停">${icon('pause')}</button></div></div>
         <div class="xp-row"><b id="level-label">Lv.1</b><div class="xp-track"><i id="xp-fill"></i></div><span id="next-form">磨合 Lv.6</span></div>
         <div id="boss-health" hidden><span>圆甲暴君<small>寻找震荡波缺口 · 瞬步避开冲锋</small></span><div><i id="boss-fill"></i></div></div>
-        <div class="relic-dock" id="relic-dock" hidden><button class="relic-bag" data-action="relics" aria-label="查看被动道具">${icon('star')}<span id="relic-count">0</span></button><div id="relic-strip" class="relic-strip" role="group" aria-label="已拾取的道具，左右滑动查看" tabindex="0"></div><small id="relic-shield"></small></div><aside id="drop-hint" class="drop-hint" role="status" hidden></aside><div id="pickup-note" class="pickup-note" role="status" hidden></div><div class="run-counters"><span>${icon('sword')}<b id="kill-count">0</b><small>击败</small></span><span class="combo-counter" id="combo-counter"></span></div>
+        <div class="wallet-bar">${coinIcon()}<b id="coin-balance">0</b><button id="shop-button" data-action="shop" aria-controls="equipment-shop" aria-expanded="false">商店 <kbd>B</kbd></button></div><aside id="equipment-shop" class="equipment-shop" aria-label="装备商店，战斗继续" hidden></aside><div class="equipment-dock" id="equipment-dock" hidden><div id="equipment-strip" class="equipment-strip" role="group" aria-label="已获得装备，左右滑动查看" tabindex="0"></div></div><div id="pickup-note" class="pickup-note" role="status" hidden></div><div class="run-counters"><span>${icon('sword')}<b id="kill-count">0</b><small>击败</small></span><span class="combo-counter" id="combo-counter"></span></div>
         <div class="current-blade"><div class="current-blade-art"><img id="current-blade-image" src="${ASSETS[`blade-${DEFAULT_WEAPON + 1}`]}" alt="当前武器"></div><div><small id="current-tier">初识 · 横扫</small><b id="current-name">刀</b><div class="tier-pips" id="tier-pips"></div><small id="blade-loadout" class="blade-loadout">轻巧</small><button id="current-passive" class="current-passive" data-action="codex" aria-label="查看当前武器的攻击方式"><b id="passive-name">横扫</b><small id="passive-state">宽幅横扫 · 前方清群</small></button></div></div>
         <div class="desktop-controls"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>移动</span><kbd>SPACE</kbd><span>瞬步</span><span>自动攻击</span></div>
         <div id="touch-joystick" class="touch-joystick" hidden aria-hidden="true"><span class="joystick-guide"></span><span id="joystick-thumb"></span></div>
         <button id="active-button" class="active-button" data-action="active" aria-label="释放武器主动技能（Q）"><svg class="dash-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle id="active-progress" cx="50" cy="50" r="45"/></svg><img id="active-image" src="${ASSETS[`blade-${DEFAULT_WEAPON + 1}`]}" alt=""><b>绝招</b><span id="active-label">就绪</span><kbd>Q</kbd></button>
         <button id="dash-button" class="dash-button" aria-label="瞬步" data-action="dash"><svg class="dash-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle id="dash-progress" cx="50" cy="50" r="45"/></svg>${icon('dash')}<span id="dash-label">瞬步</span><kbd>SPACE</kbd></button>
-        <div id="tutorial" class="tutorial">走位聚怪，刀会自动挥砍<span>同一把武器，一路觉醒 · 打怪掉道具 · 走近直接拾取</span></div>
+        <div id="tutorial" class="tutorial">走位聚怪，刀会自动挥砍<span>同一把武器，一路觉醒 · 打怪掉金币 · 走近拾取 · 商店购买</span></div>
         <div id="boss-warning" class="boss-warning" hidden><small>THE FINAL TRIAL</small><strong>圆甲暴君</strong><span>${BOSS_DURATION} 秒，斩出最后一条路。</span></div>
         <div id="evolution-flash" class="evolution-flash" hidden></div>
       </div>
@@ -137,9 +165,9 @@ export class BladeUI {
   }
   private title() {
     const m = this.app.storage.data.meta, saved = this.app.storage.data.run, blade = this.app.selectedBlade, t = TIERS[blade];
-    return `<div class="title-layout"><section class="title-copy"><div class="eyebrow"><i></i> 四种武器，四种手感</div><h1>选择你的武器，<br>闯出<span>自己的路。</span></h1><p class="title-description">刀横扫、剑快斩、弓自动射击、矛直线贯穿。<br>选一种顺手的武器，走位、聚怪，拾取道具变强。</p><div class="title-facts"><span><b>${BLADE_CATALOGUE.length}</b> 种基础武器</span><i></i><span><b>${MASTERIES.length}</b> 重掌握阶段</span><i></i><span><b>${GAME_DURATION / 60}</b> 分钟试炼</span></div><div class="title-actions"><button class="primary-button start-button" data-action="${saved ? 'continue' : 'start'}">${icon('play')}<span>${saved ? '继续试炼' : '开始试炼'}</span>${icon('arrow')}</button>${saved ? '<button class="text-button" data-action="start">重新选择武器，开启新的一局</button>' : ''}</div><div class="title-keyboard"><span><kbd>WASD</kbd> 移动</span><span><kbd>空格</kbd> 瞬步</span><span>自动攻击，专注走位</span></div>${m.bestScore > 0 ? `<div class="personal-best">${icon('trophy')} 个人最佳 <b>${m.bestScore.toLocaleString()}</b><span>· ${m.wins} 次通关</span></div>` : ''}</section>
+    return `<div class="title-layout"><section class="title-copy"><div class="eyebrow"><i></i> 四种武器，四种手感</div><h1>选择你的武器，<br>闯出<span>自己的路。</span></h1><p class="title-description">刀横扫、剑快斩、弓自动射击、矛直线贯穿。<br>选一种顺手的武器，走位、聚怪，拾取金币、购买装备变强。</p><div class="title-facts"><span><b>${BLADE_CATALOGUE.length}</b> 种基础武器</span><i></i><span><b>${MASTERIES.length}</b> 重掌握阶段</span><i></i><span><b>${RUN_DURATION / 60}</b> 分钟试炼</span></div><div class="title-actions"><button class="primary-button start-button" data-action="${saved ? 'continue' : 'start'}">${icon('play')}<span>${saved ? '继续试炼' : '开始试炼'}</span>${icon('arrow')}</button>${saved ? '<button class="text-button" data-action="start">重新选择武器，开启新的一局</button>' : ''}</div><div class="title-keyboard"><span><kbd>WASD</kbd> 移动</span><span><kbd>空格</kbd> 瞬步</span><span>自动攻击，专注走位</span></div>${m.bestScore > 0 ? `<div class="personal-best">${icon('trophy')} 个人最佳 <b>${m.bestScore.toLocaleString()}</b><span>· ${m.wins} 次通关</span></div>` : ''}</section>
       <section class="title-art" aria-label="刀、剑、弓、矛四种普通武器"><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div><div class="art-cross cross-one">+</div><div class="art-cross cross-two">+</div><div class="hero-light"></div><img class="art-enemy art-blob" src="${ASSETS.blob}" alt="软团"><img class="art-enemy art-swift" src="${ASSETS.swift}" alt="疾爪"><img class="art-enemy art-armor" src="${ASSETS.armor}" alt="甲壳"><img class="art-xp xp-one" src="${ASSETS.xp}" alt=""><img class="art-xp xp-two" src="${ASSETS.xp}" alt=""><div class="title-hero"><img src="${ASSETS.hero}" style="filter:hue-rotate(${[0, 185, 70][this.app.storage.data.settings.color]}deg)" alt="主角"><img class="title-weapon" src="${ASSETS[`blade-${blade + 1}`]}" alt="${t.name}"></div><div class="weapon-caption" style="--tier:${t.color}"><span class="tiny-label">YOUR BLADE · YOUR STORY</span><b>${t.name}</b><span>${t.role} · 一路相伴，直到觉醒。</span></div><div class="art-note"><span>∞</span><i></i>四种手感，各有所长。</div></section>
-      <section class="evolution-rail"><div class="rail-caption"><span>CHOOSE YOUR PATH</span><b>刀、剑、弓、矛，自选手感。</b></div><div class="rail-blades">${BLADE_CATALOGUE.map(({ blade: t, index: i }) => `<button data-action="blade-pick" data-value="${i}" class="rail-blade" style="--tier:${t.color}" aria-label="选择${t.name}"><span>${t.role}</span><img src="${ASSETS[`blade-${i + 1}`]}" alt="${t.name}"><b>${t.name}</b></button>`).join('')}</div></section><footer class="title-footer"><span>单人 PvE · 每局重置道具与掌握程度</span><span>V 3.0 <i></i> 一刀，向前。</span></footer></div>`;
+      <section class="evolution-rail"><div class="rail-caption"><span>CHOOSE YOUR PATH</span><b>刀、剑、弓、矛，自选手感。</b></div><div class="rail-blades">${BLADE_CATALOGUE.map(({ blade: t, index: i }) => `<button data-action="blade-pick" data-value="${i}" class="rail-blade" style="--tier:${t.color}" aria-label="选择${t.name}"><span>${t.role}</span><img src="${ASSETS[`blade-${i + 1}`]}" alt="${t.name}"><b>${t.name}</b></button>`).join('')}</div></section><footer class="title-footer"><span>单人 PvE · 十分钟一局 · 金币购买装备</span><span>V 3.0 <i></i> 一刀，向前。</span></footer></div>`;
   }
   private weaponFacts(blade: number) {
     const stats = equipmentStats(1, undefined, blade), id = TIERS[blade].id;
@@ -147,23 +175,20 @@ export class BladeUI {
   }
   private loadout() {
     const blade = this.app.selectedBlade, t = TIERS[blade];
-    return `<section class="loadout-panel" style="--tier:${t.color}"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('FOUR WEAPONS, FOUR WAYS', '选一种顺手的武器。', '刀横扫 · 剑快斩 · 弓自动射击 · 矛直线贯穿')}<div class="loadout-layout"><div class="blade-options" role="group" aria-label="选择本局武器">${BLADE_CATALOGUE.map(({blade: b, index: i}) => `<button class="blade-option ${blade === i ? 'selected' : ''}" style="--blade:${b.color}" data-action="blade-pick" data-value="${i}" aria-pressed="${blade === i}"><img src="${ASSETS[`blade-${i + 1}`]}" alt=""><b>${b.name}</b><span>${b.role}</span>${blade === i ? '<i>✓</i>' : ''}</button>`).join('')}</div><article class="loadout-detail"><span class="eyebrow">${t.role}</span><img class="loadout-weapon" src="${ASSETS[`blade-${blade + 1}`]}" alt="${t.name}"><h3>普通${t.name}<small>朴素造型，从基础出发</small></h3><p>${t.lore}</p><div class="loadout-passive"><small>基础攻击 · ${t.technique}</small><p>${t.description}</p></div>${this.weaponFacts(blade)}<p class="weapon-growth-note">攻击会自动瞄准。移动收集经验与地面道具，同一把武器陪你完成这局试炼。</p></article></div><footer class="loadout-footer"><span><b>${t.name}</b><small>${this.app.storage.data.run ? '出发后替换未完成对局，战绩保留' : '自动攻击 · 打怪掉道具 · 走近直接拾取'}</small></span><button class="primary-button" data-action="begin">${icon('play')}带上${t.name}出发${icon('arrow')}</button></footer></section>`;
+    return `<section class="loadout-panel" style="--tier:${t.color}"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('FOUR WEAPONS, FOUR WAYS', '选一种顺手的武器。', '刀横扫 · 剑快斩 · 弓自动射击 · 矛直线贯穿')}<div class="loadout-layout"><div class="blade-options" role="group" aria-label="选择本局武器">${BLADE_CATALOGUE.map(({blade: b, index: i}) => `<button class="blade-option ${blade === i ? 'selected' : ''}" style="--blade:${b.color}" data-action="blade-pick" data-value="${i}" aria-pressed="${blade === i}"><img src="${ASSETS[`blade-${i + 1}`]}" alt=""><b>${b.name}</b><span>${b.role}</span>${blade === i ? '<i>✓</i>' : ''}</button>`).join('')}</div><article class="loadout-detail"><span class="eyebrow">${t.role}</span><img class="loadout-weapon" src="${ASSETS[`blade-${blade + 1}`]}" alt="${t.name}"><h3>普通${t.name}<small>朴素造型，从基础出发</small></h3><p>${t.lore}</p><div class="loadout-passive"><small>基础攻击 · ${t.technique}</small><p>${t.description}</p></div>${this.weaponFacts(blade)}<p class="weapon-growth-note">攻击会自动瞄准。移动收集经验与金币，随时购买通用装备，同一把武器陪你完成十分钟试炼。</p></article></div><footer class="loadout-footer"><span><b>${t.name}</b><small>${this.app.storage.data.run ? '出发后替换未完成对局，战绩保留' : '自动攻击 · 打怪掉金币 · 走近拾取 · 商店购买'}</small></span><button class="primary-button" data-action="begin">${icon('play')}带上${t.name}出发${icon('arrow')}</button></footer></section>`;
   }
   private header(kicker: string, title: string, subtitle: string) { return `<div class="panel-header"><span class="eyebrow">${kicker}</span><h2>${title}</h2><p>${subtitle}</p></div>`; }
   private relicInventory() {
-    const s = this.app.run!.state, groups = relicGroups(s.relics);
-    return `<section class="relic-inventory" role="dialog" aria-modal="true" aria-labelledby="relic-bag-title"><button class="back-button" data-action="back">${icon('back')}返回</button><header><span class="eyebrow">COLLECT, COMBINE, BECOME</span><h2 id="relic-bag-title">这一局的随身道具</h2><p>战场掉落 · 不限携带数量 · 重复拾取升级，满级停止掉落。同组两件、三件自动解锁组合。</p></header>
-      ${(Object.keys(RELIC_GROUPS) as RelicGroup[]).map(id => { const group = RELIC_GROUPS[id], count = groups[id]; return `<section class="relic-family" style="--relic:${group.color};--relic-tint:${group.tint}"><h3>${group.name}<small>${count} 件</small></h3><div class="relic-family-items">${RELIC_IDS.filter(key => RELICS[key].group === id).map(key => `<article class="relic-owned ${s.relics[key] ? 'collected' : ''}">${relicIcon(key)}<div><b>${RELICS[key].name}<em class="relic-catalog-rarity" style="color:${RARITIES[RELICS[key].rarity].color}">${RARITIES[RELICS[key].rarity].name}</em><small>${s.relics[key] ? `Lv.${s.relics[key]}/${RELIC_CAP}` : '未获得'}</small></b><span>${this.itemDetail(key, Math.max(1,s.relics[key]))}</span></div></article>`).join('')}</div><div class="relic-set-bonuses"><span class="${count >= 2 ? 'active' : ''}">${count >= 2 ? '✓' : '○'} 两件 · ${group.two}</span><span class="${count >= 3 ? 'active' : ''}">${count >= 3 ? '✓' : '○'} 三件 · ${this.app.run?.isRanged?bowItemText(group.three):group.three}</span></div></section>`; }).join('')}
-      <section class="food-guide"><h3>战斗间隙，吃点好的。</h3><p>普通怪击杀食物掉率 ${5+s.relics.food*2}% · 满血时留在地上，受伤后靠近拾取。</p><div>${Object.entries(FOODS).map(([id,food])=>`<span><img src="${ASSETS[`food-${id}`]}" alt=""><b>${food.name}<small>基础恢复 ${food.heal} 生命</small></b></span>`).join('')}</div></section>
-      <p class="relic-inventory-note">道具只在本局生效，退出时随对局保存。${Object.values(s.perks).some(rank => rank > 0) ? '旧存档的锻造积累已保留，后续道具由怪物掉落。' : '基础攻击与随身道具同时生效。'}</p></section>`;
+    const run = this.app.run!, e = run.state.economy;
+    return `<section class="gear-inventory small-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('YOUR EVERYDAY KIT', '这一局的装备', '所有装备通用于刀、剑、弓、矛，获得后持续生效。没有套装与组合条件。')}${(Object.keys(GEAR_CATEGORIES) as GearCategory[]).map(category => `<section class="owned-gear-category"><h3>${GEAR_CATEGORIES[category].name}</h3>${(e?.order ?? []).filter(id => GEAR[id].category === category).map(id => `<article>${gearIcon(id)}<div><b>${GEAR[id].name} · Lv.${e!.gear[id]}</b><p>${gearDetail(id, e!.gear[id])}</p></div></article>`).join('') || '<p class="gear-empty">本类暂未购买装备</p>'}</section>`).join('')}<p class="gear-inventory-note">本局已拾取 ${e?.earned ?? 0} 金币 · 已花费 ${e?.spent ?? 0} · 剩余 ${e?.wallet ?? 0}。回到战场后点“商店”购买，购买不暂停战斗。</p></section>`;
   }
   private powerPanel() {
     const run = this.app.run!, p = combatPower(run);
-    return `<section class="small-panel power-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('BLADE GROWTH','战斗力',p.blade+' · 本局成长参考')}<strong class="power-value">${p.value.toLocaleString()}</strong><p>这把武器初始为 1,000，展示当前装备与道具的成长。各武器分别归一，不用于武器排名。</p><div class="power-axes">${p.axes.map(a=>`<div><span>${a.name}<small>权重 ${a.weight*100}%</small></span><meter min="0" max="5" value="${Math.min(5,a.ratio)}"></meter><b>×${a.ratio.toFixed(2)}</b></div>`).join('')}</div><p class="muted">按输出、范围与控制、移动、生命与灵护的相对增幅加权计算；攻击方式与走位仍会影响实战。</p></section>`;
+    return `<section class="small-panel power-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('BLADE GROWTH','战斗力',p.blade+' · 本局成长参考')}<strong class="power-value">${p.value.toLocaleString()}</strong><p>这把武器初始为 1,000，展示当前装备与等级的成长。各武器分别归一，不用于武器排名。</p><div class="power-axes">${p.axes.map(a=>`<div><span>${a.name}<small>权重 ${a.weight*100}%</small></span><meter min="0" max="5" value="${Math.min(5,a.ratio)}"></meter><b>×${a.ratio.toFixed(2)}</b></div>`).join('')}</div><p class="muted">按输出、范围与控制、移动、生命与恢复的相对增幅加权计算；攻击方式与走位仍会影响实战。</p></section>`;
   }
   private pausePanel() {
     const s = this.app.run!.state;
-    return `<section class="small-panel">${this.header('TAKE A BREATH', '刀锋暂歇', '休息一下，这一局还在等你。')}<div class="pause-summary"><img src="${ASSETS[`blade-${this.app.run!.tier + 1}`]}" alt=""><div><b>${TIERS[this.app.run!.tier].name}</b><span>Lv.${s.level} · ${formatTime(s.time + s.bossTime)} · ${s.kills} 击败</span></div></div><button class="primary-button" data-action="resume">${icon('play')}继续试炼</button><div class="pause-links"><button class="secondary-button" data-action="power">${icon('star')}战斗力</button><button class="secondary-button" data-action="relics">${icon('star')}随身道具</button><button class="secondary-button" data-action="codex">${icon('book')}武器图鉴</button><button class="secondary-button" data-action="settings">${icon('settings')}游戏设置</button></div><button class="text-button" data-action="save-title">保存并返回首页</button><button class="text-button muted" data-action="restart">重新开始</button></section>`;
+    return `<section class="small-panel">${this.header('TAKE A BREATH', '刀锋暂歇', '休息一下，这一局还在等你。')}<div class="pause-summary"><img src="${ASSETS[`blade-${this.app.run!.tier + 1}`]}" alt=""><div><b>${TIERS[this.app.run!.tier].name}</b><span>Lv.${s.level} · ${formatTime(s.time + s.bossTime)} · ${s.kills} 击败</span></div></div><button class="primary-button" data-action="resume">${icon('play')}继续试炼</button><div class="pause-links"><button class="secondary-button" data-action="power">${icon('star')}战斗力</button><button class="secondary-button" data-action="relics">${icon('star')}已购装备</button><button class="secondary-button" data-action="codex">${icon('book')}武器图鉴</button><button class="secondary-button" data-action="settings">${icon('settings')}游戏设置</button></div><button class="text-button" data-action="save-title">保存并返回首页</button><button class="text-button muted" data-action="restart">重新开始</button></section>`;
   }
   private settings() {
     const s = this.app.storage.data.settings;
@@ -191,12 +216,12 @@ export class BladeUI {
   }
   private codex() {
     const m = this.app.storage.data.meta;
-    return `<section class="codex-panel"><button class="back-button" data-action="back">${icon('back')}返回</button><div class="codex-heading">${this.header('THE WEAPON ARCHIVE', '四种普通武器，四种基础手感。', '全部开局可选。升级与道具提升伤害、尺寸和手感，武器保持原有攻击方式。')}<span class="archive-count">${BLADE_CATALOGUE.filter(({index}) => m.seenBlades.includes(index)).length}<small>/ 4 已试用 · 全部可选</small></span></div><div class="codex-grid">${BLADE_CATALOGUE.map(({blade: t, index: i}) => `<article data-tier="${i}" class="codex-card" style="--tier:${t.color}"><div class="codex-number"><b>${t.role}</b><span>${m.seenBlades.includes(i) ? '已试用' : '随时可选'}</span>${icon(m.seenBlades.includes(i) ? 'star' : 'sword')}</div><button class="codex-art" data-action="inspect" data-value="${i}" aria-label="旋转鉴赏${t.name}"><img src="${ASSETS[`blade-${i + 1}`]}" alt="${t.name}"><span>⟳ 旋转鉴赏</span></button><h3>普通${t.name}<em>${t.title}</em></h3><p class="codex-lore">${t.lore}</p><div class="codex-passive"><small>基础攻击</small><b>${t.technique}</b><p>${t.description}</p></div>${this.weaponFacts(i)}<small>本局始终使用这把武器 · 道具改变尺寸与手感</small></article>`).join('')}</div><p class="archive-note">刀擅长宽幅清群，剑擅长连续快斩，弓适合远距离走位，矛适合让敌人排成直线。</p><section class="monster-archive"><div class="monster-archive-heading"><div><span class="eyebrow">CREATURES OF THE TRIAL</span><h3>怪物志</h3></div><span>12 种普通形态 · 精英与首领</span></div><div class="monster-cards">${Object.entries(ENEMY_INFO).map(([kind, info]) => `<article class="monster-card" data-monster="${kind}"><img src="${ASSETS[kind]}" alt="${info.name}"><div><h4>${info.name}<span>${info.role}</span></h4><p>${info.description}</p><small>${kind === 'brood' ? '母团分裂时出现' : kind === 'elite' ? `每 ${Math.round((this.app.run?.duration??GAME_DURATION)/5)} 秒出现精英` : info.from ? `${formatTime(info.from*(this.app.run?.duration??GAME_DURATION)/600)} 起登场` : '开局登场'}</small></div></article>`).join('')}</div></section><div class="achievements-heading"><b>试炼印记</b><span>${m.achievements.length} / ${ACHIEVEMENTS.length}</span></div><div class="achievements-grid">${ACHIEVEMENTS.map(a => `<div class="achievement ${m.achievements.includes(a.id) ? 'unlocked' : ''}">${icon(a.icon)}<span><b>${a.name}</b><small>${a.description}</small></span>${m.achievements.includes(a.id) ? '<i>已达成</i>' : icon('lock')}</div>`).join('')}</div><div class="codex-records"><span>试炼次数 <b>${m.runs}</b></span><span>通关次数 <b>${m.wins}</b></span><span>最高战绩 <b>${m.bestScore.toLocaleString()}</b></span></div></section>`;
+    return `<section class="codex-panel"><button class="back-button" data-action="back">${icon('back')}返回</button><div class="codex-heading">${this.header('THE WEAPON ARCHIVE', '四种普通武器，四种基础手感。', '全部开局可选。等级与通用装备提升伤害、距离和手感，武器保持原有攻击方式。')}<span class="archive-count">${BLADE_CATALOGUE.filter(({index}) => m.seenBlades.includes(index)).length}<small>/ 4 已试用 · 全部可选</small></span></div><div class="codex-grid">${BLADE_CATALOGUE.map(({blade: t, index: i}) => `<article data-tier="${i}" class="codex-card" style="--tier:${t.color}"><div class="codex-number"><b>${t.role}</b><span>${m.seenBlades.includes(i) ? '已试用' : '随时可选'}</span>${icon(m.seenBlades.includes(i) ? 'star' : 'sword')}</div><button class="codex-art" data-action="inspect" data-value="${i}" aria-label="旋转鉴赏${t.name}"><img src="${ASSETS[`blade-${i + 1}`]}" alt="${t.name}"><span>⟳ 旋转鉴赏</span></button><h3>普通${t.name}<em>${t.title}</em></h3><p class="codex-lore">${t.lore}</p><div class="codex-passive"><small>基础攻击</small><b>${t.technique}</b><p>${t.description}</p></div>${this.weaponFacts(i)}<small>本局始终使用这把武器 · 通用装备改变伤害、距离与手感</small></article>`).join('')}</div><p class="archive-note">刀擅长宽幅清群，剑擅长连续快斩，弓适合远距离走位，矛适合让敌人排成直线。</p><section class="monster-archive"><div class="monster-archive-heading"><div><span class="eyebrow">CREATURES OF THE TRIAL</span><h3>怪物志</h3></div><span>12 种普通形态 · 精英与首领</span></div><div class="monster-cards">${Object.entries(ENEMY_INFO).map(([kind, info]) => `<article class="monster-card" data-monster="${kind}"><img src="${ASSETS[kind]}" alt="${info.name}"><div><h4>${info.name}<span>${info.role}</span></h4><p>${info.description}</p><small>掉落 ${COIN_VALUES[kind as keyof typeof COIN_VALUES]} 金币 · ${kind === 'brood' ? '母团分裂时出现' : kind === 'elite' ? `每 ${Math.round((this.app.run?.duration??SURVIVAL_DURATION)/5)} 秒出现精英` : info.from ? `${formatTime(info.from*(this.app.run?.duration??SURVIVAL_DURATION)/600)} 起登场` : '开局登场'}</small></div></article>`).join('')}</div></section><div class="achievements-heading"><b>试炼印记</b><span>${m.achievements.length} / ${ACHIEVEMENTS.length}</span></div><div class="achievements-grid">${ACHIEVEMENTS.map(a => `<div class="achievement ${m.achievements.includes(a.id) ? 'unlocked' : ''}">${icon(a.icon)}<span><b>${a.name}</b><small>${a.description}</small></span>${m.achievements.includes(a.id) ? '<i>已达成</i>' : icon('lock')}</div>`).join('')}</div><div class="codex-records"><span>试炼次数 <b>${m.runs}</b></span><span>通关次数 <b>${m.wins}</b></span><span>最高战绩 <b>${m.bestScore.toLocaleString()}</b></span></div></section>`;
   }
   private result() {
     const run = this.app.run!, s = run.state, win = s.mode === 'won', t = TIERS[run.tier];
-    const items = RELIC_IDS.filter(id => s.relics[id] > 0);
-    return `<section class="result-panel" style="--tier:${t.color}"><span class="result-emblem">${icon(win ? 'trophy' : 'sword')}</span><span class="eyebrow">${win ? 'DAWN HAS COME' : 'EVERY BLADE HAS A BEGINNING'}</span><h2>${win ? '你，斩出了破晓。' : '刀锋暂折，来日更利。'}</h2><p>${win ? '圆甲暴君已倒下。这把神兵，属于这一局的你。' : s.failure}</p><div class="result-weapon"><img src="${ASSETS[`blade-${run.tier + 1}`]}" alt="${t.name}"><b>${t.name}<small>${MASTERIES[run.mastery]} · Lv.${s.level}${s.level === MAX_LEVEL ? ' 极境' : ''}</small></b></div><div class="result-score"><small>本局战绩</small><strong>${run.score().toLocaleString()}</strong>${this.app.isNewBest ? '<span>NEW PERSONAL BEST</span>' : ''}</div><div class="result-stats"><span><b>${formatTime(s.time + s.bossTime)}</b><small>存活时间</small></span><span><b>${s.kills}</b><small>击败怪物</small></span><span><b>${s.bestCleave}</b><small>最高一刀</small></span><span><b>${s.eliteKills}</b><small>精英击败</small></span></div>${items.length ? `<div class="relic-result-items">${items.map(id => `<span>${relicIcon(id)}${RELICS[id].name} Lv.${s.relics[id]}</span>`).join('')}</div>` : ''}<button class="primary-button" data-action="restart-now">${icon('play')}再开一局${icon('arrow')}</button><button class="text-button" data-action="title">返回首页</button><small class="reset-note">图鉴与战绩保留，下一局可重新选择武器，从初识开始。</small></section>`;
+    const items = s.economy?.order ?? [];
+    return `<section class="result-panel" style="--tier:${t.color}"><span class="result-emblem">${icon(win ? 'trophy' : 'sword')}</span><span class="eyebrow">${win ? 'DAWN HAS COME' : 'EVERY BLADE HAS A BEGINNING'}</span><h2>${win ? '你，斩出了破晓。' : '刀锋暂折，来日更利。'}</h2><p>${win ? '圆甲暴君已倒下。这把神兵，属于这一局的你。' : s.failure}</p><div class="result-weapon"><img src="${ASSETS[`blade-${run.tier + 1}`]}" alt="${t.name}"><b>${t.name}<small>${MASTERIES[run.mastery]} · Lv.${s.level}${s.level === MAX_LEVEL ? ' 极境' : ''}</small></b></div><div class="result-score"><small>本局战绩</small><strong>${run.score().toLocaleString()}</strong>${this.app.isNewBest ? '<span>NEW PERSONAL BEST</span>' : ''}</div><div class="result-stats"><span><b>${formatTime(s.time + s.bossTime)}</b><small>存活时间</small></span><span><b>${s.kills}</b><small>击败怪物</small></span><span><b>${s.bestCleave}</b><small>最高一刀</small></span><span><b>${s.eliteKills}</b><small>精英击败</small></span></div>${items.length ? `<div class="relic-result-items">${items.map(id => `<span>${gearIcon(id)}${GEAR[id].name} Lv.${s.economy!.gear[id]}</span>`).join('')}</div>` : ''}<button class="primary-button" data-action="restart-now">${icon('play')}再开一局${icon('arrow')}</button><button class="text-button" data-action="title">返回首页</button><small class="reset-note">图鉴与战绩保留，下一局可重新选择武器，从初识开始。</small></section>`;
   }
   render(force = false) {
     const app = this.app, run = app.run, s = run?.state, panel = app.panel;
@@ -207,7 +232,7 @@ export class BladeUI {
       if (toast.classList.contains('show')) { this.deferredToast = toast.querySelector('span')?.textContent ?? this.deferredToast; toast.classList.remove('show'); clearTimeout(this.toastTimer); }
     }
     if (this.deferredToast && (!s || end || s.mode === 'playing' && panel === 'none')) { const message = this.deferredToast; this.deferredToast = ''; this.toast(message); }
-    const key = `${s?.id}|${app.selectedBlade}|${s?.level}|${s ? Object.values(s.relics).join(',') : ''}|${panel}|${s?.mode}|${s?.pending[0]}|${s?.choices.join(',')}|${app.storage.data.meta.maxTier}|${app.storage.data.settings.sound}|${app.storage.data.settings.ground}|${app.storage.data.run?.id}`;
+    const key = `${s?.id}|${app.selectedBlade}|${s?.level}|${s?.economy ? Object.values(s.economy.gear).join(',') : ''}|${panel}|${s?.mode}|${s?.pending[0]}|${s?.choices.join(',')}|${app.storage.data.meta.maxTier}|${app.storage.data.settings.sound}|${app.storage.data.settings.ground}|${app.storage.data.run?.id}`;
     if (force || key !== this.key) {
       const scrollSelector = panel === 'codex' ? '.codex-panel' : panel === 'settings' ? '.settings-panel' : panel === 'loadout' ? '.loadout-panel' : '';
       const scrollTop = scrollSelector ? this.overlay.querySelector<HTMLElement>(scrollSelector)?.scrollTop : undefined;
@@ -218,26 +243,31 @@ export class BladeUI {
       document.querySelector<HTMLElement>('#battle-hud')!.hidden = !s || panel === 'title' || !!end;
       this.overlay.className = `overlay ${panel === 'title' ? 'title-overlay' : 'modal-overlay'}`;
       const content = panel === 'title' ? this.title() : panel === 'loadout' ? this.loadout() : panel === 'power' ? this.powerPanel() : panel === 'relics' ? this.relicInventory() : panel === 'pause' ? this.pausePanel() : panel === 'settings' ? this.settings() : panel === 'codex' ? this.codex() : panel === 'confirm' ? `<section class="small-panel confirm-panel">${this.header('A NEW BEGINNING', '开启新的试炼？', '当前未完成的对局会被新一局替代，图鉴和战绩将保留。')}<button class="primary-button" data-action="restart-now">重新选择武器出发</button><button class="secondary-button" data-action="back">返回</button></section>` : end ? this.result() : '';
-      const items=run?.relicOrder??[],strip=document.querySelector<HTMLElement>('#relic-strip')!,signature=items.map(id=>`${id}:${s!.relics[id]}`).join('|');
-      if(signature!==this.relicKey){const scroll=strip.scrollLeft,previous=strip.childElementCount;this.relicKey=signature;strip.innerHTML=items.map(id=>{const rank=s!.relics[id],rarity=RARITIES[RELICS[id].rarity];return `<button class="relic-chip ${rank===RELIC_CAP?'maxed':''}" data-action="relics" data-relic="${id}" style="--relic:${rarity.color}" aria-label="${RELICS[id].name}，${rarity.name}，${rank===RELIC_CAP?'满级':`等级 ${rank}`}" title="${RELICS[id].name} · ${rarity.name} · Lv.${rank}">${relicIcon(id)}<small>${rank===RELIC_CAP?'★':rank}</small></button>`;}).join('');strip.scrollLeft=items.length>previous?strip.scrollWidth:scroll;}
-      const dockVisible=!!s&&items.length>0&&panel!=='title'&&!end;document.querySelector<HTMLElement>('#relic-dock')!.hidden=!dockVisible;document.body.classList.toggle('has-relics',dockVisible);
+      const items = run?.gearOrder ?? [], strip = document.querySelector<HTMLElement>('#equipment-strip')!, signature = items.map(id => `${id}:${s!.economy!.gear[id]}`).join('|');
+      if (signature !== this.gearKey) {
+        const scroll = strip.scrollLeft, previous = strip.childElementCount; this.gearKey = signature;
+        strip.innerHTML = items.map(id => `<button class="equipment-chip" data-action="gear-detail" data-value="${id}" aria-label="${GEAR[id].name}，等级 ${s!.economy!.gear[id]}" title="${GEAR[id].name} · ${gearDetail(id, s!.economy!.gear[id])}">${gearIcon(id)}<small>${s!.economy!.gear[id]}</small></button>`).join('');
+        strip.scrollLeft = items.length > previous ? strip.scrollWidth : scroll;
+      }
+      const dockVisible = !!s && items.length > 0 && panel !== 'title' && !end;
+      document.querySelector<HTMLElement>('#equipment-dock')!.hidden = !dockVisible; document.body.classList.toggle('has-equipment', dockVisible);
       this.overlay.innerHTML = content; this.overlay.hidden = !content;
       if (panel === 'relics') requestAnimationFrame(() => this.overlay.querySelector<HTMLButtonElement>('.back-button')?.focus({ preventScroll: true }));
       if (scrollTop !== undefined) this.overlay.querySelector<HTMLElement>(scrollSelector)!.scrollTop = scrollTop;
       for (const id of ['title-sound', 'battle-sound']) document.querySelector(`#${id}`)!.innerHTML = icon(app.storage.data.settings.sound ? 'sound' : 'mute');
     }
+    this.renderShop();
     if (!run || panel === 'title') return;
     const state = run.state, tier = run.tier, stage = run.mastery, t = TIERS[tier];
     const text = (id: string, value: string) => { const node = document.getElementById(id)!; if (node.textContent !== value) node.textContent = value; };
     const percent = (id: string, value: number) => { document.getElementById(id)!.style.width = `${Math.max(0, Math.min(100, value * 100))}%`; };
     text('health-value', `${Math.ceil(state.hp)} / ${state.maxHp}`); percent('health-fill', state.hp / state.maxHp);
     document.querySelector('.health-cluster')!.classList.toggle('low', state.hp < state.maxHp * .3);
-    text('relic-count',String(ownedRelics(state.relics).length));
-    text('relic-shield', relicGroups(state.relics).spirit >= 3 ? state.relicState.shield ? '泡泡盾就绪' : `护盾 ${Math.ceil(state.relicState.shieldCooldown)}s` : '');
+    text('coin-balance', String(state.economy?.wallet ?? 0));
     text('level-label', `Lv.${state.level}`); percent('xp-fill', state.level === MAX_LEVEL ? 1 : state.xp / run.xpNeeded);
     text('next-form', run.holdingXp ? `磨合 ${Math.ceil(run.formRemaining)}s · 经验已存` : state.level === MAX_LEVEL ? '极境 · 满级' : stage === MASTERIES.length - 1 ? '觉醒 · 极境之路' : `${MASTERIES[stage + 1]} Lv.${TIER_LEVELS[stage + 1]}`);
     text('clock', formatTime(state.bossStarted ? Math.ceil(run.bossDuration - state.bossTime) : state.time));
-    text('stage-label', state.bossStarted ? '首领决战' : state.level > LATE_GAME_LEVEL ? '高压试炼' : '生存试炼'); text('clock-goal', state.bossStarted ? '倒计时' : `/ ${formatTime(run.duration)}`);
+    text('stage-label', state.bossStarted ? '首领决战' : state.level > LATE_GAME_LEVEL ? '高压试炼' : '生存试炼'); text('clock-goal', state.bossStarted ? '倒计时' : `/ ${formatTime(state.economy ? RUN_DURATION : run.duration)}`);
     document.getElementById('stage-label')!.classList.toggle('high-pressure', state.level > LATE_GAME_LEVEL);
     document.querySelector('.battle-clock')!.classList.toggle('urgent', state.bossStarted && state.bossTime >= run.bossDuration-15);
     text('kill-count', String(state.kills)); text('combo-counter', state.recentKills.length >= 5 ? `${state.recentKills.length} 连斩` : '');
@@ -271,12 +301,9 @@ export class BladeUI {
     dashProgress.style.strokeDashoffset = `${282.75 * (state.dashCooldown / run.stats.dashCooldown)}`;
     document.querySelector('#dash-button')!.classList.toggle('cooling', state.dashCooldown > 0);
     text('dash-label', state.dashCooldown > .1 ? `${state.dashCooldown.toFixed(1)}s` : '瞬步');
-    document.querySelector<HTMLElement>('#tutorial')!.hidden = state.time > 16 || state.bossStarted || ownedRelics(state.relics).length>0;
+    document.querySelector<HTMLElement>('#tutorial')!.hidden = state.time > 16 || state.bossStarted || state.time > 18;
     document.querySelector<HTMLElement>('#boss-warning')!.hidden = state.mode !== 'boss-intro';
     document.querySelector<HTMLElement>('#evolution-flash')!.hidden = state.mode !== 'evolving';
-    const nearby=panel==='none'&&state.mode==='playing'?state.relicDrops.filter(d=>Math.hypot(d.x-state.player.x,d.y-state.player.y)<110).sort((a,b)=>Math.hypot(a.x-state.player.x,a.y-state.player.y)-Math.hypot(b.x-state.player.x,b.y-state.player.y))[0]:undefined;
-    const hint=document.querySelector<HTMLElement>('#drop-hint')!;hint.hidden=!nearby;
-    if(nearby){const item=RELICS[nearby.relic],rarity=RARITIES[item.rarity],next=state.relics[nearby.relic]+1,usable=run.availableRelics.includes(nearby.relic);const key=`${nearby.id}:${next}:${usable}`;if(hint.dataset.key!==key){hint.dataset.key=key;hint.style.setProperty('--relic',rarity.color);hint.innerHTML=`${relicIcon(nearby.relic)}<span><b>${item.name}<em>${rarity.name}</em></b><small>${usable?this.itemDetail(nearby.relic,next):'当前无收益，领取时转为 10 经验'}</small><i>${nearby.group?'旧升级奖励 · 同组任选一件':state.relics[nearby.relic]?`走近升级至 Lv.${next}`:'走近即可拾取'}</i></span>`;}}
     document.querySelector('#boss-warning>span')!.textContent=`${run.bossDuration} 秒，斩出最后一条路。`;
     const boss = state.enemies.find(e => e.kind === 'boss');
     document.querySelector<HTMLElement>('#boss-health')!.hidden = !boss;

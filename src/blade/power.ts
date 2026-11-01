@@ -1,4 +1,5 @@
-import { equipmentStats } from './equipment';
+import { freshGear } from './gear';
+import { equipmentStats, shopEquipmentStats } from './equipment';
 import { freshPerks, TIERS } from './config';
 import { freshRelics, relicGroups } from './relics';
 import type { BladeRun } from './simulation';
@@ -8,6 +9,14 @@ export const POWER_AXES = [
   { id:'mobility', name:'机动', weight:.20 }, { id:'survival', name:'生存', weight:.10 },
 ] as const;
 export function combatPower(run: BladeRun) {
+  if (run.state.economy) {
+    const s = run.state, stats = run.stats, e = s.economy!, base = shopEquipmentStats(1, run.tier, freshGear());
+    const ratios = {output: stats.damage / base.damage * base.interval / stats.interval, crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65,
+      mobility: (stats.moveSpeed / base.moveSpeed) ** .7 * (base.dashCooldown / stats.dashCooldown) ** .2 * (stats.magnet / base.magnet) ** .15,
+      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .05 * e.gear.honeyCharm)};
+    const axes = POWER_AXES.map(axis => ({...axis, ratio: ratios[axis.id]}));
+    return {value: Math.round(1000 * Math.exp(axes.reduce((sum, a) => sum + a.weight * Math.log(a.ratio), 0))), axes, blade: TIERS[run.tier].name, stats};
+  }
   const s = run.state, stats = run.stats, base = equipmentStats(1,freshPerks(),run.tier,freshRelics()), groups = relicGroups(s.relics);
   // Relative growth within the chosen blade. Conditional powers use average uptime, not an invented DPS claim.
   const stackBonus = run.bladeId === 'scrap' ? 1+s.passive.stacks*run.rules.scrapBonus : 1;

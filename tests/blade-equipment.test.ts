@@ -4,7 +4,7 @@ import { MIN_FORM_TIME, xpNext, PERKS, xpToLevel, type PerkId } from '../src/bla
 import { equipmentStats, swingMoveFactor, swingPhase } from '../src/blade/equipment';
 
 const idle = { x: 0, y: 0, dash: false };
-const run = () => { const r = new BladeRun(102); r.state.enemies = []; return r; };
+const run = () => { const r = new BladeRun(102, undefined, 0); r.state.enemies = []; return r; };
 const step = (r: BladeRun, seconds: number, x = 0, y = 0) => { for (let i = 0; i < Math.round(seconds * 60); i++) r.step(1 / 60, { x, y, dash: false }); };
 const makeHeavy = (r: BladeRun) => { Object.assign(r.state.perks, { long: 3, broad: 3, giant: 2 }); };
 const attachSwing = (r: BladeRun, phase: 'windup' | 'strike' | 'recovery') => {

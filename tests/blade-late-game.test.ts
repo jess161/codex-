@@ -3,7 +3,7 @@ import { BladeRun, restoreSnapshot, validSnapshot } from '../src/blade/simulatio
 import { ENEMIES, MAX_LEVEL, encounterDensity, lateGameDifficulty, xpNext, type EnemyKind } from '../src/blade/config';
 const idle = { x: 0, y: 0, dash: false };
 function run(level: number, time = 300) {
-  const r = new BladeRun(717); const s = r.state;
+  const r = new BladeRun(717, undefined, 0); const s = r.state;
   s.level = level; s.time = time; s.enemies = []; s.spawnBudget = -100000; s.attackTimer = 100000; s.invincible = 1000;
   s.eliteIndex = Math.min(4, Math.floor(time / (r.duration/5))); return r;
 }

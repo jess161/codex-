@@ -10,9 +10,9 @@
     "test": "vitest run",
     "test:atelier": "node tests/blade-atelier.mjs",
     "test:routes": "node tests/blade-routes.mjs",
-    "test:browser": "node tests/blade-playtest.mjs",
+    "test:browser": "node tests/blade-economy.mjs",
     "test:castaway": "node tests/playtest.mjs",
-    "test:offline": "node tests/blade-offline.mjs",
+    "test:offline": "node tests/blade-basic-offline.mjs",
     "test:themes": "node tests/blade-themes.mjs",
     "test:touch": "node tests/blade-touch.mjs",
     "test:growth": "node tests/blade-growth.mjs",
@@ -23,10 +23,11 @@
     "test:passive-size": "node tests/blade-passive-size.mjs",
     "test:late-game": "node tests/blade-late-game.mjs",
     "test:active": "node tests/blade-active.mjs",
-    "test:loot": "node tests/blade-loot.mjs",
+    "test:loot": "node tests/blade-economy.mjs",
     "test:bows": "node tests/blade-bows.mjs",
-    "test:basic-weapons": "node tests/blade-basic-weapons.mjs",
-    "test:basic-offline": "node tests/blade-basic-offline.mjs"
+    "test:basic-weapons": "node tests/blade-economy.mjs",
+    "test:basic-offline": "node tests/blade-basic-offline.mjs",
+    "test:economy": "node tests/blade-economy.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.56.1",
