@@ -13,7 +13,7 @@ export function combatPower(run: BladeRun) {
     const s = run.state, stats = run.stats, e = s.economy!, base = shopEquipmentStats(1, run.tier, freshGear());
     const ratios = {output: stats.damage / base.damage * base.interval / stats.interval * (1+stats.critChance*(stats.critMultiplier-1)), crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65 * (1+.25*e.gear.stoneCleaver),
       mobility: (stats.moveSpeed / base.moveSpeed) ** .7 * (base.dashCooldown / stats.dashCooldown) ** .2 * (stats.magnet / base.magnet) ** .15,
-      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .10*e.gear.redMoonBlade)};
+      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .05*e.gear.crimsonBlade + .10*e.gear.redMoonBlade)};
     const axes = POWER_AXES.map(axis => ({...axis, ratio: ratios[axis.id]}));
     return {value: Math.round(1000 * Math.exp(axes.reduce((sum, a) => sum + a.weight * Math.log(a.ratio), 0))), axes, blade: TIERS[run.tier].name, stats};
   }

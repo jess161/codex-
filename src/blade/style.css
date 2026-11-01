@@ -113,7 +113,7 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 
 @media(max-width:800px){.loadout-footer .primary-button{white-space:nowrap;gap:6px;padding-inline:8px}.loadout-footer .primary-button .icon{width:16px;height:16px}}
 
-/* Universal equipment and a voluntary, non-pausing supply shop. */
+/* Universal equipment and a voluntary shop that pauses combat. */
 .gear-icon{width:48px;height:48px;object-fit:contain;flex-shrink:0;pointer-events:none}.coin-icon{width:23px;height:23px;object-fit:contain;vertical-align:middle;pointer-events:none}
 .wallet-bar{position:absolute;right:28px;top:96px;display:flex;align-items:center;gap:7px;pointer-events:auto;background:transparent;border:0;padding:0;box-shadow:none}.wallet-bar>b{min-width:35px;font-size:15px;font-variant-numeric:tabular-nums;color:#826a38}.wallet-bar>button{display:flex;align-items:center;gap:5px;border-radius:10px;background:transparent;color:#29475d;padding:5px 7px;min-height:44px;font-size:12px;box-shadow:none}.wallet-bar>button>.icon{width:27px;height:27px}.wallet-bar>button:hover{color:#46899a;background:transparent}.wallet-bar>button:focus-visible{outline:2px solid #638ca9;outline-offset:2px}.wallet-bar kbd{background:transparent;border-color:#94abba;color:#54738b}
 .equipment-dock{position:absolute;left:28px;right:28px;bottom:15px;max-width:740px;margin:auto;padding:6px 10px;border:1px solid #d4e3ed;border-radius:17px;background:#f7fcfff0;backdrop-filter:blur(9px);box-shadow:0 5px 20px #29475d0a;pointer-events:auto}.equipment-strip{display:flex;gap:8px;overflow-x:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c8dce7 transparent;touch-action:pan-x;padding:3px 2px 5px;min-width:0}.equipment-chip{position:relative;flex:0 0 50px;width:50px;height:50px;background:#ecf5fb;border:1px solid #d6e5ed;border-radius:12px;padding:4px}.equipment-chip>.gear-icon{width:40px;height:40px}.equipment-chip>small{position:absolute;right:-1px;bottom:-1px;min-width:17px;height:17px;display:grid;place-items:center;background:#648da7;color:#fff;border-radius:6px;font-size:10px;border:1px solid white}.has-equipment .dash-button{bottom:100px}.has-equipment .current-blade{bottom:106px}.run-counters{top:150px;right:30px}.gear-inventory{width:580px}.owned-gear-category{border-top:1px solid #dde7ef;margin-top:17px;padding-top:12px}.owned-gear-category h3{font-size:14px}.owned-gear-category article{display:flex;gap:14px;align-items:center;margin:14px 0}.owned-gear-category b{font-size:13px}.owned-gear-category p,.gear-inventory-note{font-size:11px;color:#839aaa;line-height:1.8}.gear-empty{font-size:11px;color:#a0afbb}.pickup-note>.gear-icon{width:30px;height:30px}
@@ -178,3 +178,35 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 .equipment-shop{height:auto;max-height:calc(100dvh - 32px)}.shop-items{flex:0 1 auto;grid-template-columns:repeat(3,minmax(0,1fr))}
 @media(max-width:540px){.equipment-shop{height:auto;max-height:calc(100dvh - 28px)}}
 @media(max-height:430px) and (min-width:500px){.equipment-shop{height:calc(100dvh - 20px);grid-template-rows:55px minmax(0,1fr) 48px}.shop-items{grid-row:2;grid-column:1;grid-template-columns:repeat(3,minmax(0,1fr))}.shop-detail{grid-row:2;grid-column:2}.shop-footer{grid-row:3}}
+
+/* One shared starter branches into three rare and epic upgrades. */
+.equipment-shop{max-height:calc(100dvh - 32px)}
+.shop-items.shop-tree{display:block;flex:1 1 auto;min-height:150px;padding:8px 14px 16px}
+.shop-tree-hint{margin:0 0 10px;text-align:center;font-size:10px;color:#889eab;line-height:1.6}
+.shop-tree-root{width:33.333333%;margin:0 auto}
+.shop-tree-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0}
+.shop-tree .shop-item{width:100%;gap:5px;padding:4px 2px}
+.shop-tree .shop-item-price{min-height:14px}
+.shop-tree-fork,.shop-tree-links{display:block;width:100%;height:32px;overflow:visible;pointer-events:none}
+.shop-tree-links{height:28px}
+.shop-tree-fork path,.shop-tree-links path{fill:none;stroke:#cbd8e4;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.shop-tree-fork path.reached{stroke:#76a9ce;stroke-width:2.4}.shop-tree-links path.reached{stroke:#ad87d5;stroke-width:2.4}
+.shop-tree-fork path.selected{stroke:#4d94c5;stroke-width:2.8}.shop-tree-links path.selected{stroke:#9865c9;stroke-width:2.8}
+.shop-item.common .shop-item-art{background:radial-gradient(circle at 40% 25%,#d4dfe6,#8299aa);border-color:#a7bac7}
+.shop-item.rare .shop-item-art{background:radial-gradient(circle at 40% 25%,#7ebde8,#315e91);border-color:#7baed2}
+.shop-item.common.selected .shop-item-art{border:2px solid #8ba1b3;box-shadow:0 0 0 3px #e5edf3}
+.shop-item.rare.selected .shop-item-art{border:2px solid #6bafe0;box-shadow:0 0 0 3px #e1f0fc}
+.shop-item.common .shop-item-rarity{background:#607b90df;color:#f0f6fa}.shop-item.rare .shop-item-rarity{background:#2f6498df;color:#eef8ff}
+.shop-item.common .shop-item-rank{background:#7f94a2}.shop-item.rare .shop-item-rank{background:#4b93c6}.shop-item.epic .shop-item-rank{background:#9865c5}
+.shop-item.passed:not(.owned) .shop-item-art{opacity:.75}
+.shop-detail h3>.rarity-label.common{color:#7f94a2}.shop-detail h3>.rarity-label.rare{color:#4b93c6}.shop-detail h3>.rarity-label.epic{color:#9865c5}
+.shop-detail-route{display:flex;align-items:center;flex-wrap:wrap;gap:4px 6px;margin:8px 0 0;font-size:10px;line-height:1.6;color:#7b93a4}
+.shop-detail-route b{font-weight:550;color:#5d7c90}.shop-detail-route small{margin-left:auto;color:#a18b5e;font-size:9px}
+.shop-detail-note{max-height:43px;margin:7px 0 9px}
+.shop-actions{flex-wrap:wrap;gap:6px 8px}.shop-actions>small{flex:1 1 100%;margin-right:0;line-height:1.5}
+.equipment-chip.common{background:#eaf0f5;border-color:#a9bdca}.equipment-chip.common>small{background:#7f94a2}
+.equipment-chip.rare{background:#e1f0fc;border-color:#7eafd4}.equipment-chip.rare>small{background:#4b93c6}
+.equipment-chip>small{padding:0 3px;font-size:8px}
+@media(max-width:540px){.equipment-shop{max-height:calc(100dvh - 28px)}.shop-items.shop-tree{padding:8px 10px 14px}.shop-tree-hint{font-size:9px}.shop-detail-route{font-size:9px}.shop-item-rank{right:-3px;font-size:8px}.shop-detail{max-height:240px;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}}
+@media(max-width:350px){.shop-items.shop-tree{padding:6px 8px 12px}.shop-tree .shop-item-art{width:56px;height:56px}.shop-tree .shop-item-art>.gear-icon{width:50px;height:50px}.shop-tree .shop-item-name{font-size:11px}.shop-tree-hint{margin-bottom:6px}}
+@media(max-height:430px) and (min-width:500px){.shop-items.shop-tree{grid-row:2;grid-column:1;padding:5px 10px 10px;min-height:0}.shop-tree .shop-item{gap:3px}.shop-tree .shop-item-art{width:45px;height:45px}.shop-tree .shop-item-art>.gear-icon{width:41px;height:41px}.shop-tree .shop-item-name{font-size:10px}.shop-tree .shop-item-rarity{font-size:7px}.shop-tree-fork{height:24px}.shop-tree-links{height:20px}.shop-tree-hint{font-size:9px;margin-bottom:5px}.shop-detail{overflow-y:auto}.shop-detail-route{font-size:9px}.shop-detail-note{max-height:none;flex:1}.shop-actions>small{font-size:9px}}

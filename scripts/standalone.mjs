@@ -1,9 +1,10 @@
 import fs from 'node:fs/promises';
 import { build } from 'vite';
+import { bladeRelease } from './blade-release.mjs';
 
 // Separate builds give each offline game a self-contained bundle with embedded images.
 for (const [input, filename] of [['index.html', 'blade-evolution.html'], ['castaway.html', 'castaway.html']]) {
-  const result = await build({ configFile: false, logLevel: 'error', build: { write: false, assetsInlineLimit: Infinity, rollupOptions: { input, output: { inlineDynamicImports: true } } } });
+  const result = await build({ configFile: false, define:input==='index.html'?{__BLADE_RELEASE__:JSON.stringify(bladeRelease())}:{}, logLevel: 'error', build: { write: false, assetsInlineLimit: Infinity, rollupOptions: { input, output: { inlineDynamicImports: true } } } });
   const output = Array.isArray(result) ? result[0].output : result.output;
   let html = output.find(item => item.type === 'asset' && item.fileName.endsWith('.html')).source;
   for (const item of output) {

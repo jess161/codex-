@@ -1,8 +1,7 @@
-import {migrateEconomy} from './economy-migration';
 import { validLegacyEconomy } from './legacy-gear';
 import {validPreviousEconomy,validPreviousGearCombat} from './retired-shop-state';
 import { freshGearCombat, validGearCombat, type GearCombatState } from './build-state';
-import { COIN_VALUES, coinDropChance, GEAR_CAP, gearBlockReason, gearMaxHp, bloodShieldCap, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
+import { GEAR, COIN_VALUES, coinDropChance, gearBlockReason, gearMaxHp, gearLifesteal, bloodShieldCap, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
 import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type ArcheryState,type BowHost} from './bows';
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
 import { ACTIVE_SKILLS, activePlan, freshActive, validActive, type ActiveState, type ActivePulse } from './active-skills';
@@ -27,7 +26,7 @@ export interface Shock extends Point { id: number; radius: number; gap: number }
 export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
 export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'relic-trim' | 'won' | 'dead';
 export interface RunState {
-  version: 8 | 9 | 10 | 11 | 12 | 13; build?: GearCombatState; economy?: EconomyState; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
+  version: 8 | 9 | 10 | 11 | 12 | 13 | 14; build?: GearCombatState; economy?: EconomyState; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
@@ -69,8 +68,8 @@ export class BladeRun {
   private cachedRules = passiveRules();
   constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade: number = DEFAULT_WEAPON) {
     if (!Number.isInteger(blade) || blade < 0 || blade >= TIERS.length) blade = DEFAULT_WEAPON;
-    this.state = snapshot ? (snapshot.version===9 || snapshot.version===10 || snapshot.version===11 || snapshot.version===12 ? migrateEconomy(structuredClone(snapshot)) : structuredClone(snapshot)) : {
-      version: isBasicWeapon(blade) ? 13 : 8, ...(isBasicWeapon(blade) ? {economy: freshEconomy(), build: freshGearCombat()} : {}), classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
+    this.state = snapshot ? structuredClone(snapshot) : {
+      version: isBasicWeapon(blade) ? 14 : 8, ...(isBasicWeapon(blade) ? {economy: freshEconomy(), build: freshGearCombat()} : {}), classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
       player: { x: 0, y: 0 }, direction: { x: 0, y: -1 }, velocity: { x: 0, y: 0 }, hp: 100, maxHp: 100, invincible: .7, dashTime: 0, dashCooldown: 0,
       level: 1, xp: 0, totalXp: 0, formStartedAt: 0, perks: freshPerks(), pending: [], choices: [], evolutionTime: 0,
@@ -80,7 +79,7 @@ export class BladeRun {
       kills: 0, eliteKills: 0, bestCleave: 0, bossHits: 0, recentKills: [], maxCombo: 0, failure: '',
     };
     this.state.active ??= freshActive();
-    if (this.state.version === 13) this.state.build ??= freshGearCombat();
+    if (this.state.version === 14) this.state.build ??= freshGearCombat();
     if(isBow(this.state.blade))this.state.archery??=freshArchery();
     if (!snapshot) for (let i = 0; i < 3; i++) {
       const angle = -Math.PI / 2 + (i - 1) * 1.05;
@@ -130,12 +129,16 @@ export class BladeRun {
   buyGear(value: unknown) {
     const s = this.state, e = s.economy;
     if (!e || s.mode !== 'playing' || !isGearId(value) || gearBlockReason(e, value)) return false;
-    const price = gearPrice(value, e.gear[value]);
+    const price=gearPrice(value),from=GEAR[value].from,oldHp=gearMaxHp(e.gear);
     if (e.wallet < price) return false;
     e.wallet -= price; e.spent += price;
-    if (e.gear[value] === 0) e.order.push(value);
+    if(from){
+      const slot=e.order.indexOf(from);
+      e.gear[from]--;e.order[slot]=value;
+    }else e.order.push(value);
     e.gear[value]++;
-    if(value==='stoneCleaver'){s.maxHp+=70;this.heal(70);}
+    const hpGain=gearMaxHp(e.gear)-oldHp;
+    if(hpGain){s.maxHp+=hpGain;this.heal(hpGain);}
     this.events.push({type: 'gear-buy', gearId: value, rank: e.gear[value], amount: price});
     return true;
   }
@@ -143,7 +146,7 @@ export class BladeRun {
     const s = this.state, e = s.economy;
     if (!e || s.mode !== 'playing' || !isGearId(value) || !e.gear[value]) return false;
     const oldHp = gearMaxHp(e.gear), price = gearSellPrice(value,e.gear[value]);
-    e.gear[value] = 0; e.order = e.order.filter(id => id !== value); e.wallet += price; e.refunded += price;
+    e.gear[value]--;e.order.splice(e.order.indexOf(value),1);e.wallet+=price;e.refunded+=price;
     s.maxHp += gearMaxHp(e.gear) - oldHp; s.hp = Math.min(s.hp,s.maxHp);
     const b = s.build!;
     b.bloodShield=Math.min(b.bloodShield,bloodShieldCap(s.maxHp,e.gear));
@@ -538,9 +541,9 @@ export class BladeRun {
     if(source==='active'&&this.bladeId==='shusui'&&(e.kind==='boss'||e.kind==='elite'))amount=Math.round(amount*1.5);
     const actual=Math.min(e.hp,amount);
     e.hp -= amount; e.hit = .15;
-    if (normal && gear?.redMoonBlade && build) {
+    if (normal && gear && gearLifesteal(gear)>0 && build) {
       const cap=s.maxHp*.05;
-      const desired=Math.min(actual*.12*gear.redMoonBlade,Math.max(0,cap-build.healUsed));
+      const desired=Math.min(actual*gearLifesteal(gear),Math.max(0,cap-build.healUsed));
       const healed=this.heal(desired);build.healUsed+=healed;
       if (healed>.01) this.events.push({type:'gear-proc',procKind:'leech',x:s.player.x,y:s.player.y,amount:healed,radius:25});
       const overflow=Math.max(0,desired-healed);
@@ -979,13 +982,13 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (!value || typeof value !== 'object') return false;
   const s = value as RunState;
   const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  if (s.version !== (legacy || (s.economy ? (s.version===9 ? 9 : s.version===10 ? 10 : s.version===11 ? 11 : s.version===12 ? 12 : 13) : 8)) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
-  if ((s.version >= 9 && s.version <= 13) && (!isBasicWeapon(s.blade) || !(s.version===9 ? validLegacyEconomy(s.economy) : s.version===13 ? validEconomy(s.economy) : validPreviousEconomy(s.economy,s.version as 10|11|12)) || ((s.version===10 || s.version===11 || s.version===12) && !validPreviousGearCombat(s.build,s.version) || s.version===13 && !validGearCombat(s.build)) || s.classicTiming || Object.values(s.perks ?? {}).some(v => v !== 0) || Object.values(s.relics ?? {}).some(v => v !== 0) || s.relicDrops?.length || s.waves?.length || s.active?.casts || s.active?.buff || s.active?.fields?.length || s.active?.pending?.length)) return false;
+  if (s.version !== (legacy || (s.economy ? (s.version===9 ? 9 : s.version===10 ? 10 : s.version===11 ? 11 : s.version===12 ? 12 : s.version===13 ? 13 : 14) : 8)) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
+  if ((s.version >= 9 && s.version <= 14) && (!isBasicWeapon(s.blade) || !(s.version===9 ? validLegacyEconomy(s.economy) : s.version===14 ? validEconomy(s.economy) : validPreviousEconomy(s.economy,s.version as 10|11|12|13)) || ((s.version===10 || s.version===11 || s.version===12) && !validPreviousGearCombat(s.build,s.version) || s.version>=13 && !validGearCombat(s.build)) || s.classicTiming || Object.values(s.perks ?? {}).some(v => v !== 0) || Object.values(s.relics ?? {}).some(v => v !== 0) || s.relicDrops?.length || s.waves?.length || s.active?.casts || s.active?.buff || s.active?.fields?.length || s.active?.pending?.length)) return false;
   if (!s.player || !finite(s.player.x) || !finite(s.player.y) || !s.direction || !finite(s.direction.x) || !finite(s.direction.y)) return false;
   if (!s.velocity || !finite(s.velocity.x) || !finite(s.velocity.y) || Math.hypot(s.velocity.x, s.velocity.y) > 1000) return false;
   for (const key of ['time', 'bossTime', 'hp', 'maxHp', 'level', 'xp', 'totalXp', 'formStartedAt', 'rng', 'seed', 'nextId', 'targetId', 'attackTimer', 'attackCount', 'dashTime', 'dashCooldown', 'invincible', 'aim', 'eliteIndex', 'spawnBudget', 'evolutionTime', 'transition', 'kills', 'eliteKills', 'bestCleave', 'bossHits', 'maxCombo'] as const) if (!finite(s[key])) return false;
   if (typeof s.bossStarted !== 'boolean') return false;
-  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy===5 ? 190 : legacy===6 ? 250 : legacy===7 ? 265 : s.economy ? (s.version===9 ? 258 : s.version===12 ? 608 : s.version===13 ? 368 : 398) : 323) || s.time < 0 || s.time > (s.economy ? SURVIVAL_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.game:GAME_DURATION) || s.bossTime < 0 || s.bossTime > (s.economy ? FINALE_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION)) return false;
+  if (s.level < 1 || s.level > MAX_LEVEL || !Number.isInteger(s.level) || s.hp <= 0 || s.hp > s.maxHp || s.maxHp > (legacy===5 ? 190 : legacy===6 ? 250 : legacy===7 ? 265 : s.economy ? (s.version===9 ? 258 : s.version===12 ? 608 : s.version===13 ? 368 : s.version===14 ? 228 : 398) : 323) || s.time < 0 || s.time > (s.economy ? SURVIVAL_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.game:GAME_DURATION) || s.bossTime < 0 || s.bossTime > (s.economy ? FINALE_DURATION : legacy||s.classicTiming?CLASSIC_TIMING.boss:BOSS_DURATION)) return false;
   if (s.formStartedAt < 0 || s.formStartedAt > s.time + s.bossTime + .001 || s.xp < 0 || s.totalXp < 0) return false;
   if (!s.perks || !Object.keys(PERKS).every(k => Number.isInteger(s.perks[k as PerkId]) && s.perks[k as PerkId] >= 0 && s.perks[k as PerkId] <= PERKS[k as PerkId].cap)) return false;
   if(s.active!==undefined&&!validActive(s.active))return false;

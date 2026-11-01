@@ -1,0 +1,111 @@
+{
+  "change": "Connected ordinary, rare and epic equipment upgrade tree",
+  "baseline_commit": "e21601971245bad2536412eee12c607fe216d8d0",
+  "branch": "reconstruct/latest-from-conversation",
+  "common": {
+    "id": "ironBlade",
+    "name": "铁芯短刃",
+    "price": 35,
+    "attack": 6,
+    "background": "gray"
+  },
+  "routes": [
+    {
+      "rare": {
+        "id": "crimsonBlade",
+        "name": "赤纹利刃",
+        "upgrade_gold": 55,
+        "attack": 15,
+        "lifesteal": 0.06
+      },
+      "epic": {
+        "id": "redMoonBlade",
+        "name": "赤月誓刃",
+        "upgrade_gold": 80
+      },
+      "total_gold": 170
+    },
+    {
+      "rare": {
+        "id": "gleamBlade",
+        "name": "鎏光锋刃",
+        "upgrade_gold": 60,
+        "attack": 18,
+        "critical_chance": 0.1
+      },
+      "epic": {
+        "id": "solarEdge",
+        "name": "曜金裁决",
+        "upgrade_gold": 85
+      },
+      "total_gold": 180
+    },
+    {
+      "rare": {
+        "id": "ridgeBlade",
+        "name": "岩脊战刃",
+        "upgrade_gold": 55,
+        "attack": 10,
+        "max_health": 35
+      },
+      "epic": {
+        "id": "stoneCleaver",
+        "name": "玄岩巨斧",
+        "upgrade_gold": 85
+      },
+      "total_gold": 175
+    }
+  ],
+  "upgrade_rules": {
+    "requires_direct_parent": true,
+    "consumes_one_parent": true,
+    "replaces_same_slot": true,
+    "max_slots": 3,
+    "common_duplicates_allowed": true,
+    "one_item_per_branch": true,
+    "epic_is_final": true,
+    "consumed_stats_do_not_stack": true,
+    "sell_return": 0.75,
+    "sell_basis": "total invested in this item including consumed predecessors"
+  },
+  "shop": {
+    "layout": "common above three rare nodes above three epic nodes",
+    "connected_paths": true,
+    "icons_above_names": true,
+    "rare_background": "blue",
+    "epic_background": "purple",
+    "paused_while_open": true
+  },
+  "normal_coin_drop_chance": 0.25,
+  "save_policy": {
+    "version": 14,
+    "reset_on_release_change": true,
+    "release_revision": "shared source content fingerprint in web and standalone builds",
+    "same_release_resume": true,
+    "migration": false,
+    "refund": false,
+    "reset_scope": [
+      "run",
+      "equipment",
+      "coins",
+      "meta",
+      "settings"
+    ],
+    "user_instruction": "以后更新，直接删除旧档，重开玩"
+  },
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 9523619,
+    "sha256": "28aeeb8d7c5815f1c8f29558762e4265a8ef3c59bbd5bfe11b9094bb6b0a84c8"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "按玩家要求，仅打包，不运行测试或试玩。",
+  "pages_published": false
+}
