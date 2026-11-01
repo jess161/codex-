@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "user_instruction": "把a组应用到游戏",
+  "selected_group": "A",
+  "selected_source_sha256": "cff52fa1beb05e3758cba6882ba2a7a3369a8c99e7e7f3e426eeb40a33b94f73",
+  "workflows": [
+    "create-game-assets",
+    "phaser-core",
+    "threejs-materials-lighting"
+  ],
+  "preparation": "image_gen extracted separate transparent sprites from approved A sheet; removed background glow and long bowstring, retained painted appearance. Original PNG files copied without pixel edits or reencoding.",
+  "art_direction_brief": "docs/art/approved-a-art-direction.md",
+  "runtime_mapping": {
+    "blade-16": "A_GROUP_ART.carrot",
+    "blade-18": "A_GROUP_ART.banana (PNG plus static cord)",
+    "bow-limbs-18": "A_GROUP_ART.bananaLimbs (cord animated in game)"
+  },
+  "mesh": "alpha contour at threshold 96, simplified at 2.5 source pixels; painted front/back planes in sRGB and unlit material",
+  "assets": [
+    {
+      "id": "approved-a-carrot",
+      "path": "src/blade/assets/produce/a-carrot-knife.png",
+      "source_tool": "image_gen.imagegen",
+      "model_version": null,
+      "image_edit_output": "exec-e3656692-82df-41b4-b9a9-a6af17d65a25.png",
+      "source_approved_sheet": "docs/images/a-group-approved.png",
+      "status": "integrated-at-user-request",
+      "sha256": "9f7e90e4cb2f68125e6dd31014a31dca46783359dc4e1ce7977d06b0edadc455",
+      "dimensions": [
+        2172,
+        724
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "frame_size": [
+        2063,
+        674
+      ],
+      "grip": [
+        611,
+        340
+      ],
+      "pixels_reencoded_after_tool": false,
+      "native_scale_reviewed_in_game": false,
+      "in_engine_reviewed": false
+    },
+    {
+      "id": "approved-a-banana",
+      "path": "src/blade/assets/produce/a-banana-limbs.png",
+      "source_tool": "image_gen.imagegen",
+      "model_version": null,
+      "image_edit_output": "exec-1fa0c716-a56d-440c-8155-c1979e32665c.png",
+      "source_approved_sheet": "docs/images/a-group-approved.png",
+      "status": "integrated-at-user-request",
+      "sha256": "25aaf2817cf372206068e1e9cdcde9d8143c88beae8c87bf6e7805b8cd3fe6e4",
+      "dimensions": [
+        1254,
+        1254
+      ],
+      "mode": "RGBA",
+      "alpha_range": [
+        0,
+        255
+      ],
+      "frame_size": [
+        710,
+        1194
+      ],
+      "grip": [
+        578,
+        600
+      ],
+      "pixels_reencoded_after_tool": false,
+      "native_scale_reviewed_in_game": false,
+      "in_engine_reviewed": false
+    }
+  ],
+  "tests_run": false,
+  "browser_run": false,
+  "gameplay_run": false,
+  "reason": "用户此前要求做好后不用测试，继续沿用。"
+}

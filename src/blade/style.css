@@ -219,3 +219,8 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 .codex-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.codex-card .codex-art img{height:100px}
 @media(max-width:800px){.rail-blade img{height:62px}.blade-option>img{height:64px}.blade-option>b{font-size:16px}.loadout-weapon.fruit-bow{height:90px}.loadout-weapon.fruit-knife{height:62px}.codex-grid{grid-template-columns:1fr}.codex-card .codex-art img{height:88px}.title-weapon.fruit-bow{width:190px;height:190px;left:-18px;top:-47px}}
 @media(max-width:360px){.blade-option>b{font-size:14px}.blade-option>span{font-size:9px}.rail-blade b{font-size:10px}}
+
+/* Grip positions follow the approved A-group painted silhouettes. */
+.title-weapon.fruit-knife{left:calc(100% - 123.5px);top:calc(50% - 64.2px);width:390px;height:auto;transform-origin:29.62% 50.45%}
+.title-weapon.fruit-bow{width:145px;height:244px;left:calc(100% - 126px);top:calc(50% - 122.6px);object-fit:contain;transform-origin:81.4% 50.25%}
+@media(max-width:800px){.title-weapon.fruit-knife{width:320px;left:calc(100% - 102.8px);top:calc(50% - 52.7px)}.title-weapon.fruit-bow{width:125px;height:210px;left:calc(100% - 109.8px);top:calc(50% - 105.5px)}}

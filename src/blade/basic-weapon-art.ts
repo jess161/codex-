@@ -2,8 +2,9 @@ import type Phaser from 'phaser';
 import { bladePresentation } from './feedback';
 import type { EquipmentStats, SwingTiming } from './equipment';
 import type { BladeRun } from './simulation';
+import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 
-// Cards, the held sprite and the 3D object share these fruit silhouettes.
+// Historical vector fallback; painted A-group sprites and alpha contours are active.
 export const CARROT_BODY_PATH='M146 62 C213 43 285 55 350 74 L582 118 Q614 128 582 141 L350 182 Q218 213 146 194 Q112 177 118 126 Q110 85 146 62 Z';
 export const CARROT_LEAF_PATH='M133 127 C89 106 44 94 18 60 Q65 48 105 89 L129 114 C99 77 76 36 87 17 Q128 36 142 105 L144 127 C122 169 73 202 27 193 Q49 157 104 134 Z';
 export const BASIC_DESIGNS={
@@ -19,22 +20,23 @@ const carrot=outlined(CARROT_LEAF_PATH,'url(#leaf)')+outlined(CARROT_BODY_PATH,'
 const banana=outlined(BASIC_BOW_PATH,'url(#banana)')+BANANA_DETAILS;
 export const SEED_DRAWING='<path d="M4 12Q18 3 42 7L61 12L42 17Q18 21 4 12Z" fill="#657374" stroke="#29475d" stroke-width="2.5" stroke-linejoin="round"/><path d="M12 11Q29 8 51 12Q30 14 12 13Z" fill="#fff0c8"/><path d="M18 8l13-1" fill="none" stroke="#d4dcd1" stroke-width="1.5" stroke-linecap="round"/>';
 export const BASIC_WEAPON_ART:Record<string,string>={
- 'blade-16':svg(carrot),
- 'blade-18':svg(banana+'<path d="M181 68V444" fill="none" stroke="#29475d" stroke-width="5"/><path d="M181 68V444" fill="none" stroke="#f5efd6" stroke-width="2"/>',512,512),
- 'bow-limbs-18':svg(banana,512,512),
+ 'blade-16':A_GROUP_ART.carrot,
+ 'blade-18':A_GROUP_ART.banana,
+ 'bow-limbs-18':A_GROUP_ART.bananaLimbs,
  'fruit-arrow':svg(SEED_DRAWING,64,24),
 };
 
 export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|null,aim:number,stats:EquipmentStats){
  const rest=aim+.9;
  const pose=swing?bladePresentation(swing,aim,stats.arc*Math.PI/180,stats.mass,rest):{angle:rest,opacity:0};
- return {...pose,hand:12,reach:stats.range};
+ return {...pose,hand:16,reach:stats.range};
 }
 export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image){
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
  const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
- const length=(stats.range-12)*640/544;
- sprite('basic-weapon','blade-16',x,y,length,28).setOrigin(56/640,.5).setRotation(a).setDisplaySize(length,length*.4*Math.min(2.5,Math.sqrt(stats.widthScale)));
+ const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
+ const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
+ sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
   g.lineStyle(15*Math.sqrt(stats.widthScale),0xf2a04f,pose.opacity*.18).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,a).strokePath();

@@ -4,6 +4,8 @@ import { BLADE_ART, BLADE_DESIGNS } from './blade-art';
 import { BASIC_BOW_PATH } from './basic-weapon-art';
 import { isBow } from './bows';
 import { BOW_LIMB_PATH } from './assets/bows/bow-shapes';
+import { isBasicWeapon } from './config';
+import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 
 // The inspected object shares the combat silhouette; no external model or texture downloads.
 function extrude(path: string, depth: number) {
@@ -13,6 +15,7 @@ function extrude(path: string, depth: number) {
   geometry.scale(1, -1, 1); geometry.translate(-292, 128, -depth / 2); return geometry;
 }
 export async function createBladeModel(index: number) {
+  if(isBasicWeapon(index))return createApprovedFruitModel(index);
   if(isBow(index))return createBowModel(index);
   const design = BLADE_DESIGNS[index], group = new THREE.Group(); group.name = `blade-${index}`;
   const side = new THREE.MeshStandardMaterial({color:index===15?'#bd7038':'#263a50',metalness:0,roughness:.72});
@@ -29,6 +32,31 @@ export async function createBladeModel(index: number) {
     for (const z of [-1,1]) { const plane = new THREE.Mesh(new THREE.PlaneGeometry(640,256),painted); plane.position.set(28,0,z*((depth+2)/2+(index===15?1.4:.12))); group.add(plane); }
     return group;
   } catch(error) { disposeBladeModel(group); throw error; }
+}
+async function createApprovedFruitModel(index:number){
+  const layout=index===15?A_GROUP_LAYOUT.carrot:A_GROUP_LAYOUT.banana;
+  const scale=index===15?540/layout.width:300/layout.height,depth=index===15?12:10;
+  const group=new THREE.Group();group.name=`approved-a-fruit-${index}`;
+  const parsed=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${layout.outline}"/></svg>`);
+  const geometry=new THREE.ExtrudeGeometry(parsed.paths.flatMap(p=>SVGLoader.createShapes(p)),{depth,steps:1,bevelEnabled:true,bevelSize:.45/scale,bevelThickness:1,bevelSegments:3,curveSegments:8});
+  geometry.scale(scale,-scale,1);geometry.translate(-layout.width*scale/2,layout.height*scale/2,-depth/2);
+  const face=new THREE.MeshStandardMaterial({color:index===15?'#e18d3d':'#f2cc50',roughness:.7,metalness:0,side:THREE.DoubleSide});
+  const edge=new THREE.MeshStandardMaterial({color:'#29475d',roughness:.75,metalness:0,side:THREE.DoubleSide});
+  group.add(new THREE.Mesh(geometry,[face,edge]));
+  if('anchors' in layout){
+    const points=layout.anchors.map(([x,y])=>new THREE.Vector3((x-layout.width/2)*scale,(layout.height/2-y)*scale,0));
+    const delta=points[1].clone().sub(points[0]);
+    const rope=new THREE.Mesh(new THREE.CylinderGeometry(.7,.7,delta.length(),8),new THREE.MeshBasicMaterial({color:'#efd7a4',toneMapped:false}));
+    rope.position.copy(points[0]).add(points[1]).multiplyScalar(.5);
+    rope.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());group.add(rope);
+  }
+  try{
+    const map=await new THREE.TextureLoader().loadAsync(index===15?A_GROUP_ART.carrot:A_GROUP_ART.bananaLimbs);
+    map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=4;
+    const painted=new THREE.MeshBasicMaterial({map,transparent:true,alphaTest:.03,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+    for(const sign of [-1,1]){const plane=new THREE.Mesh(new THREE.PlaneGeometry(layout.width*scale,layout.height*scale),painted);plane.position.z=sign*(depth/2+1.5);group.add(plane);}
+    return group;
+  }catch(error){disposeBladeModel(group);throw error;}
 }
 async function createBowModel(index:number){
   const group=new THREE.Group();group.name=`bow-${index}`;

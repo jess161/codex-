@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { BladeRun } from './simulation';
+import { A_GROUP_LAYOUT } from './approved-fruit-art';
 type Graphics=Phaser.GameObjects.Graphics;
 type Sprite=(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image;
 export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolean){
@@ -8,12 +9,18 @@ export function drawArchery(g:Graphics,run:BladeRun,sprite:Sprite,reduced:boolea
  const drawing=s.swing&&s.swing.age<s.swing.windup?Math.min(1,s.swing.age/s.swing.windup):0;
  const recoil=s.swing&&s.swing.resolved?Math.max(0,1-(s.swing.age-s.swing.windup)/.14):0;
  const distance=23-(reduced?0:recoil*2),x=s.player.x+Math.cos(angle)*distance,y=s.player.y+Math.sin(angle)*distance;
- const point=(lx:number,ly:number)=>({x:x+Math.cos(angle)*lx-Math.sin(angle)*ly,y:y+Math.sin(angle)*lx+Math.cos(angle)*ly});
- sprite('held-bow',`bow-limbs-${run.tier+1}`,x,y,size,28).setOrigin(.625,.5).setRotation(angle).setDisplaySize(size*(1-(reduced?0:drawing*.035)),size);
- const anchor=run.tier===17?181/512-.625:-.245;
- const top=point(anchor*size,-.3671875*size),bottom=point(anchor*size,.3671875*size),nock=point((anchor-drawing*.18)*size,0);
+ const squeeze=1-(reduced?0:drawing*.035);
+ const point=(lx:number,ly:number)=>({x:x+Math.cos(angle)*lx*squeeze-Math.sin(angle)*ly,y:y+Math.sin(angle)*lx*squeeze+Math.cos(angle)*ly});
+ const art=A_GROUP_LAYOUT.banana;
+ const held=sprite('held-bow',`bow-limbs-${run.tier+1}`,x,y,size,28).setRotation(angle);
+ if(run.tier===17)held.setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setDisplaySize(size*art.width/art.height*squeeze,size);
+ else held.setOrigin(.625,.5).setDisplaySize(size*squeeze,size);
+ const local=art.anchors.map(([ax,ay])=>({x:(ax-art.grip[0])/art.height*size,y:(ay-art.grip[1])/art.height*size}));
+ const upper=run.tier===17?local[0]:{x:-.245*size,y:-.3671875*size};
+ const lower=run.tier===17?local[1]:{x:-.245*size,y:.3671875*size};
+ const top=point(upper.x,upper.y),bottom=point(lower.x,lower.y),nock=point((upper.x+lower.x)/2-drawing*.18*size,(upper.y+lower.y)/2);
  g.lineStyle(2.6,0x263d54,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
- g.lineStyle(1,0xf0fbff,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
+ g.lineStyle(1,0xffe8b9,1).beginPath().moveTo(top.x,top.y).lineTo(nock.x,nock.y).lineTo(bottom.x,bottom.y).strokePath();
  if(s.swing&&!s.swing.resolved){
   if(run.tier===17)sprite('nocked-seed','fruit-arrow',nock.x,nock.y,19,29).setOrigin(.25,.5).setRotation(angle).setDisplaySize(19,19*24/64);
   else{const tip=point(size*.31,0);g.lineStyle(3,0x263d54,.95).lineBetween(nock.x,nock.y,tip.x,tip.y).lineStyle(1.3,0xffedbb,1).lineBetween(nock.x,nock.y,tip.x,tip.y);if(run.tier===14)g.fillStyle(0xffd177,.2+drawing*.5).fillCircle(tip.x,tip.y,3+drawing*4);}

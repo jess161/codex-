@@ -10,5 +10,5 @@ export const BLADE_FINISHES = ['晴蓝短锋','深蓝短刃','金色弯月','碧
 BLADE_FINISHES.push(...['追风翠羽','凝霜月白','焰星流金'].map(title=>({title:title+' · 糖果弓装',note:'圆润弓臂、奶金握把、深蓝轮廓与清晰高光。张弦积蓄力量，松弦射出流光。'})));
 
 for (const [index, design] of Object.entries(BASIC_DESIGNS)) BLADE_DESIGNS[Number(index)] = {...BLADE_DESIGNS[0], ...design};
-BLADE_FINISHES[15]={title:'胡萝卜刀 · 鲜脆橙光',note:'饱满橙色根身、绿色叶柄、浅色根纹与高光；战斗、选择和立体鉴赏共用胡萝卜轮廓。'};
-BLADE_FINISHES[17]={title:'香蕉弓 · 弯弯有劲',note:'弯曲黄色果身、深色果蒂、绿色纤维握带与浅色弦，拉弦后射出瓜子箭。'};
+BLADE_FINISHES[15]={title:'胡萝卜刀 · 鲜脆橙光',note:'饱满橙色根身上刻着分节根纹，茂密绿色叶柄衬着清晰高光与深蓝轮廓，挥动时带起鲜脆橙光。'};
+BLADE_FINISHES[17]={title:'香蕉弓 · 弯弯有劲',note:'黄色果身弯成弓形，深色果蒂系着奶色绳结，中央缠绕绿色握带，拉弦时弹出一枚瓜子箭。'};

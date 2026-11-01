@@ -1,6 +1,6 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `4ed060e`，开局收为胡萝卜刀与香蕉弓两种，重画战斗与鉴赏造型，剑与矛退出选择和启动入口。设计见 [果蔬双武器](gdd/blade-evolution-fruit-duo-v2.1.md)，交付记录见 [本轮说明](blade-fruit-duo-change-notes.json)。按玩家要求未运行测试或试玩。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已备份的 `17f274a`，将玩家选定的 A 组胡萝卜刀与香蕉弓绘画接入战斗、菜单与鉴赏，使用透明素材和对应轮廓。设计见 [A 组原画接入](gdd/blade-evolution-approved-a-v2.2.md)，交付记录见 [本轮说明](blade-approved-a-change-notes.json)。按玩家要求未运行测试或试玩。
 
 [原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages；旧网页不能代表本轮调整版。
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-工作区备份使用 `blade-fruit-duo-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
+工作区备份使用 `blade-a-art-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
 
 恢复完整历史：
 

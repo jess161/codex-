@@ -1,0 +1,56 @@
+{
+  "change": "Apply user-selected A-group artwork to carrot knife and banana bow",
+  "baseline_commit": "17f274a6fa678f5fb39290d224c988689acc20d8",
+  "branch": "reconstruct/latest-from-conversation",
+  "selected_group": "A",
+  "approved_sheet": "docs/images/a-group-approved.png",
+  "assets_manifest": "docs/art/approved-a-assets.json",
+  "game_art_module": "src/blade/approved-fruit-art.ts",
+  "integrated_surfaces": [
+    "home",
+    "weapon selection",
+    "codex",
+    "battle held sprites",
+    "HUD weapon icon",
+    "pause",
+    "result",
+    "3D inspector"
+  ],
+  "preparation": [
+    "image_gen extracts transparent sprites from approved A sheet",
+    "remove original preview glow",
+    "separate long banana bowstring for animation",
+    "copy generated PNG bytes without reencoding",
+    "read alpha contour for 3D silhouette"
+  ],
+  "holding": {
+    "carrot": "scale from measured grip to tip; draw leaves behind hero",
+    "banana": "use measured grip and cord anchors for static and animated bowstring"
+  },
+  "3d_inspector": "extruded alpha silhouette with original painted image on front and back; sRGB unlit painted faces",
+  "game_rules": {
+    "playable_weapons": [
+      "胡萝卜刀",
+      "香蕉弓"
+    ],
+    "equipment_tree": "common to rare to epic",
+    "normal_coin_drop_chance": 0.25,
+    "minutes": 10
+  },
+  "save_policy": "Updated content revision clears older saved game",
+  "packaging": {
+    "commands": [
+      "node node_modules/vite/bin/vite.js build",
+      "node scripts/standalone.mjs"
+    ],
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 11765886,
+    "sha256": "e08d4b890ee990c69c1b663ff5d47314d42dbc969a5ed80502003b084f0635d8"
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "verification_policy": "按玩家已有要求，不进行游戏测试或试玩；仅处理素材、阅读源码与打包。",
+  "pages_published": false
+}
