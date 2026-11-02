@@ -2,10 +2,10 @@
 
 GitHub Pages 发布分支：`preview/mobile-20261031`，目录 `/`。
 
-在线网址：https://jess161.github.io/codex-/?v=770caee
+在线网址：https://jess161.github.io/codex-/?v=2b03cf3
 
-本版源码：`reconstruct/latest-from-conversation` 的 `770caee81566f8e68db42bd7f5cd060d48a4b10a`。
+源码：`reconstruct/latest-from-conversation` 的 `2b03cf3c5cc93ec0d4c82841d0de1ae1cb683ff0`。
 
-`index.html` 为已打包的自包含游戏，包含胡萝卜刀、香蕉弓、七罐电火毒调料与对应战斗效果。源码与备份仍保留在原分支；本分支只发布网页资源。新版按原约定清除旧档重开。
+胡萝卜现按实际装备显示电纹叶柄、毒液刀身和火焰根尖，可同时出现，稀有到史诗进一步强化对应部位。新增元素挥砍／命中／地面表现。保留电火毒三个商店分支，冰只准备素材，未加入冰霜玩法。更新按约定清旧档重开。
 
-只做资源打包与发布状态检查，未运行测试、游戏试玩、浏览器或独立类型检查。当前文件版本与 SHA-256 记录在 `version.json`。
+`index.html` 是自包含游戏。源码与备份仍保留原分支，此分支只发布网页资源。只做资源打包和发布状态／HTTP 文件版本核对，未运行测试、游戏试玩、浏览器或独立类型检查。版本与 SHA-256 见 `version.json`。
