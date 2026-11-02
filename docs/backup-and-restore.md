@@ -1,8 +1,8 @@
 # 源码备份与恢复
 
-当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于已确认推送的 `4168d407533006a8f7cf9cfb15f798e89056413e`，将商店旧七件装备替换为电、火、毒调料罐头，接入七张图片生成图标、按攻击次数充能的连锁闪电、刷新燃烧与不连爆的死亡爆燃、最多五层毒。设计见 [调料罐头 v2.6](gdd/blade-evolution-seasonings-v2.6.md)，素材记录在 `art/seasonings/`。按玩家要求未运行测试、试玩、浏览器或独立类型检查。
+当前源码分支为 `reconstruct/latest-from-conversation`。本轮基于 `770caee81566f8e68db42bd7f5cd060d48a4b10a`，为胡萝卜加入电纹叶柄、毒液刀身、火焰根尖的分区材质与挥砍／命中／地面效果。三次实际图片生成的原图、提示词和注册图层保留在 `art/carrot-elements/`。按玩家选择，冰只准备素材，不改变电火毒商店与玩法。设计见 [分区外观 v2.7](gdd/blade-evolution-carrot-elements-v2.7.md)。未运行测试、试玩、浏览器或独立类型检查。
 
-[原网页试玩](https://jess161.github.io/codex-/) 与源码分支分别更新。本轮只备份源码和提供离线游戏，没有更新 Pages；旧网页不能代表本轮调整版。
+[手机试玩](https://jess161.github.io/codex-/) 使用独立发布分支 `preview/mobile-20261031`。按玩家已明确提出的手机浏览器试玩需求继续更新；线上版本以 `version.json` 的源码提交和文件哈希为准。
 
 远端备份：
 
@@ -11,7 +11,7 @@ git push origin HEAD:refs/heads/reconstruct/latest-from-conversation
 git ls-remote origin refs/heads/reconstruct/latest-from-conversation
 ```
 
-工作区备份使用 `blade-seasonings-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
+工作区备份使用 `blade-carrot-elements-<源码短提交>` 前缀，包含源码 ZIP、单文件游戏 HTML、完整 Git 历史 bundle 和 SHA-256 清单。文件另存到自己的设备后，可以在环境删除后恢复。
 
 恢复完整历史：
 

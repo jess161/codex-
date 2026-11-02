@@ -1,0 +1,311 @@
+{
+  "schema_version": 1,
+  "brief": "art/carrot-elements/art-direction.md",
+  "assets": [
+    {
+      "id": "poison-body",
+      "path": "src/blade/assets/carrot-elements/poison-body.webp",
+      "source": "fire-poison.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          620,
+          1545,
+          55
+        ]
+      ],
+      "alpha_bounds": [
+        621,
+        55,
+        1545,
+        690
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 425422,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "8df77c82c1bedce6e163cd06f00e686efccf8d173b772cf1412a9601117df2fa",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/fire-poison-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "d31010d335dca52037210a5cb85479a93148e9302f73595ca8111ba55a3a1ce0",
+        "raw_png_preserved": true
+      },
+      "status": "integrated; runtime not reviewed"
+    },
+    {
+      "id": "poison-leaves",
+      "path": "src/blade/assets/carrot-elements/poison-leaves.webp",
+      "source": "fire-poison.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          -100,
+          585,
+          50
+        ]
+      ],
+      "alpha_bounds": [
+        50,
+        38,
+        585,
+        686
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 286154,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "6a4f2ebc0990564950aade255fe52619699f318b2d0a3d8d2b1d2aeb682b1f52",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/fire-poison-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "d31010d335dca52037210a5cb85479a93148e9302f73595ca8111ba55a3a1ce0",
+        "raw_png_preserved": true
+      },
+      "status": "integrated; runtime not reviewed"
+    },
+    {
+      "id": "fire-tip",
+      "path": "src/blade/assets/carrot-elements/fire-tip.webp",
+      "source": "fire-poison.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          1440,
+          2300,
+          85
+        ]
+      ],
+      "alpha_bounds": [
+        1441,
+        101,
+        2124,
+        675
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 208098,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "d6700fe1fcfaf5b066807aa717fe25a050f2e021aab84530319078436ca0bd56",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/fire-poison-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "d31010d335dca52037210a5cb85479a93148e9302f73595ca8111ba55a3a1ce0",
+        "raw_png_preserved": true
+      },
+      "status": "integrated; runtime not reviewed"
+    },
+    {
+      "id": "frost-grip",
+      "path": "src/blade/assets/carrot-elements/frost-grip.webp",
+      "source": "frost-grip.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          -100,
+          745,
+          65
+        ]
+      ],
+      "alpha_bounds": [
+        38,
+        33,
+        745,
+        700
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 499038,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "cc31bc8a882f48628f9571d6fc7ac4d64db19b720389ca2216ee69a6b71d1369",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/frost-grip-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "e369c590345d8b12de7fff6eca3bf752f3231bdadd7f24819fdeadb3fd6949d8",
+        "raw_png_preserved": true
+      },
+      "status": "prepared only; no frost gameplay"
+    },
+    {
+      "id": "electric-grip",
+      "path": "src/blade/assets/carrot-elements/electric-grip.webp",
+      "source": "electric-grip.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          -100,
+          745,
+          65
+        ]
+      ],
+      "alpha_bounds": [
+        41,
+        36,
+        745,
+        700
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 403096,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "e5d3f9e12c625d495699252f1221369d64f68ad1c9f5ecaaf2d2044ed037ca33",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/electric-grip-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "11c444763a34790f75d6797ab798e0a13f304570070d182f4ac505aa3f496cdd",
+        "raw_png_preserved": true
+      },
+      "status": "integrated; runtime not reviewed"
+    },
+    {
+      "id": "electric-grip-front",
+      "path": "src/blade/assets/carrot-elements/electric-grip-front.webp",
+      "source": "electric-grip.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        650,
+        370
+      ],
+      "physical_tip": [
+        2085,
+        370
+      ],
+      "windows": [
+        [
+          485,
+          745,
+          35
+        ]
+      ],
+      "alpha_bounds": [
+        486,
+        38,
+        745,
+        674
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 119756,
+      "frames": 1,
+      "filtering": "linear",
+      "collision": "visual only; no range change",
+      "sha256": "e8ca35e304625da6fc498a195e39a147d7dc300185c3a45ceab6f47929e83a26",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "reference": "src/blade/assets/produce/a-carrot-knife.png",
+        "prompt": "art/carrot-elements/source/electric-grip-prompt.txt",
+        "date": "2026-11-02",
+        "sha256": "11c444763a34790f75d6797ab798e0a13f304570070d182f4ac505aa3f496cdd",
+        "raw_png_preserved": true
+      },
+      "status": "integrated; runtime not reviewed"
+    }
+  ],
+  "generation_used": true,
+  "normalization": "scripts/prepare-carrot-element-assets.py",
+  "static_native_preview": "art/carrot-elements/native-preview.png",
+  "review": {
+    "static_54px_and_76px": true,
+    "hero_occlusion_static_composition": true,
+    "in_engine": false,
+    "browser": false,
+    "gameplay": false
+  },
+  "terms": "Generated for this project using user-selected A-group project reference. OpenAI image generation service terms apply; no third-party stock asset or additional open license claimed."
+}

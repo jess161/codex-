@@ -8,6 +8,7 @@ import { GEAR, COMMON_GEAR, lightningProfile, GEAR_IDS, GEAR_BRANCHES, GEAR_RARI
 import { gearIcon, coinIcon } from './gear-art';
 import type { BladeInspector } from './inspector';
 import { combatPower } from './power';
+import {carrotElements} from './carrot-elements';
 
 
 const paths: Record<string, string> = {
@@ -337,7 +338,9 @@ export class BladeUI {
     text('blade-loadout', run.isRanged?`射程 ${Math.round(equipment.range)} · 射速 ${(1/equipment.interval).toFixed(1)}/秒 · ${loadName(equipment.mass).replace('巨刃','重弓')}`:`长 ${equipment.lengthScale.toFixed(2)}× · 宽 ${equipment.widthScale.toFixed(2)}× · ${loadName(equipment.mass)}`);
     document.getElementById('current-passive')!.setAttribute('aria-label','查看当前武器的攻击方式');
     const tutorial=document.getElementById('tutorial')!;const tutorialText=run.isRanged?'边走边射，香蕉弓自动发射瓜子':'走位聚怪，胡萝卜刀自动横扫';if(tutorial.firstChild?.textContent!==tutorialText)tutorial.firstChild!.textContent=tutorialText;
-    text('passive-name', run.passiveInfo.name); text('passive-state', passiveProgress(t.id, state.passive, state.dashCooldown, stage));
+    const materials=carrotElements(state.economy?.gear);
+    const materialLabel=[materials.electric?`电纹${materials.electric===2?'Ⅱ':'Ⅰ'}`:'',materials.poison?`毒液${materials.poison===2?'Ⅱ':'Ⅰ'}`:'',materials.fire?`火尖${materials.fire===2?'Ⅱ':'Ⅰ'}`:''].filter(Boolean).join(' · ');
+    text('passive-name', run.passiveInfo.name); text('passive-state',run.bladeId==='knife'&&materialLabel?materialLabel:passiveProgress(t.id, state.passive, state.dashCooldown, stage));
     const passiveButton = document.querySelector<HTMLElement>('#current-passive')!; passiveButton.style.setProperty('--passive', t.color);
     passiveButton.classList.toggle('ready', state.passive.shield || state.passive.empowered > 0 || state.passive.haste > 0);
     text('current-name', t.name); text('current-tier', `${MASTERIES[stage]} · ${t.role}`);

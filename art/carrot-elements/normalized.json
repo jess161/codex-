@@ -1,0 +1,212 @@
+[
+  {
+    "id": "poison-body",
+    "path": "src/blade/assets/carrot-elements/poison-body.webp",
+    "source": "fire-poison.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        620,
+        1545,
+        55
+      ]
+    ],
+    "alpha_bounds": [
+      621,
+      55,
+      1545,
+      690
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 425422
+  },
+  {
+    "id": "poison-leaves",
+    "path": "src/blade/assets/carrot-elements/poison-leaves.webp",
+    "source": "fire-poison.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        -100,
+        585,
+        50
+      ]
+    ],
+    "alpha_bounds": [
+      50,
+      38,
+      585,
+      686
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 286154
+  },
+  {
+    "id": "fire-tip",
+    "path": "src/blade/assets/carrot-elements/fire-tip.webp",
+    "source": "fire-poison.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        1440,
+        2300,
+        85
+      ]
+    ],
+    "alpha_bounds": [
+      1441,
+      101,
+      2124,
+      675
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 208098
+  },
+  {
+    "id": "frost-grip",
+    "path": "src/blade/assets/carrot-elements/frost-grip.webp",
+    "source": "frost-grip.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        -100,
+        745,
+        65
+      ]
+    ],
+    "alpha_bounds": [
+      38,
+      33,
+      745,
+      700
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 499038
+  },
+  {
+    "id": "electric-grip",
+    "path": "src/blade/assets/carrot-elements/electric-grip.webp",
+    "source": "electric-grip.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        -100,
+        745,
+        65
+      ]
+    ],
+    "alpha_bounds": [
+      41,
+      36,
+      745,
+      700
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 403096
+  },
+  {
+    "id": "electric-grip-front",
+    "path": "src/blade/assets/carrot-elements/electric-grip-front.webp",
+    "source": "electric-grip.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      650,
+      370
+    ],
+    "physical_tip": [
+      2085,
+      370
+    ],
+    "windows": [
+      [
+        485,
+        745,
+        35
+      ]
+    ],
+    "alpha_bounds": [
+      486,
+      38,
+      745,
+      674
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 119756
+  }
+]

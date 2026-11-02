@@ -1,0 +1,44 @@
+{
+  "change": "Regional carrot weapon material layers and element-specific attack, hit and ground VFX",
+  "baseline_commit": "770caee81566f8e68db42bd7f5cd060d48a4b10a",
+  "branch": "reconstruct/latest-from-conversation",
+  "user_choice": "Keep electric/fire/poison shop; frost artwork prepared only",
+  "live_regions": {
+    "electric": "leaf grip, cyan veins and yellow lightning charm",
+    "poison": "orange body grooves with large green drips; violet leaf tips when alone",
+    "fire": "ember root tip, char stripes, red fissures and flickering flame"
+  },
+  "frost_gameplay_enabled": false,
+  "frost_art_prepared": true,
+  "rarity_response": "rare material opacity and VFX sizes increase at epic; poison splash count increases",
+  "trail_lifetimes_seconds": {
+    "plain": 1.1,
+    "poison": 1.1,
+    "fire": 0.38,
+    "electric": 0.35
+  },
+  "trail_budget_per_channel": {
+    "standard": 80,
+    "simplified": 28
+  },
+  "actual_imagegen_calls": 3,
+  "asset_manifest": "art/carrot-elements/manifest.json",
+  "static_preview": "art/carrot-elements/native-preview.png",
+  "weapon_hit_range_changed": false,
+  "carrot_sweep_degrees": 45,
+  "shop_or_combat_numbers_changed": false,
+  "old_save_policy": "clear on changed content fingerprint, no migration",
+  "packaging": {
+    "command": "node scripts/standalone.mjs --blade-only",
+    "bytes": 14912890,
+    "sha256": "e6405fe141707a5e068a3e7505cf4a6d21d7bf21cf14e7c180ab60876c3e2b6b",
+    "artifact": "dist/blade-evolution.html"
+  },
+  "tests_run": false,
+  "browser_run": false,
+  "gameplay_run": false,
+  "independent_typecheck_run": false,
+  "castaway_modified": false,
+  "agents_committed": false,
+  "publishing": "Update already-authorized mobile Pages preview after source push; verify deployment status and HTTP file hash only."
+}

@@ -1,5 +1,7 @@
 import {drawBuildBody,drawBuildProc} from './build-art';
 import { drawBasicMelee } from './basic-weapon-art';
+import {carrotElements,CARROT_TRAILS,type CarrotElements} from './carrot-elements';
+import {drawCarrotTrails,drawCarrotHit} from './carrot-element-art';
 import { drawArchery } from './bow-art';
 import Phaser from 'phaser';
 import { drawActiveFields, drawActiveBurst } from './active-art';
@@ -50,6 +52,9 @@ export class BattleScene extends Phaser.Scene {
   private grooves!: Phaser.GameObjects.Graphics;
   private friction!: Phaser.GameObjects.Graphics;
   private bladeBack!: Phaser.GameObjects.Graphics;
+  private carrotFx!:Phaser.GameObjects.Graphics;
+  private readonly carrotDrags={poison:new BladeDrag(),fire:new BladeDrag(),frost:new BladeDrag(),electric:new BladeDrag()};
+  private carrotHits:{x:number;y:number;age:number;elements:CarrotElements}[]=[];
   private groundHazards!: Phaser.GameObjects.Graphics;
   private recoilAge = 1;
   private recoilStrength = 0;
@@ -93,6 +98,7 @@ export class BattleScene extends Phaser.Scene {
     this.bladeBack = this.add.graphics().setDepth(20.5);
     this.shadows = this.add.graphics().setDepth(2);
     this.fx = this.add.graphics().setDepth(24);
+    this.carrotFx=this.add.graphics().setDepth(26.3);
     this.danger = this.add.graphics().setDepth(32);
     this.hero = this.add.image(0, 0, 'hero').setDepth(27);
     this.expression = this.add.graphics().setDepth(28);
@@ -112,6 +118,7 @@ export class BattleScene extends Phaser.Scene {
     this.textures.create(key, canvas)!.add('__BASE', 0, 0, 0, canvas.width, canvas.height);
   }
   reset(run: BladeRun) {
+    for(const drag of Object.values(this.carrotDrags))drag.reset();this.carrotHits=[];
     this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.activeFx=[]; this.buildFx=[]; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
     for (const label of this.labels) { label.object.setVisible(false); this.spareLabels.push(label.object); }
     this.labels = [];
@@ -129,6 +136,9 @@ export class BattleScene extends Phaser.Scene {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
       const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active' || event.source==='gear');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
+      if(event.type==='hit'&&event.source==='melee'&&this.run?.bladeId==='knife'&&this.carrotHits.length<(this.simplified?12:24)){
+        this.carrotHits.push({x,y,age:0,elements:carrotElements(this.run.state.economy?.gear)});
+      }
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='gear-proc'){
         const limit=this.simplified?8:16;
@@ -192,6 +202,7 @@ export class BattleScene extends Phaser.Scene {
       .setTileScale(zoom / density, zoom / density)
       .setTilePosition((px - worldWidth / 2 - 8 / zoom) * density, (py - worldHeight / 2 - 8 / zoom) * density);
     this.shadows.clear(); this.fx.clear(); this.danger.clear(); this.grooves.clear(); this.groundHazards.clear(); this.friction.clear(); this.bladeBack.clear(); this.used.clear();
+    this.carrotFx.clear().setVisible(active);
     this.hero.setVisible(active); this.blade.setVisible(active); this.hilt.setVisible(active); this.slash.setVisible(false);
     this.expression.clear().setVisible(active); this.hands.clear().setVisible(active); this.effortLevel = 0;
     if (active && this.run) this.drawBattle(dt);
@@ -325,9 +336,14 @@ export class BattleScene extends Phaser.Scene {
     }
     if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else if (isBasicWeapon(run.tier)) {
       this.blade.setVisible(false); this.hilt.setVisible(false);
-      const contact=drawBasicMelee(g, run, (...args) => this.sprite(...args));
+      const contact=drawBasicMelee(g, run, (...args) => this.sprite(...args),this.clock,this.reducedMotion,this.carrotFx);
       // Carrot pigment scratches use the real ground tip; organic contact has no metal sparks.
-      this.drag.update(fxDt,contact,this.simplified,true);
+      this.drag.update(fxDt,contact?.elementalTrails?undefined:contact,this.simplified,true);
+      for(const kind of CARROT_TRAILS){
+        const drag=this.carrotDrags[kind];drag.update(fxDt,contact?.elementalTrails?.[kind],this.simplified,true);
+        const limit=this.simplified?28:80;if(drag.marks.length>limit)drag.marks.splice(0,drag.marks.length-limit);
+        drawCarrotTrails(this.grooves,kind,drag.marks);
+      }
       for(const mark of this.drag.marks){
         const alpha=Math.min(1,dragOpacity(mark)*1.3);
         this.grooves.lineStyle(mark.width+1.2,mark.color,alpha*.14).lineBetween(mark.from.x,mark.from.y,mark.to.x,mark.to.y);
@@ -457,6 +473,8 @@ export class BattleScene extends Phaser.Scene {
       else { g.lineStyle(2,0xfff5c7,alpha).lineBetween(c.x-r,c.y,c.x+r,c.y).lineBetween(c.x,c.y-r,c.x,c.y+r); }
     }
     this.contacts=this.contacts.filter(c=>c.age<(c.death?.28:.16));
+    for(const hit of this.carrotHits){hit.age+=fxDt;drawCarrotHit(this.carrotFx,hit.elements,hit.x,hit.y,hit.age,this.reducedMotion);}
+    this.carrotHits=this.carrotHits.filter(hit=>hit.age<.32);
     for (const p of this.particles) {
       p.age += fxDt; p.x += p.vx * fxDt; p.y += p.vy * fxDt;
       g.fillStyle(p.color, Math.max(0, 1 - p.age / p.life)).fillTriangle(p.x - p.size, p.y, p.x + p.size, p.y, p.x, p.y - p.size * 1.5);

@@ -1,6 +1,6 @@
 import { swingPhase, type SwingTiming } from './equipment';
 interface Point { x: number; y: number }
-export interface DragContact extends Point { player: Point; range: number; widthScale: number; mass: number; color: number; markWidth?: number; markLife?: number }
+export interface DragContact extends Point { player: Point; range: number; widthScale: number; mass: number; color: number; markWidth?: number; markLife?: number; elementalTrails?:Partial<Record<import('./carrot-elements').CarrotTrail,DragContact>> }
 export interface DragMark { from: Point; to: Point; width: number; strength: number; age: number; life: number; color: number }
 export interface DragSpark extends Point { origin: Point; vx: number; vy: number; age: number; life: number; size: number }
 export const DRAG_REST_ANGLE = Math.PI * .30;

@@ -4,6 +4,8 @@ import { swingPhase, type EquipmentStats, type SwingTiming } from './equipment';
 import type { BladeRun } from './simulation';
 import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 import type { DragContact } from './blade-drag';
+import {drawCarrotMaterials,carrotPoint} from './carrot-element-art';
+import {hasCarrotElements} from './carrot-elements';
 
 export const CARROT_GROUND_COLOR=0xf49a43;
 export const CARROT_MARK_LIFETIME=1.1;
@@ -36,18 +38,26 @@ export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|
  const pose=swing?bladePresentation(swing,aim,stats.arc*Math.PI/180,stats.mass,rest):{angle:rest,opacity:0};
  return {...pose,hand:16,reach:stats.range};
 }
-export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image):DragContact|undefined{
+export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image,clock=0,reduced=false,materialFx=g):DragContact|undefined{
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
  const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
  const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
  sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
+ const frame={x,y,angle:a,scaleX:width/art.width,scaleY:height/art.height};
+ const elements=drawCarrotMaterials(materialFx,run,sprite,frame,clock,reduced);
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
   const trailEnd=swingPhase(s.swing).phase==='strike'?a:s.swing.angle+arc/2;
-  g.lineStyle(15*Math.sqrt(stats.widthScale),0xf2a04f,pose.opacity*.18).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
-  g.lineStyle(2.5,0xffe2a4,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
-  for(let i=0;i<3;i++){
+  const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0x6fd1fa:elements.poison?0x87db3d:0xf2a04f;
+  const arcLight=elements.fire?0xffd477:elements.frost?0xf0fcff:elements.electric?0xffef9c:elements.poison?0xe0ffad:0xffe2a4;
+  g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
+  g.lineStyle(elements.fire===2?3.5:2.5,arcLight,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
+  if(elements.poison)for(let i=0;i<(elements.poison===2?4:2);i++){
+   const angle=a-.15-i*.13,r=stats.range*(.76+i*.055),px=s.player.x+Math.cos(angle)*r,py=s.player.y+Math.sin(angle)*r;
+   materialFx.fillStyle(0x83df38,pose.opacity).fillEllipse(px,py,3+elements.poison,2+elements.poison);
+  }
+  if(!hasCarrotElements(elements))for(let i=0;i<3;i++){
    const leaf=a-.12-i*.1,r=stats.range*(.72+i*.07);
    g.fillStyle(i===1?0xffc16b:0x79b65c,pose.opacity*.7).fillEllipse(s.player.x+Math.cos(leaf)*r,s.player.y+Math.sin(leaf)*r,4.5,2.5);
   }
@@ -56,6 +66,15 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
   // Use the same pivot, scaling and rotation as the painted sprite's actual tip.
   const tipX=(art.tip[0]-art.grip[0])*width/art.width;
   const tipY=(art.tip[1]-art.grip[1])*height/art.height;
-  return {x:x+dx*tipX-dy*tipY,y:y+dy*tipX+dx*tipY,player:{...s.player},range:stats.range,widthScale:stats.widthScale,mass:stats.mass,color:CARROT_GROUND_COLOR,markWidth:carrotMarkWidth(height),markLife:CARROT_MARK_LIFETIME};
+  const contact:DragContact={x:x+dx*tipX-dy*tipY,y:y+dy*tipX+dx*tipY,player:{...s.player},range:stats.range,widthScale:stats.widthScale,mass:stats.mass,color:CARROT_GROUND_COLOR,markWidth:carrotMarkWidth(height),markLife:CARROT_MARK_LIFETIME};
+  if(hasCarrotElements(elements)){
+   const sample={...contact};
+   contact.elementalTrails={};
+   if(elements.poison)contact.elementalTrails.poison={...sample,...carrotPoint(frame,1130,600),color:0x7cda35,markWidth:carrotMarkWidth(height)*(elements.poison===2?1.35:1),markLife:1.1};
+   if(elements.fire)contact.elementalTrails.fire={...sample,color:0xf47b34,markWidth:carrotMarkWidth(height)*(elements.fire===2?1.4:1),markLife:.38};
+   if(elements.frost)contact.elementalTrails.frost={...sample,...carrotPoint(frame,570,430),color:0xc3efff,markWidth:carrotMarkWidth(height)*(elements.frost===2?1.3:1),markLife:.9};
+   if(elements.electric)contact.elementalTrails.electric={...sample,...carrotPoint(frame,680,420),color:0x8bdfff,markWidth:1.5,markLife:.35};
+  }
+  return contact;
  }
 }
