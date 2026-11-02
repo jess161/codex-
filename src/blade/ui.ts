@@ -4,7 +4,7 @@ import type { BladeApp } from './main';
 import { GROUNDS, groundPreview } from './grounds';
 import { shopEquipmentStats, loadName } from './equipment';
 import { passiveProgress } from './passives';
-import { GEAR, GEAR_IDS, GEAR_BRANCHES, GEAR_RARITIES, GEAR_SLOTS, gearBlockReason, gearPurchaseHint, gearSellPrice, RUN_DURATION, SURVIVAL_DURATION, COIN_VALUES, coinDropChance, freshGear, gearDetail, gearPrice, type GearId, type GearCategory } from './gear';
+import { GEAR, COMMON_GEAR, lightningProfile, GEAR_IDS, GEAR_BRANCHES, GEAR_RARITIES, GEAR_SLOTS, gearBlockReason, gearPurchaseHint, gearSellPrice, RUN_DURATION, SURVIVAL_DURATION, COIN_VALUES, coinDropChance, freshGear, gearDetail, gearPrice, type GearId, type GearCategory } from './gear';
 import { gearIcon, coinIcon } from './gear-art';
 import type { BladeInspector } from './inspector';
 import { combatPower } from './power';
@@ -85,7 +85,7 @@ export class BladeUI {
   }
   showGearPickup(id: GearId, rank: number) {
     const node = document.querySelector<HTMLElement>('#pickup-note')!;
-    node.innerHTML = `${gearIcon(id)}<span>${GEAR[id].from?'升级为':'获得'}${GEAR[id].name} · ${GEAR_RARITIES[GEAR[id].rarity].name}${id==='ironBlade'&&rank>1?` ×${rank}`:''}</span>`;
+    node.innerHTML = `${gearIcon(id)}<span>${GEAR[id].from?'升级为':'获得'}${GEAR[id].name} · ${GEAR_RARITIES[GEAR[id].rarity].name}${id===COMMON_GEAR&&rank>1?` ×${rank}`:''}</span>`;
     node.style.setProperty('--relic', GEAR_RARITIES[GEAR[id].rarity].color); node.hidden = false;
     clearTimeout(this.pickupTimer); this.pickupTimer = window.setTimeout(() => node.hidden = true, 1500);
   }
@@ -126,21 +126,21 @@ export class BladeUI {
   private shopTree() {
     const e=this.app.run!.state.economy!,selected=this.selectedGear;
     const tile=(id:GearId)=>{
-      const item=GEAR[id],count=e.gear[id],passed=id==='ironBlade'?e.order.some(held=>held!=='ironBlade'):GEAR_BRANCHES.some(([rare,epic])=>id===rare&&e.gear[epic]>0);
-      const badge=count?(id==='ironBlade'?`×${count}`:'持有'):passed?'已升级':'';
+      const item=GEAR[id],count=e.gear[id],passed=id===COMMON_GEAR?e.order.some(held=>held!==COMMON_GEAR):GEAR_BRANCHES.some(([rare,epic])=>id===rare&&e.gear[epic]>0);
+      const badge=count?(id===COMMON_GEAR?`×${count}`:'持有'):passed?'已升级':'';
       const price=count&&item.rarity==='epic'?'已完成':passed&&item.rarity==='rare'?'已升级':`${item.from?'+ ':''}${coinIcon()}${gearPrice(id)}`;
       return `<button class="shop-item ${item.rarity}${selected===id?' selected':''}${count?' owned':''}${passed?' passed':''}" data-action="gear-detail" data-value="${id}" data-gear="${id}" aria-pressed="${selected===id}" aria-label="查看${item.name}，${GEAR_RARITIES[item.rarity].name}${count?`，持有 ${count} 件`:''}${item.from?`，由${GEAR[item.from].name}加${gearPrice(id)}金币升级`:''}"><span class="shop-item-art">${gearIcon(id)}<small class="shop-item-rarity">${GEAR_RARITIES[item.rarity].name}</small>${badge?`<small class="shop-item-rank">${badge}</small>`:''}</span><b class="shop-item-name">${item.name}</b><span class="shop-item-price">${price}</span></button>`;
     };
     const fork=GEAR_BRANCHES.map(([rare,epic],i)=>`<path class="${e.gear[rare]||e.gear[epic]?'reached ':''}${selected===rare||selected===epic?'selected':''}" d="M150 0V16H${50+i*100}V32"/>`).join('');
     const links=GEAR_BRANCHES.map(([rare,epic],i)=>`<path class="${e.gear[epic]?'reached ':''}${selected===rare||selected===epic?'selected':''}" d="M${50+i*100} 0V28"/>`).join('');
-    return `<div class="shop-items shop-tree" role="group" aria-label="装备升级树，一件普通装备分为三条稀有与史诗升级路线"><p class="shop-tree-hint">先购买普通装备，沿连线补金币升级</p><div class="shop-tree-root">${tile('ironBlade')}</div><svg class="shop-tree-fork" viewBox="0 0 300 32" preserveAspectRatio="none" aria-hidden="true">${fork}</svg><div class="shop-tree-row">${GEAR_BRANCHES.map(([rare])=>tile(rare)).join('')}</div><svg class="shop-tree-links" viewBox="0 0 300 28" preserveAspectRatio="none" aria-hidden="true">${links}</svg><div class="shop-tree-row">${GEAR_BRANCHES.map(([,epic])=>tile(epic)).join('')}</div></div>`;
+    return `<div class="shop-items shop-tree" role="group" aria-label="调料罐头升级树，普通罐分为电、火、毒三条路线"><p class="shop-tree-hint">小调味罐 → 电、火、毒 · 沿连线补金币升级</p><div class="shop-tree-root">${tile(COMMON_GEAR)}</div><svg class="shop-tree-fork" viewBox="0 0 300 32" preserveAspectRatio="none" aria-hidden="true">${fork}</svg><div class="shop-tree-row">${GEAR_BRANCHES.map(([rare])=>tile(rare)).join('')}</div><svg class="shop-tree-links" viewBox="0 0 300 28" preserveAspectRatio="none" aria-hidden="true">${links}</svg><div class="shop-tree-row">${GEAR_BRANCHES.map(([,epic])=>tile(epic)).join('')}</div></div>`;
   }
   private shopDetail() {
     const id=this.selectedGear,e=this.app.run!.state.economy!;
     if (!id) return '<section class="shop-detail empty"><span>点击图标查看属性与升级所需金币</span></section>';
-    const item=GEAR[id],count=e.gear[id],settled=count>0&&id!=='ironBlade',reason=gearBlockReason(e,id),price=gearPrice(id);
+    const item=GEAR[id],count=e.gear[id],settled=count>0&&id!==COMMON_GEAR,reason=gearBlockReason(e,id),price=gearPrice(id);
     const verb=settled?(item.rarity==='epic'?'已完成':'已拥有'):item.from?'升级':count?'再买一件':'购买';
-    const route=item.from?`<div class="shop-detail-route"><b>${GEAR[item.from].name}</b><span>+ ${price} 金币 →</span><b>${item.name}</b><small>累计 ${item.price} 金币</small></div>`:'<div class="shop-detail-route"><span>共享起点 · 每件短刃可走一条路线</span></div>';
+    const route=item.from?`<div class="shop-detail-route"><b>${GEAR[item.from].name}</b><span>+ ${price} 金币 →</span><b>${item.name}</b><small>累计 ${item.price} 金币</small></div>`:'<div class="shop-detail-route"><span>共享起点 · 每个调味罐可走一条路线</span></div>';
     return `<section class="shop-detail" aria-label="装备详情"><div class="shop-detail-heading">${gearIcon(id)}<div><h3>${item.name}<small class="rarity-label ${item.rarity}">${GEAR_RARITIES[item.rarity].name}${count?` · 持有 ${count} 件`:''}</small></h3><p>${item.effect}</p></div></div>${route}<p class="shop-detail-note">${item.note}</p><div class="shop-actions"><small data-purchase-status>${reason || gearPurchaseHint(id)}</small>${count?`<button class="sell-gear" data-action="sell-gear" data-value="${id}" aria-label="出售一件${item.name}，返还${gearSellPrice(id)}金币">出售${count>1?'一件':''} ${gearSellPrice(id)}</button>`:''}<button class="buy-gear" data-action="buy-gear" data-value="${id}" title="${reason}" ${reason?'disabled':''} aria-label="${verb}${item.name}，${price}金币"><b>${verb}</b>${settled?'':`<span>${coinIcon()}${price}</span>`}</button></div></section>`;
   }
   private toastTimer = 0;
@@ -155,7 +155,7 @@ export class BladeUI {
         <div class="xp-row"><b id="level-label">Lv.1</b><div class="xp-track"><i id="xp-fill"></i></div><span id="next-form">磨合 Lv.6</span></div>
         <div id="boss-health" hidden><span>圆甲暴君<small>寻找震荡波缺口 · 瞬步避开冲锋</small></span><div><i id="boss-fill"></i></div></div>
         <div class="wallet-bar">${coinIcon()}<b id="coin-balance">0</b><button id="shop-button" data-action="shop" aria-controls="equipment-shop" aria-expanded="false" aria-label="打开商店，暂停战斗" title="商店（B）· 暂停战斗">${icon('shop')}<span>商店</span><kbd>B</kbd></button></div><div id="shop-backdrop" class="shop-backdrop" data-action="shop" aria-hidden="true" hidden></div><aside id="equipment-shop" class="equipment-shop" role="dialog" aria-modal="true" tabindex="-1" aria-labelledby="shop-title" hidden></aside><div class="equipment-dock" id="equipment-dock" hidden><div id="equipment-strip" class="equipment-strip" role="group" aria-label="已获得装备，左右滑动查看" tabindex="0"></div></div><div id="pickup-note" class="pickup-note" role="status" hidden></div><div class="run-counters"><span>${icon('carrot')}<b id="kill-count">0</b><small>击败</small></span><span class="combo-counter" id="combo-counter"></span></div>
-        <div class="current-blade"><div class="current-blade-art"><img id="current-blade-image" src="${ASSETS[`blade-${DEFAULT_WEAPON + 1}`]}" alt="当前武器"></div><div><small id="current-tier">初识 · 胡萝卜横扫</small><b id="current-name">胡萝卜刀</b><div class="tier-pips" id="tier-pips"></div><small id="blade-loadout" class="blade-loadout">轻巧</small><button id="current-passive" class="current-passive" data-action="codex" aria-label="查看当前武器的攻击方式"><b id="passive-name">横扫</b><small id="passive-state">45°横扫 · 刀尖拖地</small></button></div></div>
+        <div class="current-blade"><div class="current-blade-art"><img id="current-blade-image" src="${ASSETS[`blade-${DEFAULT_WEAPON + 1}`]}" alt="当前武器"></div><div><small id="current-tier">初识 · 胡萝卜横扫</small><b id="current-name">胡萝卜刀</b><div class="tier-pips" id="tier-pips"></div><small id="blade-loadout" class="blade-loadout">轻巧</small><button id="current-passive" class="current-passive" data-action="codex" aria-label="查看当前武器的攻击方式"><b id="passive-name">横扫</b><small id="passive-state">45°横扫 · 橙色刀痕</small></button></div></div>
         <div id="build-state" class="build-state"></div><div class="desktop-controls"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>移动</span><kbd>SPACE</kbd><span>瞬步</span><span>自动攻击</span></div>
         <div id="touch-joystick" class="touch-joystick" hidden aria-hidden="true"><span class="joystick-guide"></span><span id="joystick-thumb"></span></div>
         <button id="active-button" class="active-button" data-action="active" aria-label="释放武器主动技能（Q）"><svg class="dash-ring" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45"/><circle id="active-progress" cx="50" cy="50" r="45"/></svg><img id="active-image" src="${ASSETS[`blade-${DEFAULT_WEAPON + 1}`]}" alt=""><b>绝招</b><span id="active-label">就绪</span><kbd>Q</kbd></button>
@@ -239,7 +239,7 @@ export class BladeUI {
   private header(kicker: string, title: string, subtitle: string) { return `<div class="panel-header"><span class="eyebrow">${kicker}</span><h2>${title}</h2><p>${subtitle}</p></div>`; }
   private relicInventory() {
     const run = this.app.run!, e = run.state.economy;
-    return `<section class="gear-inventory small-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('YOUR EVERYDAY KIT', '这一局的装备', '普通短刃逐级升级为稀有与史诗，胡萝卜刀与香蕉弓均可使用。')}<section class="owned-gear-category"><h3>已装备 ${e?.order.length??0}/${GEAR_SLOTS}</h3>${(e?.order??[]).map(id=>`<article>${gearIcon(id)}<div><b>${GEAR[id].name} · ${GEAR_RARITIES[GEAR[id].rarity].name}</b><p>${gearDetail(id)}</p></div></article>`).join('')||'<p class="gear-empty">暂未购买装备</p>'}</section><p class="gear-inventory-note">本局已拾取 ${e?.earned ?? 0} 金币 · 已花费 ${e?.spent ?? 0} · 出售返还 ${e?.refunded ?? 0} · 剩余 ${e?.wallet ?? 0}。回到战场后点“商店”沿连线升级；打开商店暂停战斗，关闭后继续。</p></section>`;
+    return `<section class="gear-inventory small-panel"><button class="back-button" data-action="back">${icon('back')}返回</button>${this.header('YOUR EVERYDAY KIT', '这一局的装备', '小调味罐沿电、火、毒三条路线升级，胡萝卜刀与香蕉弓均生效。')}<section class="owned-gear-category"><h3>已装备 ${e?.order.length??0}/${GEAR_SLOTS}</h3>${(e?.order??[]).map(id=>`<article>${gearIcon(id)}<div><b>${GEAR[id].name} · ${GEAR_RARITIES[GEAR[id].rarity].name}</b><p>${gearDetail(id)}</p></div></article>`).join('')||'<p class="gear-empty">暂未购买装备</p>'}</section><p class="gear-inventory-note">本局已拾取 ${e?.earned ?? 0} 金币 · 已花费 ${e?.spent ?? 0} · 出售返还 ${e?.refunded ?? 0} · 剩余 ${e?.wallet ?? 0}。回到战场后点“商店”沿连线升级；打开商店暂停战斗，关闭后继续。</p></section>`;
   }
   private powerPanel() {
     const run = this.app.run!, p = combatPower(run);
@@ -324,7 +324,8 @@ export class BladeUI {
     document.querySelector('.health-cluster')!.classList.toggle('low', state.hp < state.maxHp * .3);
     text('coin-balance', String(state.economy?.wallet ?? 0));
     const build=state.build;
-    text('build-state',state.economy&&build?.bloodShield?'血契盾 '+Math.ceil(build.bloodShield):'');
+    const electric=state.economy?lightningProfile(state.economy.gear,state.level):null;
+    text('build-state',electric?.enabled&&build?`闪电充能 ${build.lightning}/${electric.attacks} · ${electric.targets} 目标`:'');
     text('level-label', `Lv.${state.level}`); percent('xp-fill', state.level === MAX_LEVEL ? 1 : state.xp / run.xpNeeded);
     text('next-form', run.holdingXp ? `磨合 ${Math.ceil(run.formRemaining)}s · 经验已存` : state.level === MAX_LEVEL ? '极境 · 满级' : stage === MASTERIES.length - 1 ? '觉醒 · 极境之路' : `${MASTERIES[stage + 1]} Lv.${TIER_LEVELS[stage + 1]}`);
     text('clock', formatTime(state.bossStarted ? Math.ceil(run.bossDuration - state.bossTime) : state.time));

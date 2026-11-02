@@ -1,4 +1,4 @@
-import { freshGear } from './gear';
+import { freshGear, lightningProfile, fireProfile, poisonProfile } from './gear';
 import { equipmentStats, shopEquipmentStats } from './equipment';
 import { freshPerks, TIERS } from './config';
 import { freshRelics, relicGroups } from './relics';
@@ -11,9 +11,12 @@ export const POWER_AXES = [
 export function combatPower(run: BladeRun) {
   if (run.state.economy) {
     const s = run.state, stats = run.stats, e = s.economy!, base = shopEquipmentStats(1, run.tier, freshGear());
-    const ratios = {output: stats.damage / base.damage * base.interval / stats.interval * (1+stats.critChance*(stats.critMultiplier-1)), crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65 * (1+.25*e.gear.stoneCleaver),
+    const electric=lightningProfile(e.gear,s.level),fire=fireProfile(e.gear),poison=poisonProfile(e.gear);
+    // Conditional element weights are a growth indicator, not a measured DPS promise.
+    const elements=1+(electric.enabled?electric.damage/electric.attacks:0)+(fire.enabled?fire.tickDamage*2:0)+(poison.enabled?poison.tickDamage*4:0);
+    const ratios = {output: stats.damage / base.damage * base.interval / stats.interval * elements, crowd: Math.sqrt(stats.range / base.range) * (stats.arc / base.arc) ** .65 * (1+(electric.enabled ? .10*electric.targets:0)+(fire.enabled ? .25:0)),
       mobility: (stats.moveSpeed / base.moveSpeed) ** .7 * (base.dashCooldown / stats.dashCooldown) ** .2 * (stats.magnet / base.magnet) ** .15,
-      survival: s.maxHp / 100 / (1 - stats.damageReduction) * (1 + .05*e.gear.crimsonBlade + .10*e.gear.redMoonBlade)};
+      survival: s.maxHp / 100 / (1 - stats.damageReduction)};
     const axes = POWER_AXES.map(axis => ({...axis, ratio: ratios[axis.id]}));
     return {value: Math.round(1000 * Math.exp(axes.reduce((sum, a) => sum + a.weight * Math.log(a.ratio), 0))), axes, blade: TIERS[run.tier].name, stats};
   }

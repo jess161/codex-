@@ -132,7 +132,7 @@ export class BattleScene extends Phaser.Scene {
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='gear-proc'){
         const limit=this.simplified?8:16;
-        if(event.procKind==='cleave'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
+        if(event.procKind==='fire-burst'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
         else if(this.buildFx.length<limit)this.buildFx.push({event,age:0});
       }
       if(event.type==='active'&&event.activePhase==='heal')this.damageLabel(`+${Math.round(event.amount??0)} 生命`,x,y);
@@ -264,7 +264,7 @@ export class BattleScene extends Phaser.Scene {
       }
       if (e.dragonHits > 0) for (let i = 0; i < 2; i++) g.fillStyle(i < e.dragonHits ? 0x6c85ae : 0xc4d0df, .85).fillCircle(e.x - 3 + i * 6, e.y + e.radius + 6, 1.8);
       if (e.slowTime > 0) g.lineStyle(1.4, 0x8fd7ed, .7).strokeEllipse(e.x, e.y + e.radius * .7, e.radius * 2.2, e.radius * .6);
-      if(e.poisonTime>0)for(let i=0;i<(this.simplified?2:3);i++){const sx=e.x-e.radius*.6+i*e.radius*.6,sy=e.y-e.radius-3-(this.reducedMotion?0:Math.sin(this.clock*4+i)*2);g.fillStyle(0x70bb8c,.65).fillCircle(sx,sy,2.5).lineStyle(1,0xd4f4ac,.85).strokeCircle(sx,sy,2.5);}
+      if(e.poisonTime>0){const stacks=e.poisonStacks??1;for(let i=0;i<stacks;i++){const sx=e.x+(i-(stacks-1)/2)*6,sy=e.y-e.radius-5-(this.reducedMotion?0:Math.sin(this.clock*4+i)*2);g.fillStyle(0x56b775,.8).fillCircle(sx,sy,2.2).lineStyle(1,0xd4f4ac,.9).strokeCircle(sx,sy,2.2);}}
       if (e.burnTime > 0) for (let i = 0; i < (this.simplified ? 2 : 3); i++) {
         const sx = e.x - e.radius * .6 + e.radius * .6 * i, sy = e.y + e.radius * .7;
         const flame = this.reducedMotion ? 9 : 8 + Math.sin(this.clock * 10 + e.id + i) * 3;

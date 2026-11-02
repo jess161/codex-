@@ -1,0 +1,92 @@
+{
+  "change": "Electric, fire and poison seasoning cans with generated shop art and shared carrot/banana combat effects",
+  "baseline_commit": "4168d407533006a8f7cf9cfb15f798e89056413e",
+  "branch": "reconstruct/latest-from-conversation",
+  "gear": {
+    "common": "seasoningTin",
+    "branches": [
+      [
+        "pepperPowder",
+        "thunderSalt"
+      ],
+      [
+        "chiliSauce",
+        "volcanicSauce"
+      ],
+      [
+        "mushroomSauce",
+        "jadeMushroom"
+      ]
+    ],
+    "slots": 3,
+    "rarity_backgrounds": [
+      "gray",
+      "blue",
+      "purple"
+    ],
+    "prices_unchanged": true
+  },
+  "combat": {
+    "shared_weapons": [
+      "carrot knife",
+      "banana bow"
+    ],
+    "lightning_charge": "once per attack release, including misses; never per hit",
+    "lightning_targets": {
+      "start": 4,
+      "max": 8,
+      "extra_at_levels": [
+        8,
+        15,
+        22,
+        29
+      ]
+    },
+    "fire_duration_seconds": 3,
+    "fire_refresh_preserves_tick_clock": true,
+    "poison_max_stacks": 5,
+    "element_on_hit_recursion": false,
+    "explosion_chaining": false,
+    "burning_death_burst": "normal attack or own burn death only; other secondary sources do not proc it"
+  },
+  "art": {
+    "skill": ".agents/skills/create-game-assets/SKILL.md",
+    "tool": "image_gen.imagegen",
+    "actual_generation_used": true,
+    "count": 7,
+    "manifest": "art/seasonings/manifest.json",
+    "static_native_scale_reviewed": true,
+    "in_engine_reviewed": false
+  },
+  "retained": {
+    "carrot_full_face": true,
+    "compact_starting_weapons": true,
+    "carrot_sweep_degrees": 45,
+    "banana_arrow_range": 140,
+    "orange_scratch_life_seconds": 1.1,
+    "round_seconds": 600,
+    "normal_coin_drop_chance": 0.25,
+    "shop_pauses": true
+  },
+  "not_implemented": [
+    "weapon body elemental decorations",
+    "skill tree"
+  ],
+  "save_version": 15,
+  "save_policy": "clear old save on content change; no migration",
+  "packaging": {
+    "command": "node scripts/standalone.mjs --blade-only",
+    "artifact": "dist/blade-evolution.html",
+    "bytes": 12317686,
+    "sha256": "3902bbbd866b6cc6a7de0bd6ba1da004577e9799093a55e8cdde20b47d5869de",
+    "success": true
+  },
+  "tests_run": false,
+  "gameplay_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "pages_published": false,
+  "castaway_source_modified": false,
+  "preexisting_agents_directory_committed": false,
+  "verification_policy": "Source review, static raster inspection and asset bundling only; no runtime acceptance claim."
+}

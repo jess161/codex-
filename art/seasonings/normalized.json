@@ -1,0 +1,198 @@
+[
+  {
+    "id": "seasoningTin",
+    "path": "src/blade/assets/seasonings/seasoningTin.webp",
+    "source_cell": [
+      0,
+      0,
+      444,
+      414
+    ],
+    "alpha_crop": [
+      69,
+      64,
+      432,
+      403
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 48934,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "pepperPowder",
+    "path": "src/blade/assets/seasonings/pepperPowder.webp",
+    "source_cell": [
+      444,
+      0,
+      887,
+      421
+    ],
+    "alpha_crop": [
+      43,
+      29,
+      400,
+      407
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 65246,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "chiliSauce",
+    "path": "src/blade/assets/seasonings/chiliSauce.webp",
+    "source_cell": [
+      887,
+      0,
+      1330,
+      421
+    ],
+    "alpha_crop": [
+      33,
+      25,
+      404,
+      419
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 56482,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "mushroomSauce",
+    "path": "src/blade/assets/seasonings/mushroomSauce.webp",
+    "source_cell": [
+      1330,
+      0,
+      1774,
+      443
+    ],
+    "alpha_crop": [
+      44,
+      26,
+      424,
+      443
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 49646,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "thunderSalt",
+    "path": "src/blade/assets/seasonings/thunderSalt.webp",
+    "source_cell": [
+      0,
+      414,
+      444,
+      887
+    ],
+    "alpha_crop": [
+      32,
+      21,
+      421,
+      441
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 68418,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "volcanicSauce",
+    "path": "src/blade/assets/seasonings/volcanicSauce.webp",
+    "source_cell": [
+      444,
+      421,
+      887,
+      887
+    ],
+    "alpha_crop": [
+      22,
+      12,
+      433,
+      440
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 63924,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  },
+  {
+    "id": "jadeMushroom",
+    "path": "src/blade/assets/seasonings/jadeMushroom.webp",
+    "source_cell": [
+      887,
+      421,
+      1330,
+      887
+    ],
+    "alpha_crop": [
+      20,
+      12,
+      427,
+      436
+    ],
+    "size": [
+      256,
+      256
+    ],
+    "bytes": 66612,
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "anchor": "center",
+    "frames": 1,
+    "collision": "none; UI only"
+  }
+]

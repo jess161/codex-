@@ -1,6 +1,7 @@
 import { isBow, bowProfile } from './bows';
 import { TIERS, DEFAULT_WEAPON, basicWeaponKind, isBasicWeapon, freshPerks, tierForLevel, type PerkId } from './config';
 import { freshRelics, ownedRelics, relicGroups, type RelicInventory } from './relics';
+import {gearAttack} from './gear';
 
 export interface SwingTiming { age: number; windup: number; strike: number; recovery: number }
 export type SwingPhase = 'windup' | 'strike' | 'recovery';
@@ -59,9 +60,9 @@ export function shopEquipmentStats(level:number,blade:number,gear:import('./gear
  const range=isBow(blade)?t.range:Math.min(420,t.range*.90*(1+.10*mastery));
  const windup=base.windup*pace,strike=base.strike*pace,recovery=base.recovery*pace;
  return {...base,
-  damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+6*gear.ironBlade+15*gear.crimsonBlade+18*gear.gleamBlade+10*gear.ridgeBlade+25*gear.redMoonBlade+30*gear.solarEdge+15*gear.stoneCleaver),
+  damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+gearAttack(gear)),
   interval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
   widthScale:1+.09*mastery,arc:t.id==='knife'?t.arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
-  moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:Math.min(1,.10*gear.gleamBlade+.20*gear.solarEdge),critMultiplier:1.75+.30*gear.solarEdge,dashCooldown:5,waveEvery:0,
+  moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:0,critMultiplier:1.75,dashCooldown:5,waveEvery:0,
  };
 }

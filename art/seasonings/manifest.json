@@ -1,0 +1,345 @@
+{
+  "schema_version": 1,
+  "art_direction_brief": "art/seasonings/art-direction.md",
+  "generation_used": true,
+  "source_sha256": "2775d640233411b76caeebf747ab27222aeba3690a8c4a39ddd1b2484072508f",
+  "normalization": "scripts/prepare-seasoning-assets.py",
+  "assets": [
+    {
+      "id": "seasoningTin",
+      "path": "src/blade/assets/seasonings/seasoningTin.webp",
+      "source_cell": [
+        0,
+        0,
+        444,
+        414
+      ],
+      "alpha_crop": [
+        69,
+        64,
+        432,
+        403
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 48934,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "24702b5d3c6a0a711281bd6de3c0de133d5b7955936063afee90522a90f3991a",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "pepperPowder",
+      "path": "src/blade/assets/seasonings/pepperPowder.webp",
+      "source_cell": [
+        444,
+        0,
+        887,
+        421
+      ],
+      "alpha_crop": [
+        43,
+        29,
+        400,
+        407
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 65246,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "01dcb0e7a10725c411a5a261125306dec9d6eb9d547c0452f18a244b9b8af8b5",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "chiliSauce",
+      "path": "src/blade/assets/seasonings/chiliSauce.webp",
+      "source_cell": [
+        887,
+        0,
+        1330,
+        421
+      ],
+      "alpha_crop": [
+        33,
+        25,
+        404,
+        419
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 56482,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "a8d1dacb291ce789164edc6dae2b9e0c97695b2d49c2c7b89636b7634f962dff",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "mushroomSauce",
+      "path": "src/blade/assets/seasonings/mushroomSauce.webp",
+      "source_cell": [
+        1330,
+        0,
+        1774,
+        443
+      ],
+      "alpha_crop": [
+        44,
+        26,
+        424,
+        443
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 49646,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "2ea791dee871fda8a44e13d2748729b6b2b3676f5555feeede2370ff7842294b",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "thunderSalt",
+      "path": "src/blade/assets/seasonings/thunderSalt.webp",
+      "source_cell": [
+        0,
+        414,
+        444,
+        887
+      ],
+      "alpha_crop": [
+        32,
+        21,
+        421,
+        441
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 68418,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "c52d4fc6de31394da928acde03ca4df0b995f2d27e424b0339808c8bbba1aed9",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "volcanicSauce",
+      "path": "src/blade/assets/seasonings/volcanicSauce.webp",
+      "source_cell": [
+        444,
+        421,
+        887,
+        887
+      ],
+      "alpha_crop": [
+        22,
+        12,
+        433,
+        440
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 63924,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "75222cc4a5c0ee92777c27ab5fc7fcfd3e5ed7ad752524493dccf1ae04880dd3",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    },
+    {
+      "id": "jadeMushroom",
+      "path": "src/blade/assets/seasonings/jadeMushroom.webp",
+      "source_cell": [
+        887,
+        421,
+        1330,
+        887
+      ],
+      "alpha_crop": [
+        20,
+        12,
+        427,
+        436
+      ],
+      "size": [
+        256,
+        256
+      ],
+      "bytes": 66612,
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "anchor": "center",
+      "frames": 1,
+      "collision": "none; UI only",
+      "status": "integrated; runtime review not performed",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "sha256": "5f12ca08f587c25a3cc86e3c14d0529b7117633a971f9b32c7ecdcb40bbe1010",
+      "source": {
+        "kind": "generated",
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed by tool",
+        "created_at": "2026-11-02",
+        "raw": "art/seasonings/source/seasoning-family.png",
+        "reference": "docs/images/a-group-approved.png",
+        "prompt": "art/seasonings/source/prompt.txt",
+        "terms": "Generated for this project using OpenAI image generation; service terms apply; no additional open license asserted."
+      },
+      "verification": {
+        "static_native_scale_reviewed": true,
+        "in_engine_reviewed": false,
+        "tests_run": false,
+        "note": "Static source image and 58px contact sheet only; user forbids browser, playthrough and tests."
+      }
+    }
+  ]
+}
