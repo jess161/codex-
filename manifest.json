@@ -1,0 +1,41 @@
+{
+  "source_commit": "2b03cf3c5cc93ec0d4c82841d0de1ae1cb683ff0",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "source_push_confirmed": true,
+  "backup_branch": "backup/carrot-elements-2b03cf3",
+  "deployment_branch": "preview/mobile-20261031",
+  "files": [
+    {
+      "name": "blade-carrot-elements-2b03cf3.html",
+      "bytes": 14912890,
+      "sha256": "e6405fe141707a5e068a3e7505cf4a6d21d7bf21cf14e7c180ab60876c3e2b6b"
+    },
+    {
+      "name": "blade-carrot-elements-2b03cf3-source.zip",
+      "bytes": 38722668,
+      "sha256": "268d206f440f185b36755bf35f98d2ceeebb7363893217edaa8c06682155219b"
+    },
+    {
+      "name": "blade-carrot-elements-2b03cf3-history.bundle",
+      "bytes": 38956570,
+      "sha256": "c2369989d9763805e1d7d3469a2d299304ba288950582e6f4299293ae1e3a193"
+    },
+    {
+      "name": "native-preview.png",
+      "bytes": 159274,
+      "sha256": "2d24c1a68c330ed655bdaed7cc02e47b6602ef28819bc8161e7789a52d809238"
+    }
+  ],
+  "full_git_history_bundle_verified": true,
+  "frost_art_prepared_only": true,
+  "shop_branches": [
+    "electric",
+    "fire",
+    "poison"
+  ],
+  "agents_included": false,
+  "runtime_tests_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "castaway_modified": false
+}
