@@ -1,0 +1,31 @@
+{
+  "source_commit": "770caee81566f8e68db42bd7f5cd060d48a4b10a",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "source_push_confirmed": true,
+  "backup_branch": "backup/seasonings-770caee",
+  "baseline_commit": "4168d407533006a8f7cf9cfb15f798e89056413e",
+  "files": [
+    {
+      "name": "blade-seasonings-770caee.html",
+      "bytes": 12317686,
+      "sha256": "3902bbbd866b6cc6a7de0bd6ba1da004577e9799093a55e8cdde20b47d5869de"
+    },
+    {
+      "name": "blade-seasonings-770caee-source.zip",
+      "bytes": 33214639,
+      "sha256": "592cbb0eecedde1073b08f765f31393b03ad26c891eb613463477112bebcbb9c"
+    },
+    {
+      "name": "blade-seasonings-770caee-history.bundle",
+      "bytes": 33455229,
+      "sha256": "03f743114425718c10e91598aeb33993a9daaa34ed91f968dc366b0b9576c1bd"
+    }
+  ],
+  "full_git_history_bundle_verified": true,
+  "agents_included": false,
+  "runtime_tests_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "pages_published": false,
+  "castaway_modified": false
+}
