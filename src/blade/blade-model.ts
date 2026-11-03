@@ -36,7 +36,7 @@ export async function createBladeModel(index: number) {
 async function createApprovedFruitModel(index:number){
   const layout=index===15?A_GROUP_LAYOUT.carrot:A_GROUP_LAYOUT.banana;
   const scale=index===15?540/layout.width:300/layout.height,depth=index===15?12:10;
-  const group=new THREE.Group();group.name=`approved-a-fruit-${index}`;
+  const group=new THREE.Group();group.name=`current-fruit-${index}`;
   const parsed=new SVGLoader().parse(`<svg xmlns="http://www.w3.org/2000/svg"><path d="${layout.outline}"/></svg>`);
   const geometry=new THREE.ExtrudeGeometry(parsed.paths.flatMap(p=>SVGLoader.createShapes(p)),{depth,steps:1,bevelEnabled:true,bevelSize:.45/scale,bevelThickness:1,bevelSegments:3,curveSegments:8});
   geometry.scale(scale,-scale,1);geometry.translate(-layout.width*scale/2,layout.height*scale/2,-depth/2);

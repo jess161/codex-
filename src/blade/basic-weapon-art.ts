@@ -6,6 +6,7 @@ import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 import type { DragContact } from './blade-drag';
 import {drawCarrotMaterials,carrotPoint} from './carrot-element-art';
 import {hasCarrotElements} from './carrot-elements';
+import {CARROT_SWORD_FX} from './assets/carrot-sword/layout';
 
 export const CARROT_GROUND_COLOR=0xf49a43;
 export const CARROT_MARK_LIFETIME=1.1;
@@ -70,10 +71,10 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
   if(hasCarrotElements(elements)){
    const sample={...contact};
    contact.elementalTrails={};
-   if(elements.poison)contact.elementalTrails.poison={...sample,...carrotPoint(frame,1130,600),color:0x7cda35,markWidth:carrotMarkWidth(height)*(elements.poison===2?1.35:1),markLife:1.1};
+   if(elements.poison)contact.elementalTrails.poison={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.poisonTrail),color:0x7cda35,markWidth:carrotMarkWidth(height)*(elements.poison===2?1.35:1),markLife:1.1};
    if(elements.fire)contact.elementalTrails.fire={...sample,color:0xf47b34,markWidth:carrotMarkWidth(height)*(elements.fire===2?1.4:1),markLife:.38};
-   if(elements.frost)contact.elementalTrails.frost={...sample,...carrotPoint(frame,570,430),color:0xc3efff,markWidth:carrotMarkWidth(height)*(elements.frost===2?1.3:1),markLife:.9};
-   if(elements.electric)contact.elementalTrails.electric={...sample,...carrotPoint(frame,680,420),color:0x8bdfff,markWidth:1.5,markLife:.35};
+   if(elements.frost)contact.elementalTrails.frost={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.frostTrail),color:0xc3efff,markWidth:carrotMarkWidth(height)*(elements.frost===2?1.3:1),markLife:.9};
+   if(elements.electric)contact.elementalTrails.electric={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.electricTrail),color:0x8bdfff,markWidth:1.5,markLife:.35};
   }
   return contact;
  }

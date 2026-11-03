@@ -18,7 +18,7 @@ export type GearId='seasoningTin'|'pepperPowder'|'chiliSauce'|'mushroomSauce'|'t
 interface GearDefinition {name:string;category:GearCategory;rarity:GearRarity;price:number;upgradeCost:number;from:GearId|null;effect:string;note:string}
 // price is the total investment; upgradeCost is the gold paid at this step.
 export const GEAR:Record<GearId,GearDefinition>={
- seasoningTin:{name:'小调味罐',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条调味路线共用的起点，胡萝卜刀与香蕉弓均生效。可购买多罐，分别升级为电、火、毒；升级原位替换，不额外占位置。'},
+ seasoningTin:{name:'小调味罐',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条调味路线共用的起点，胡萝卜剑与香蕉弓均生效。可购买多罐，分别升级为电、火、毒；升级原位替换，不额外占位置。'},
  pepperPowder:{name:'麻椒粉',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'seasoningTin',effect:'攻击力 +10；每 5 次普攻释放连锁闪电',note:'每次挥刀或射箭充能一次，挥空也计数，一刀命中多怪只计一次。每个目标受到 55% 攻击力的电伤；初始连接 4 个不同目标，Lv.8／15／22／29 各增加 1 个，最多 8 个。补 80 金币升级。'},
  chiliSauce:{name:'辣椒酱',category:'attack',rarity:'rare',price:95,upgradeCost:60,from:'seasoningTin',effect:'攻击力 +10；命中燃烧 3 秒；死亡爆燃',note:'胡萝卜横扫与瓜子箭命中施加燃烧，每 0.5 秒造成 8% 攻击力火伤，重复命中刷新 3 秒。燃烧目标被普攻或燃烧击败时，在 55 范围爆燃，造成 45% 攻击力伤害。爆燃不传火、不连爆。补 85 金币升级。'},
  mushroomSauce:{name:'幽绿菇酱',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'seasoningTin',effect:'攻击力 +10；命中叠毒，最多 5 层',note:'每次普攻命中叠 1 层毒并刷新 4 秒。每层每 0.5 秒造成 3.5% 攻击力毒伤，对精英与首领提高 25%；最多 5 层。重复命中不重置跳伤计时，适合持续消耗。补 85 金币升级。'},
