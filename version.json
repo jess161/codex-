@@ -1,10 +1,10 @@
 {
-  "title": "刃之进化 · 怪物必掉金币版",
-  "source_commit": "e69114f996a33fe12b8dcb6d1eedab1b5c900d59",
+  "title": "刃之进化 · 胡萝卜逐级成长版",
+  "source_commit": "7628c1b1cede4e70ae4e3e1f90a4e3af109f9ef7",
   "source_branch": "reconstruct/latest-from-conversation",
-  "created_utc": "2026-11-03T11:51:30.512988+00:00",
-  "artifact_sha256": "455396deb311f2938313eb70ddd997e26cfcdd33fa02ced8644a0062b8d4fd71",
-  "bytes": 13073604,
+  "created_utc": "2026-11-03T12:24:03.443184+00:00",
+  "artifact_sha256": "5b5ad8db05730874400d965363429420d709e8649fbef446d1c6a756539776e7",
+  "bytes": 13073759,
   "save_version": 15,
   "features": [
     "叶冠与交叉缠带握柄",
@@ -13,8 +13,8 @@
     "电火毒材质按新剑重新对位",
     "战斗、菜单和图鉴共用新图"
   ],
-  "carrot_level_one_grip_to_tip": 48.8,
-  "carrot_level_one_hit_range": 64.8,
+  "carrot_level_one_grip_to_tip": 39.04,
+  "carrot_level_one_hit_range": 55.04,
   "carrot_sweep_degrees": 45,
   "banana_art_changed": false,
   "frost_gameplay_enabled": false,
@@ -24,5 +24,9 @@
   "independent_typecheck_run": false,
   "artifact_packaging": "node scripts/standalone.mjs --blade-only",
   "normal_coin_drop_chance": 1,
-  "bomber_detonation_drops_coins": true
+  "bomber_detonation_drops_coins": true,
+  "carrot_initial_attack_interval": 0.95,
+  "carrot_interval_multiplier_per_level": 0.975,
+  "carrot_length_growth_per_level": 0.06,
+  "carrot_width_parameter_growth_per_level": 0.035
 }
