@@ -1,0 +1,37 @@
+{
+  "source_commit": "b7b6dfcfcbe609ac3bd311b3d1fc5cef82b241d7",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "backup_branch": "backup/evolution-b7b6dfc",
+  "created_utc": "2026-11-03T22:50:48.502021+00:00",
+  "save_version": 16,
+  "engine": "Phaser 3.90 / TypeScript",
+  "build_command": "node scripts/standalone.mjs --blade-only",
+  "game_tests_run": false,
+  "browser_run": false,
+  "gameplay_run": false,
+  "standalone_typecheck_run": false,
+  "pages_published": false,
+  "backup_bundle_verified": true,
+  "files": [
+    {
+      "file": "carrot-evolution-b7b6dfc.html",
+      "bytes": 13442371,
+      "sha256": "40bf14a1be4f32186033d629f13eb40f5268015842c7c9dede34d0e2bafccb53"
+    },
+    {
+      "file": "frost-native-preview.png",
+      "bytes": 65018,
+      "sha256": "31cb86d0ee468c0658917fe108a4feef2e0a1d98fe2c21b3326bc4d6439e39da"
+    },
+    {
+      "file": "history-b7b6dfc.bundle",
+      "bytes": 45131057,
+      "sha256": "b00a3be47cfb6403fcdac19e9ad4b2407f15dd6ac09399ed2c7e6770229e1b67"
+    },
+    {
+      "file": "source-b7b6dfc.zip",
+      "bytes": 44909794,
+      "sha256": "f056f2bfaea4d897ce1b58526d5b23b26195878f7da8debd6adbc9ce9d4034c9"
+    }
+  ]
+}
