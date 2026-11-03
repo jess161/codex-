@@ -1,0 +1,43 @@
+{
+  "source_commit": "6441ad190963d08949cc07f934f0ac05b3264500",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "source_push_confirmed": true,
+  "backup_branch": "backup/carrot-sword-6441ad1",
+  "deployment_branch": "preview/mobile-20261031",
+  "files": [
+    {
+      "name": "blade-carrot-sword-6441ad1.html",
+      "bytes": 13073700,
+      "sha256": "7e62f329b7810d3b87cf04e0b6e159dd41637bf3c92a490ec59974c98284da53"
+    },
+    {
+      "name": "blade-carrot-sword-6441ad1-source.zip",
+      "bytes": 43753437,
+      "sha256": "e911a4c0c743de4309e47b471aedc772f92d9ec965bd52f220027ad9d4c2039e"
+    },
+    {
+      "name": "blade-carrot-sword-6441ad1-history.bundle",
+      "bytes": 43980313,
+      "sha256": "ec1e1aa7c1be76422d0750fea623ac4a86018e2916e331ab093f571759984df8"
+    },
+    {
+      "name": "native-preview.png",
+      "bytes": 152089,
+      "sha256": "c98aac6a8774c0a7333cf624263a58ecea467b380b5de03d5d6baeeba87519b4"
+    }
+  ],
+  "full_git_history_bundle_verified": true,
+  "reference_design_applied": true,
+  "actual_imagegen_calls": 3,
+  "carrot_grip_to_tip": 48.8,
+  "carrot_hit_range": 64.8,
+  "carrot_sweep_degrees": 45,
+  "gameplay_stats_changed": false,
+  "banana_art_changed": false,
+  "frost_gameplay": false,
+  "agents_included": false,
+  "runtime_tests_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false,
+  "castaway_modified": false
+}
