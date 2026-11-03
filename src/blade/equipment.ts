@@ -57,12 +57,16 @@ export const loadName = (mass: number) => mass < 1.3 ? '轻巧' : mass < 2 ? '�
 // The new catalogue is weapon-neutral. No historical relic or set is consulted.
 export function shopEquipmentStats(level:number,blade:number,gear:import('./gear').GearInventory){
  const t=TIERS[blade],mastery=tierForLevel(level),base=equipmentStats(1,freshPerks(),blade,freshRelics()),pace=1.10;
- const range=isBow(blade)?t.range:Math.min(420,t.range*.90*(1+.10*mastery));
- const windup=base.windup*pace,strike=base.strike*pace,recovery=base.recovery*pace;
+ const carrot=t.id==='knife',growth=Math.max(0,Math.min(29,level-1));
+ const carrotInterval=.95*.975**growth;
+ const range=isBow(blade)?t.range:carrot?16+(t.range*.90-16)*.80*(1+.06*growth):Math.min(420,t.range*.90*(1+.10*mastery));
+ const timing=carrot?carrotInterval/base.interval:pace;
+ const windup=base.windup*timing,strike=base.strike*timing,recovery=base.recovery*timing;
+ const widthScale=carrot?1+.035*growth:1+.09*mastery;
  return {...base,
   damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+gearAttack(gear)),
-  interval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
-  widthScale:1+.09*mastery,arc:t.id==='knife'?t.arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(1+.09*mastery),mass:base.mass,burden:0,
+  interval:carrot?carrotInterval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
+  widthScale,arc:t.id==='knife'?t.arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(widthScale),mass:base.mass,burden:0,
   moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:0,critMultiplier:1.75,dashCooldown:5,waveEvery:0,
  };
 }
