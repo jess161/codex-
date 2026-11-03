@@ -1,5 +1,5 @@
 import { freshGearCombat, validGearCombat, type GearCombatState } from './build-state';
-import { GEAR, COIN_VALUES, coinDropChance, gearBlockReason, lightningProfile, fireProfile, poisonProfile, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
+import { GEAR, COIN_VALUES, gearBlockReason, lightningProfile, fireProfile, poisonProfile, gearSellPrice, SURVIVAL_DURATION, FINALE_DURATION, freshEconomy, isGearId, gearPrice, validEconomy, type EconomyState, type GearId } from './gear';
 import {SAVE_VERSION} from './release';
 import {isBow,freshArchery,shootBow,activateBow,stepArchery,validArchery,type ArcheryState,type BowHost} from './bows';
 import {freshRelicLoot,dropCandidates,drawRelic,relicRandom,validRelicLoot,validRelicDrops,type RelicDrop,type RelicLootState} from './relic-loot';
@@ -588,7 +588,7 @@ export class BladeRun {
       for (const other of this.grid.query(e.x, e.y, radius + 45)) if (other.id !== e.id && Math.hypot(other.x - e.x, other.y - e.y) <= radius + other.radius) this.ignite(other, Math.max(1, Math.round(e.burnDamage * .65)));
       this.emitPassive('ryujin', e.x, e.y, radius);
     }
-    if (s.economy && (coinDropChance(e.kind) === 1 || this.lootRandom() < coinDropChance(e.kind))) this.addOrb(e.x, e.y, COIN_VALUES[e.kind], 'coin');
+    if (s.economy) this.addOrb(e.x, e.y, COIN_VALUES[e.kind], 'coin');
     if (e.kind === 'boss') { s.mode = 'won'; this.events.push({ type: 'win' }); return true; }
     this.tryRelicReward(e);
     if (e.kind === 'elite') { s.eliteKills++; this.addOrb(e.x + 12, e.y, 16, 'heal','bread'); }
@@ -717,6 +717,7 @@ export class BladeRun {
           e.hp = 0; const hazards = s.hazards ??= [];
           if (hazards.length < (this.simplified ? 8 : 12)) hazards.push({ id: s.nextId++, kind: 'blast', x: e.x, y: e.y, radius: 72, age: 0, duration: .28, damage: 0 });
           if (distance <= 72) this.damagePlayer(18, '未能离开爆燃球的爆炸范围');
+          if(s.economy)this.addOrb(e.x,e.y,COIN_VALUES[e.kind],'coin');
           this.addOrb(e.x, e.y, e.xp, 'xp'); this.events.push({ type: 'blast', x: e.x, y: e.y }); return;
         } else { e.action = 'charge'; e.timer = .42; }
       }

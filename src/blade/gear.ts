@@ -54,7 +54,7 @@ export function gearBlockReason(e:EconomyState,id:GearId):string {
 export const gearPurchaseHint=(id:GearId)=>GEAR[id].from?'消耗 1 件'+GEAR[GEAR[id].from!].name+'，原位升级':'所有武器通用，可购买多件';
 export const gearDetail=(id:GearId,_count=1)=>GEAR[id].effect;
 export const COIN_VALUES:Record<EnemyKind,number>={blob:1,swift:2,armor:4,shooter:3,charger:4,wisp:4,splitter:3,brood:1,spiker:5,poison:4,bomber:4,stalker:5,elite:25,boss:100};
-export const NORMAL_COIN_DROP_CHANCE=.25;
+export const NORMAL_COIN_DROP_CHANCE=1;
 export const coinDropChance=(kind:EnemyKind)=>kind==='elite'||kind==='boss'?1:NORMAL_COIN_DROP_CHANCE;
 export interface EconomyState{wallet:number;earned:number;spent:number;refunded:number;gear:GearInventory;order:GearId[]}
 export const freshEconomy=(coins=0):EconomyState=>({wallet:coins,earned:coins,spent:0,refunded:0,gear:freshGear(),order:[]});
