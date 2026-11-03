@@ -32,6 +32,11 @@
       "file": "source-b7b6dfc.zip",
       "bytes": 44909794,
       "sha256": "f056f2bfaea4d897ce1b58526d5b23b26195878f7da8debd6adbc9ce9d4034c9"
+    },
+    {
+      "file": "offline-carrot-evolution-b7b6dfc.zip",
+      "bytes": 9085102,
+      "sha256": "e4c05ac649a3f11e03a0d14043a6be9faf9810808f3b715fe33d6b13fd78413b"
     }
   ]
 }

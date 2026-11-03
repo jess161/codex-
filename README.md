@@ -2,6 +2,7 @@
 
 源码提交：`b7b6dfcfcbe609ac3bd311b3d1fc5cef82b241d7`，分支 `reconstruct/latest-from-conversation`。
 
+- `offline-carrot-evolution-b7b6dfc.zip`：仅包含游戏 HTML 的手机离线包。GitHub 原始 HTML 链接会显示源码时，下载本压缩包，解压得到“胡萝卜剑-多流派进化.html”，再用手机浏览器打开。
 - `carrot-evolution-b7b6dfc.html`：完整离线 HTML，图片和脚本均已内嵌。下载到手机后选择“使用浏览器打开”，不需要本地服务器。个别手机文件管理器不能把 HTML 交给浏览器时，请通过浏览器的下载记录打开。
 - `source-b7b6dfc.zip`：该提交的全部已跟踪源码，不包含未跟踪的 `.agents/`。
 - `history-b7b6dfc.bundle`：源码分支的完整可达 Git 历史，已执行 Git 备份完整性校验。
