@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { GEAR_CATEGORIES, isGearId } from './gear';
 import './style.css';
-import { ACHIEVEMENTS, toBasicWeapon, isBasicWeapon, FIXED_STEP, MASTERIES, TIERS, TIER_LEVELS, encounterDensity } from './config';
+import { ACHIEVEMENTS, DEFAULT_WEAPON, toBasicWeapon, isBasicWeapon, FIXED_STEP, MASTERIES, TIERS, TIER_LEVELS, encounterDensity } from './config';
 import { BladeRun, type MoveInput } from './simulation';
 import { BattleScene } from './scene';
 import { BladeStorage, type Settings } from './storage';
@@ -20,7 +20,7 @@ export class BladeApp {
   readonly ui: BladeUI;
   readonly game: Phaser.Game;
   panel: Panel = 'title';
-  selectedBlade = this.storage.data.settings.blade;
+  selectedBlade = DEFAULT_WEAPON;
   private backPanel: Panel = 'title';
   run?: BladeRun;
   isNewBest = false;
@@ -38,7 +38,7 @@ export class BladeApp {
   private activeTouch: number | null = null;
   private touchOrigin: { x: number; y: number } | null = null;
   private touchRadius = 35;
-  get battlePaused() { return this.panel !== 'none' || this.ui.shopOpen; }
+  get battlePaused() { return this.panel !== 'none' || this.ui.shopOpen || this.run?.state.mode==='upgrade'; }
   constructor() {
     this.ui = new BladeUI(this);
     this.scene.onReady = () => { this.ready = true; this.ui.ready(); this.applySettings(); if (this.storage.warning) this.ui.toast(this.storage.warning); };
@@ -180,6 +180,10 @@ export class BladeApp {
     this.panel = 'pause'; this.scene.pausedRun = true; this.clearInputs(); this.save(); this.ui.render(true);
   }
   action(action: string, value?: string) {
+    if(action==='evolution-pick'&&value&&this.panel==='none'&&this.run){
+      if(this.run.chooseUpgrade(value)){this.clearInputs();this.accumulator=0;this.audio.choose();this.save();this.ui.render(true);}
+      return;
+    }
     if (action === 'shop' && this.run && this.panel === 'none') { this.ui.toggleShop(); return; }
     if (action === 'shop-category' && value && (value === 'all' || Object.hasOwn(GEAR_CATEGORIES, value))) {
       this.ui.toggleShop(value as keyof typeof GEAR_CATEGORIES | 'all'); return;
@@ -214,7 +218,7 @@ export class BladeApp {
     if (action === 'fullscreen') { if (document.fullscreenElement) void document.exitFullscreen(); else void document.documentElement.requestFullscreen?.().catch(() => this.ui.toast('当前浏览器未开放全屏。')); return; }
     if (action === 'blade-pick') {
       const blade = Number(value);
-      if (Number.isInteger(blade) && isBasicWeapon(blade)) {
+      if (blade === DEFAULT_WEAPON) {
         if (this.panel !== 'loadout') this.backPanel = this.panel;
         this.selectedBlade = blade; this.panel = 'loadout'; this.clearInputs(); this.ui.render(true);
       }
@@ -284,13 +288,13 @@ export class BladeApp {
     }
     this.storage.data.meta.maxTier = Math.max(this.storage.data.meta.maxTier, this.run.mastery);
     this.checkAchievements();
-    if (this.run.state.mode !== modeBefore) { this.clearInputs(); this.ui.render(true); }
+    if (this.run.state.mode !== modeBefore) { this.clearInputs(); if(this.run.state.mode==='upgrade')this.save();this.ui.render(true); }
     if (['won', 'dead'].includes(this.run.state.mode)) this.finish();
   }
   private checkAchievements() {
     if (!this.run) return;
     const s = this.run.state, m = this.storage.data.meta;
-    const conditions: Record<string, boolean> = { divine: s.level >= TIER_LEVELS[MASTERIES.length - 1], cleave: s.bestCleave >= 8, combo: s.maxCombo >= 15, flawless: s.mode === 'won' && s.bossHits === 0, veteran: m.runs >= 5 };
+    const conditions: Record<string, boolean> = { divine: s.evolution?!!s.evolution.ultimate:s.level >= TIER_LEVELS[MASTERIES.length - 1], cleave: s.bestCleave >= 8, combo: s.maxCombo >= 15, flawless: s.mode === 'won' && s.bossHits === 0, veteran: m.runs >= 5 };
     for (const a of ACHIEVEMENTS) if (conditions[a.id] && !m.achievements.includes(a.id)) { m.achievements.push(a.id); this.ui.toast(`试炼印记 · ${a.name}`); this.save(); }
   }
   private finish() {
@@ -326,7 +330,7 @@ export class BladeApp {
   advance(ms: number) { for (let i = 0; i < Math.min(36000, Math.ceil(ms / (FIXED_STEP * 1000))); i++) this.tick(); this.ui.render(true); }
   text() {
     const s = this.run?.state;
-    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, shopOpen: this.ui.shopOpen, battlePaused: this.battlePaused, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:this.run!.hasActiveSkill?{name:this.run!.activeInfo?.name,...this.run!.active}:null, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, economy: s.economy, build: s.build, coinsOnGround: s.orbs.filter(o => o.kind === 'coin').length, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
+    return JSON.stringify(s ? { mode: s.mode, panel: this.panel, shopOpen: this.ui.shopOpen, battlePaused: this.battlePaused, coordinateSystem: 'world units, x right, y down, player-centered camera', time: +s.time.toFixed(2), bossTime: +s.bossTime.toFixed(2), level: s.level, mastery: MASTERIES[this.run!.mastery], bladeIndex: this.run!.tier, tier: this.run!.mastery + 1, density: encounterDensity(s.time, this.run!.simplified, s.level,this.run!.duration), blade: TIERS[this.run!.tier].name, xp: s.xp, totalXp: s.totalXp, formRemaining: this.run!.formRemaining, holdingXp: this.run!.holdingXp, equipment: this.run!.stats, active:this.run!.hasActiveSkill?{name:this.run!.activeInfo?.name,...this.run!.active}:null, passive: { id: this.run!.bladeId, name: this.run!.passiveInfo.name, ...s.passive }, attackPhase: s.swing ? swingPhase(s.swing).phase : 'idle', hp: s.hp, maxHp: s.maxHp, position: s.player, velocity: s.velocity, dashCooldown: +s.dashCooldown.toFixed(2), invincible: s.invincible, enemies: s.enemies.map(e => ({ id: e.id, kind: e.kind, x: Math.round(e.x), y: Math.round(e.y), hp: Math.ceil(e.hp), action: e.action, effects: { hunt: e.hunt, chill: e.chillStacks, freeze: e.freeze, stun: e.stun, burn: e.burnTime, dragonHits: e.dragonHits } })), orbs: s.orbs.length, bullets: s.bullets.length, waves: s.waves.length, choices: s.choices, pending: s.pending, relics: s.relics, relicDrops:s.relicDrops, relicOrder:this.run!.relicOrder, relicLoot:s.relicLoot, relicState: s.relicState, economy: s.economy, build: s.build, evolution:s.evolution, elements:this.run!.elements, coinsOnGround: s.orbs.filter(o => o.kind === 'coin').length, legacyPerks: s.perks, kills: s.kills, score: this.run!.score(), achievements: this.storage.data.meta.achievements } : { mode: 'title', panel: this.panel, canContinue: !!this.storage.data.run, meta: this.storage.data.meta });
   }
 }
 

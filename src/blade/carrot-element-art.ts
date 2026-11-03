@@ -13,14 +13,15 @@ export function carrotPoint(frame:CarrotFrame,px:number,py:number){
  const x=(px-art.grip[0])*frame.scaleX,y=(py-art.grip[1])*frame.scaleY,c=Math.cos(frame.angle),s=Math.sin(frame.angle);
  return {x:frame.x+c*x-s*y,y:frame.y+s*x+c*y};
 }
-export function drawCarrotMaterials(g:Graphics,run:BladeRun,sprite:Sprite,frame:CarrotFrame,clock:number,reduced:boolean){
- const elements=carrotElements(run.state.economy?.gear);
- const layer=(name:string,depth:number,alpha=1)=>sprite(name,'carrot-'+name,frame.x,frame.y,art.width*frame.scaleX,depth)
+export function drawCarrotMaterials(g:Graphics,run:BladeRun,sprite:Sprite,frame:CarrotFrame,clock:number,reduced:boolean,prefix=''){
+ const elements=carrotElements(run.state.economy?.gear,run.state.evolution);
+ const layer=(name:string,depth:number,alpha=1)=>sprite(prefix+name,'carrot-'+name,frame.x,frame.y,art.width*frame.scaleX,depth)
   .setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setDisplaySize(art.width*frame.scaleX,art.height*frame.scaleY).setRotation(frame.angle).setAlpha(alpha);
  if(elements.poison){layer('poison-body',26.06,elements.poison===2?1:.84);if(!elements.frost&&!elements.electric)layer('poison-leaves',26.08,elements.poison===2?1:.84);}
  if(elements.fire)layer('fire-tip',26.10,elements.fire===2?1:.88);
+ if(elements.frost)layer('frost-grip',27.10,elements.frost===2?1:.88);
  if(elements.electric){
-  layer('electric-grip',26.12,elements.electric===2?1:.85);
+  if(!elements.frost)layer('electric-grip',26.12,elements.electric===2?1:.85);
   // Keep the registered lightning charm readable where the hand overlaps the hero.
   layer('electric-grip-front',27.15,elements.electric===2?1:.85);
  }

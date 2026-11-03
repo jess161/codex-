@@ -88,5 +88,7 @@ if (SOURCE/'fire-poison.png').exists():
 if (SOURCE/'electric-grip.png').exists():
     regional('electric-grip.png','electric-grip',[(-100,870,55)])
     regional('electric-grip.png','electric-grip-front',[(650,870,35)])
+if (SOURCE/'frost-grip.png').exists():
+    regional('frost-grip.png','frost-grip',[(-100,665,35)])
 (ROOT/'art/carrot-sword/normalized.json').write_text(json.dumps(records,indent=2)+'\n')
 print(f'Prepared {len(records)} registered sword images; silhouette has {len(outline)} vertices.')

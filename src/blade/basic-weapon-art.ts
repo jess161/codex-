@@ -41,15 +41,22 @@ export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|
 }
 export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image,clock=0,reduced=false,materialFx=g):DragContact|undefined{
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
- const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
+ const dual=s.evolution?.form==='dual',activeHand=s.swing?.hand??0;
+ const a=dual&&activeHand===1?s.aim+.9:pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
  const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
  sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  const frame={x,y,angle:a,scaleX:width/art.width,scaleY:height/art.height};
  const elements=drawCarrotMaterials(materialFx,run,sprite,frame,clock,reduced);
+ if(dual){
+  const angle=activeHand===1?pose.angle:s.aim-.9,c=Math.cos(angle),n=Math.sin(angle);
+  const x2=s.player.x+c*pose.hand,y2=s.player.y+n*pose.hand;
+  sprite('basic-weapon-offhand','blade-16',x2,y2,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(angle).setDisplaySize(width,height);
+  drawCarrotMaterials(materialFx,run,sprite,{x:x2,y:y2,angle,scaleX:width/art.width,scaleY:height/art.height},clock,reduced,'offhand-');
+ }
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
-  const trailEnd=swingPhase(s.swing).phase==='strike'?a:s.swing.angle+arc/2;
+  const trailEnd=swingPhase(s.swing).phase==='strike'?pose.angle:s.swing.angle+arc/2;
   const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0x6fd1fa:elements.poison?0x87db3d:0xf2a04f;
   const arcLight=elements.fire?0xffd477:elements.frost?0xf0fcff:elements.electric?0xffef9c:elements.poison?0xe0ffad:0xffe2a4;
   g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();

@@ -136,8 +136,8 @@ export class BattleScene extends Phaser.Scene {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
       const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active' || event.source==='gear');
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
-      if(event.type==='hit'&&event.source==='melee'&&this.run?.bladeId==='knife'&&this.carrotHits.length<(this.simplified?12:24)){
-        this.carrotHits.push({x,y,age:0,elements:carrotElements(this.run.state.economy?.gear)});
+      if(event.type==='hit'&&(event.source==='melee'||event.source==='wave')&&this.run?.bladeId==='knife'&&this.carrotHits.length<(this.simplified?12:24)){
+        this.carrotHits.push({x,y,age:0,elements:carrotElements(this.run.state.economy?.gear,this.run.state.evolution)});
       }
       if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='gear-proc'){
@@ -214,7 +214,7 @@ export class BattleScene extends Phaser.Scene {
     const effort = Math.min(1, Math.max(0, stats.mass - 1) / 2.4);
     const strain = phase ? effort * (phase.phase === 'recovery' ? 1 - phase.progress * .75 : phase.phase === 'windup' ? .45 + phase.progress * .55 : 1) : 0;
     this.effortLevel = strain;
-    const frozen = this.pausedRun || this.impactStopped || ['relic', 'relic-trim', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
+    const frozen = this.pausedRun || this.impactStopped || ['upgrade', 'relic', 'relic-trim', 'evolving', 'boss-intro'].includes(s.mode), fxDt = frozen ? 0 : dt;
     const moving = !frozen && (s.dashTime > 0 || Math.hypot(s.velocity.x, s.velocity.y) > .1);
     const walkFrequency = 11 / (1 + effort * .5);
     const bob = this.reducedMotion || !moving ? 0 : Math.sin(this.clock * walkFrequency) * (.8 + effort * 1.2);
@@ -401,12 +401,18 @@ export class BattleScene extends Phaser.Scene {
     }
     }
     for (const wave of s.waves) {
-      const color = TIERS[wave.tier].hex;
+      const elements=carrotElements(s.economy?.gear,s.evolution);
+      const color = s.evolution?(elements.fire?0xf48b4f:elements.frost?0x9ddffc:elements.electric?0xb0b4ff:elements.poison?0x93d44e:0xffb251):TIERS[wave.tier].hex;
       const shape = waveDimensions(wave, run.mastery), radius = shape.radius, stroke = Math.sqrt(shape.scale);
       g.beginPath().lineStyle((wave.kind === 'getsuga' ? 12 : 7) * stroke, color, .16).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
       if (wave.kind === 'getsuga') g.beginPath().lineStyle(7 * stroke, 0x3b2c48, .9).arc(wave.x, wave.y, radius - 2 * stroke, wave.angle - 1.05, wave.angle + 1.05).strokePath();
       g.beginPath().lineStyle(2.5 * stroke, color, .95).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
       g.beginPath().lineStyle(1.2 * stroke, 0xffffff, 1).arc(wave.x, wave.y, radius - stroke, wave.angle - 1.1, wave.angle + 1.1).strokePath();
+    }
+    if(s.evolution&&s.waves.length)for(const wave of s.waves){
+      const elements=carrotElements(s.economy?.gear,s.evolution);
+      if(elements.poison)g.fillStyle(0x91dc44,.9).fillCircle(wave.x-Math.cos(wave.angle)*8,wave.y-Math.sin(wave.angle)*8,2.5);
+      if(elements.frost)g.lineStyle(1.5,0xe0f8ff,.95).lineBetween(wave.x-3,wave.y-3,wave.x+3,wave.y+3).lineBetween(wave.x-3,wave.y+3,wave.x+3,wave.y-3);
     }
     if (s.relicState.shield) {
       g.fillStyle(0x82cee8, .08).fillCircle(s.player.x, s.player.y, 26);

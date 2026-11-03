@@ -11,6 +11,15 @@ import { FOODS, foodForRoll, isFoodId, type FoodId } from './food';
 import { shopEquipmentStats, equipmentStats, swingMoveFactor, type SwingTiming } from './equipment';
 import { PASSIVE_SIZE_LIMITS, passiveSize, waveDimensions } from './passive-size';
 import { freshEnemyEffects, freshPassive, passiveForTier, passiveRules, type BladeId, type EnemyEffects, type PassiveState } from './passives';
+import {freshEvolution,AUTO_GROWTH,EVOLUTION_LIMITS,type EvolutionState} from './evolution/types';
+import {WeaponEvolutionSystem,validEvolution} from './evolution/WeaponEvolutionSystem';
+import {WeaponFormSystem} from './evolution/WeaponFormSystem';
+import {AttackMutationSystem} from './evolution/AttackMutationSystem';
+import {ElementSystem,effectiveElements,elementCount,GEAR_ELEMENT,lightningStats} from './evolution/ElementSystem';
+import {ElementReactionSystem} from './evolution/ElementReactionSystem';
+import {optionAllowed} from './evolution/UpgradeOptionPool';
+import {OPTION_BY_ID,ULTIMATE_RULES,SWORD_WAVE} from './evolution/config';
+import {meetsRequirements} from './evolution/UltimateAwakeningSystem';
 
 export interface Point { x: number; y: number }
 export interface Enemy extends Point, EnemyEffects {
@@ -23,10 +32,11 @@ export interface Orb extends Point { id: number; value: number; kind: 'xp' | 'he
 export interface Bullet extends Point { id: number; vx: number; vy: number; life: number; kind?: 'orb' | 'spine'; damage?: number }
 export interface Wave extends Point { id: number; angle: number; distance: number; maxRange: number; damage: number; pierce: number; hit: number[]; tier: number; kind: 'basic' | 'moon' | 'getsuga'; radius?: number; hitRadius?: number; source?:'active'; boomerang?:boolean; returning?:boolean }
 export interface Shock extends Point { id: number; radius: number; gap: number }
-export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number }
-export type RunMode = 'playing' | 'evolving' | 'relic' | 'boss-intro' | 'relic-trim' | 'won' | 'dead';
+export interface Swing extends SwingTiming { id: number; angle: number; resolved: boolean; tier: number; followup?:boolean; hand?:number }
+export type RunMode = 'playing' | 'upgrade' | 'evolving' | 'relic' | 'boss-intro' | 'relic-trim' | 'won' | 'dead';
 export interface RunState {
-  version: 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15; build?: GearCombatState; economy?: EconomyState; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
+  evolution?:EvolutionState;
+  version: 8 | 9 | 10 | 11 | 12 | 13 | 14 | 15 | 16; build?: GearCombatState; economy?: EconomyState; classicTiming:boolean; relicLoot:RelicLootState; relicDrops:RelicDrop[]; lootRng:number; skipped:number; relicResume?: 'playing'|'evolving'|'relic'|'boss-intro'; relics: RelicInventory; relicState: RelicState; blade: number; forgeAwakening: boolean; id: string; seed: number; rng: number; nextId: number; mode: RunMode;
   time: number; bossTime: number; bossStarted: boolean; transition: number; eliteIndex: number; spawnBudget: number;
   player: Point; direction: Point; velocity: Point; hp: number; maxHp: number; invincible: number; dashTime: number; dashCooldown: number;
   level: number; xp: number; totalXp: number; formStartedAt: number; perks: Record<PerkId, number>; pending: number[]; choices: RelicId[]; evolutionTime: number;
@@ -35,7 +45,7 @@ export interface RunState {
   hazards?: Hazard[]; enemies: Enemy[]; orbs: Orb[]; bullets: Bullet[]; waves: Wave[]; shocks: Shock[];
   kills: number; eliteKills: number; bestCleave: number; bossHits: number; recentKills: number[]; maxCombo: number; failure: string;
 }
-export type RunEvent = { type: 'gear-proc' | 'gear-sell' | 'coin' | 'gear-buy' | 'shot' | 'bow-blast' | 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; procKind?: 'lightning' | 'fire-burst'; gearId?: GearId; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: DamageSource };
+export type RunEvent = { type: 'gear-proc' | 'gear-sell' | 'coin' | 'gear-buy' | 'shot' | 'bow-blast' | 'slash' | 'hit' | 'kill' | 'pickup' | 'hurt' | 'dash' | 'level' | 'evolve' | 'boss' | 'win' | 'passive' | 'relic' | 'blast' | 'active' | 'item-drop' | 'item-pickup'; procKind?: 'lightning' | 'fire-burst' | 'reaction'; reaction?:string; gearId?: GearId; relicId?:RelicId;rank?:number;lootKind?:'gain'|'upgrade'|'overflow'; activePhase?:'cast'|'pulse'|'heal'; pulseKind?:ActivePulse['kind']; angle?:number; arc?:number; item?: 'thunder' | 'shield' | 'vortex' | 'phoenix'; critical?:boolean; food?:FoodId; toX?: number; toY?: number; x?: number; y?: number; amount?: number; tier?: number; elite?: boolean; skill?: BladeId; radius?: number; size?: number; detail?: 'ready' | 'break'; enemyKind?: EnemyKind; enemyId?: number; lethal?: boolean; source?: DamageSource };
 export type DamageSource = 'melee' | 'wave' | 'passive' | 'burn' | 'poison' | 'relic' | 'active' | 'gear';
 export interface MoveInput { x: number; y: number; dash: boolean; active?:boolean }
 export class SpatialGrid {
@@ -67,7 +77,8 @@ export class BladeRun {
   private rulesMastery = -1;
   private cachedRules = passiveRules();
   constructor(seed = Date.now() >>> 0, snapshot?: RunState, blade: number = DEFAULT_WEAPON) {
-    if (!Number.isInteger(blade) || !isBasicWeapon(blade)) blade = DEFAULT_WEAPON;
+    // New runs have exactly one fixed main weapon. Historical bow code stays available.
+    blade = DEFAULT_WEAPON;
     this.state = snapshot ? structuredClone(snapshot) : {
       version: isBasicWeapon(blade) ? SAVE_VERSION : 8, ...(isBasicWeapon(blade) ? {economy: freshEconomy(), build: freshGearCombat()} : {}), classicTiming:false,relicLoot:freshRelicLoot(seed),relicDrops:[],lootRng: (seed ^ 0xa5b35705) >>> 0, skipped:0, relics: freshRelics(), relicState: freshRelicState(), blade, forgeAwakening: false, id: `${Date.now()}-${seed}`, seed, rng: seed || 1, nextId: 1, mode: 'playing',
       time: 0, bossTime: 0, bossStarted: false, transition: 0, eliteIndex: 0, spawnBudget: 0,
@@ -79,6 +90,7 @@ export class BladeRun {
       kills: 0, eliteKills: 0, bestCleave: 0, bossHits: 0, recentKills: [], maxCombo: 0, failure: '',
     };
     this.state.active ??= freshActive();
+    this.state.evolution ??= freshEvolution();
     if (this.state.version === SAVE_VERSION) this.state.build ??= freshGearCombat();
     if(isBow(this.state.blade))this.state.archery??=freshArchery();
     if (!snapshot) for (let i = 0; i < 3; i++) {
@@ -105,7 +117,26 @@ export class BladeRun {
   get activeInfo() { return isBasicWeapon(this.tier) ? null : ACTIVE_SKILLS[this.bladeId as keyof typeof ACTIVE_SKILLS]; }
   get passiveInfo() { return passiveForTier(this.tier, this.mastery); }
   get passiveSize() { return passiveSize(this.stats, this.rules); }
-  get stats() { return this.state.economy ? shopEquipmentStats(this.state.level, this.tier, this.state.economy.gear) : this.statsForRelics(this.state.relics); }
+  get stats() {
+    const base=this.state.economy ? shopEquipmentStats(this.state.level, this.tier, this.state.economy.gear) : this.statsForRelics(this.state.relics);
+    return this.state.evolution?WeaponFormSystem.stats(base,this.state.evolution):base;
+  }
+  get evolutionContext(){return {state:this.state.evolution!,gear:this.state.economy?.gear};}
+  get elements(){return effectiveElements(this.evolutionContext);}
+  get lightning(){return lightningStats(this.elements,this.state.level);}
+  get maxLevel(){return this.state.evolution?AUTO_GROWTH.levels:MAX_LEVEL;}
+  get targetRange(){return this.state.evolution&&WeaponFormSystem.hasWave(this.state.evolution)?Math.max(SWORD_WAVE.range,this.stats.range):this.stats.range;}
+  gearBlock(value:GearId){
+    const e=this.state.economy;if(!e)return '当前无法购买';
+    const element=GEAR_ELEMENT[value];
+    if(element&&!this.elements[element]&&elementCount(this.elements)>=EVOLUTION_LIMITS.elements)return '元素槽已满（最多 3 种）';
+    return gearBlockReason(e,value);
+  }
+  chooseUpgrade(id:string){
+    if(this.state.mode!=='upgrade'||!WeaponEvolutionSystem.choose(this.evolutionContext,id))return false;
+    this.state.mode='playing';this.syncGearCharge();this.state.invincible=Math.max(this.state.invincible,.6);
+    return true;
+  }
   statsForRelics(items: RelicInventory) {
     const stats = equipmentStats(this.state.level, this.state.perks, this.tier, items);
     if(!this.state.classicTiming)stats.damage=Math.round(stats.damage*(1+.02*(this.state.level-1)));
@@ -128,7 +159,7 @@ export class BladeRun {
   get coinRange() { return 48; }
   buyGear(value: unknown) {
     const s = this.state, e = s.economy;
-    if (!e || s.mode !== 'playing' || !isGearId(value) || gearBlockReason(e, value)) return false;
+    if (!e || s.mode !== 'playing' || !isGearId(value) || this.gearBlock(value)) return false;
     const price=gearPrice(value),from=GEAR[value].from;
     if (e.wallet < price) return false;
     e.wallet -= price; e.spent += price;
@@ -152,18 +183,18 @@ export class BladeRun {
   }
   private syncGearCharge(){
     const s=this.state;if(!s.economy||!s.build)return;
-    const profile=lightningProfile(s.economy.gear,s.level);
-    s.build.lightning=profile.enabled?Math.min(s.build.lightning,profile.attacks):0;
+    const profile=s.evolution?this.lightning:lightningProfile(s.economy.gear,s.level);
+    s.build.lightning=profile.enabled?Math.min(s.build.lightning,profile.attacks-1):0;
   }
   private chargeSeasoning(){
     const s=this.state;if(!s.economy||!s.build||s.mode!=='playing')return;
-    const profile=lightningProfile(s.economy.gear,s.level);
+    const profile=s.evolution?this.lightning:lightningProfile(s.economy.gear,s.level);
     if(!profile.enabled||++s.build.lightning<profile.attacks)return;
     s.build.lightning=0;
     const hit=new Set<number>(),damage=Math.max(1,Math.round(this.stats.damage*profile.damage));
     let from:Point=s.player;
     for(let hop=0;hop<profile.targets&&s.mode==='playing';hop++){
-      const reach=hop?profile.hopRange:this.stats.range;
+      const reach=hop?profile.hopRange:this.targetRange;
       const target=s.enemies.filter(e=>e.hp>0&&e.spawn<=0&&!hit.has(e.id)&&Math.hypot(e.x-from.x,e.y-from.y)<=reach+e.radius)
         .sort((a,b)=>Math.hypot(a.x-from.x,a.y-from.y)-Math.hypot(b.x-from.x,b.y-from.y)||a.id-b.id)[0];
       if(!target)break;
@@ -173,6 +204,7 @@ export class BladeRun {
     }
   }
   private seasoningHit(e:Enemy){
+    if(this.state.evolution){ElementSystem.apply(e,this.elements,this.stats.damage);return;}
     const gear=this.state.economy?.gear;if(!gear)return;
     const damage=this.stats.damage,fire=fireProfile(gear),poison=poisonProfile(gear);
     if(fire.enabled){
@@ -194,6 +226,24 @@ export class BladeRun {
     // Secondary damage bypasses all seasoning on-hit effects and further death bursts.
     const targets=s.enemies.filter(e=>e.id!==origin.id&&e.hp>0&&e.spawn<=0&&Math.hypot(e.x-origin.x,e.y-origin.y)<=radius+e.radius);
     for(const target of targets)if(s.mode==='playing')this.hitEnemy(target,damage,0,'gear');
+  }
+  private evolutionReaction(origin:Enemy){
+    const s=this.state;if(!s.evolution||s.mode!=='playing')return;
+    const reaction=ElementReactionSystem.trigger(s.evolution,this.elements,s.time+s.bossTime);if(!reaction)return;
+    const damage=Math.max(1,Math.round(this.stats.damage*reaction.damage));
+    this.events.push({type:'gear-proc',procKind:'reaction',reaction:reaction.id,x:origin.x,y:origin.y,radius:reaction.radius,amount:damage});
+    for(const target of this.grid.query(origin.x,origin.y,reaction.radius+45)){
+      if(s.mode!=='playing')break;
+      if(target.hp<=0||target.spawn>0||Math.hypot(target.x-origin.x,target.y-origin.y)>reaction.radius+target.radius)continue;
+      if(reaction.slow){target.slow=Math.max(target.slow,target.kind==='boss'||target.kind==='elite'?.15:reaction.slow);target.slowTime=Math.max(target.slowTime,1.2);}
+      // Secondary damage never reapplies elements, reactions, crits or death explosions.
+      this.hitEnemy(target,damage,0,'gear');
+    }
+  }
+  private evolutionWave(angle:number){
+    const s=this.state,e=s.evolution;if(!e||s.waves.length>=32)return;
+    s.waves.push({id:s.nextId++,x:s.player.x,y:s.player.y,angle,distance:0,maxRange:SWORD_WAVE.range,
+      damage:Math.max(1,Math.round(this.stats.damage*SWORD_WAVE.damage)),pierce:AttackMutationSystem.wavePierce(e),hit:[],tier:this.tier,kind:'basic',radius:SWORD_WAVE.radius,hitRadius:SWORD_WAVE.hitRadius});
   }
   get isRanged(){return isBow(this.tier);}
   get archery(){return this.state.archery??=freshArchery();}
@@ -294,7 +344,7 @@ export class BladeRun {
     this.state.waves = [];
   }
   get formRemaining() { return Math.max(0, this.practiceTime - (this.state.time + this.state.bossTime - this.state.formStartedAt)); }
-  get holdingXp() { return TIER_LEVELS.includes(this.state.level + 1) && this.state.xp >= this.xpNeeded && this.formRemaining > .001; }
+  get holdingXp() { return !this.state.evolution && TIER_LEVELS.includes(this.state.level + 1) && this.state.xp >= this.xpNeeded && this.formRemaining > .001; }
   random() {
     let t = this.state.rng += 0x6d2b79f5;
     this.state.rng >>>= 0;
@@ -324,9 +374,10 @@ export class BladeRun {
   }
   private processXp() {
     const s = this.state;
-    while (s.level < MAX_LEVEL && s.xp >= this.xpNeeded) {
+    while (s.level < this.maxLevel && s.xp >= this.xpNeeded) {
+      if(s.evolution && s.time+s.bossTime < s.level*AUTO_GROWTH.interval)break;
       const evolves = TIER_LEVELS.includes(s.level + 1);
-      if (evolves && this.formRemaining > .0001) break;
+      if (!s.evolution && evolves && this.formRemaining > .0001) break;
       s.xp -= this.xpNeeded; s.level++;
       s.maxHp+=2;this.heal(evolves?EVOLUTION_HEAL+2:2);
       this.events.push({ type: 'level', amount: s.level });
@@ -341,7 +392,7 @@ export class BladeRun {
       }
       if(evolves)this.events.push({type:'evolve',tier:this.tier,amount:this.mastery});
     }
-    if (s.level === MAX_LEVEL) s.xp = 0;
+    if (s.level === this.maxLevel) s.xp = 0;
     this.convertSpentDrops();
   }
   get availableRelics() {
@@ -572,7 +623,7 @@ export class BladeRun {
       e.knockY += Math.sin(angle) * this.stats.knockback * 16 * resistance;
     }
     this.events.push({ type: 'hit', x: e.x, y: e.y, amount, elite: e.kind === 'elite' || e.kind === 'boss', enemyKind: e.kind, enemyId:e.id, lethal: e.hp <= 0, source, critical });
-    if (e.hp > 0) return false;
+    if (e.hp > 0) {if(normal)this.evolutionReaction(e);return false;}
     this.events.push({ type: 'kill', enemyKind:e.kind, enemyId:e.id, source, x: e.x, y: e.y, tier: this.tier, elite: e.kind === 'elite' || e.kind === 'boss' });
     const p = s.passive;
     if (this.bladeId === 'scrap') {
@@ -608,6 +659,7 @@ export class BladeRun {
     s.recentKills.push(s.time + s.bossTime);
     this.addOrb(e.x, e.y, e.xp, 'xp');
     if(s.economy&&(normal||source==='burn')&&(e.burnTime>0||source==='burn'))this.seasoningBurst(e);
+    if(normal)this.evolutionReaction(e);
     return true;
   }
   private resolveMelee(angle: number) {
@@ -688,7 +740,7 @@ export class BladeRun {
     e.stun = Math.max(0, e.stun - dt); e.chill = Math.max(0, e.chill - dt); e.slowTime = Math.max(0, e.slowTime - dt);
     if (e.chill === 0) e.chillStacks = 0;
     if (e.slowTime === 0) e.slow = 0;
-    if (e.burnTime > 0) {
+    if (!this.state.evolution && e.burnTime > 0) {
       const burnDt = Math.min(dt, e.burnTime);
       e.burnTime = Math.max(0, e.burnTime - dt); e.burnTick -= burnDt;
       while (e.burnTick <= .000001 && e.hp > 0 && this.state.mode === 'playing') {
@@ -699,7 +751,7 @@ export class BladeRun {
     }
   }
   private updatePoison(e:Enemy,dt:number) {
-    if(e.poisonTime<=0)return;
+    if(this.state.evolution||e.poisonTime<=0)return;
     const poisonDt=Math.min(dt,e.poisonTime);e.poisonTime=Math.max(0,e.poisonTime-dt);if(e.poisonTime<.000001)e.poisonTime=0;e.poisonTick-=poisonDt;
     while(e.poisonTick<=.000001 && e.hp>0 && this.state.mode==='playing'){e.poisonTick+=.5;this.hitEnemy(e,e.poisonDamage,0,'poison');}
     if(e.poisonTime===0){e.poisonDamage=0;e.poisonTick=.5;e.poisonStacks=0;}
@@ -749,6 +801,7 @@ export class BladeRun {
     const s = this.state;
     e.hit = Math.max(0, e.hit - dt); e.reveal = Math.max(0, (e.reveal ?? 0) - dt); e.age += dt;
     if (e.spawn > 0) { e.spawn = Math.max(0, e.spawn - dt); return; }
+    if(s.evolution)ElementSystem.tickDots(e,effectsDt,(damage,source)=>this.hitEnemy(e,damage,0,source),()=>s.mode==='playing');
     this.updateEnemyEffects(e, effectsDt);
     if (e.hp <= 0 || s.mode !== 'playing') return;
     if (e.freeze > 0 || e.stun > 0) {
@@ -829,7 +882,7 @@ export class BladeRun {
   step(dt: number, input: MoveInput) {
     this.events = []; this.passiveFxCount = 0;
     const s = this.state;
-    if (s.mode === 'won' || s.mode === 'dead' || s.mode === 'relic' || s.mode === 'relic-trim') return;
+    if (s.mode === 'upgrade' || s.mode === 'won' || s.mode === 'dead' || s.mode === 'relic' || s.mode === 'relic-trim') return;
     this.syncPassive();
     if (s.mode === 'evolving') { s.evolutionTime -= dt; if (s.evolutionTime <= 0) s.mode = 'relic'; return; }
     if (s.mode === 'boss-intro') {
@@ -840,6 +893,9 @@ export class BladeRun {
     if (s.bossStarted) { s.bossTime = Math.min(this.bossDuration, s.bossTime + dt); if (s.bossTime >= this.bossDuration) { s.mode = 'dead'; s.failure = '首领战时间耗尽'; return; } }
     else { s.time = Math.min(this.duration, s.time + dt); if (s.time >= this.duration) { this.beginBoss(); return; } }
     this.processXp();
+    if(s.evolution&&WeaponEvolutionSystem.due(this.evolutionContext,s.time+s.bossTime)){
+      WeaponEvolutionSystem.open(this.evolutionContext);s.mode='upgrade';return;
+    }
     s.invincible = Math.max(0, s.invincible - dt); s.dashCooldown = Math.max(0, s.dashCooldown - dt);
     this.updatePassive(dt); this.updateRelics(dt); this.updateActive(dt);
     if(s.mode!=='playing')return;
@@ -899,15 +955,24 @@ export class BladeRun {
           s.aim=s.swing.angle;shootBow(this.bowHost(),s.aim);
         }else cleave=this.resolveMelee(s.swing.angle);
         s.bestCleave = Math.max(s.bestCleave, cleave);
-        s.attackCount++;
-        // One charge at attack release, including misses. Never count hit targets or DoT ticks.
-        this.chargeSeasoning();
+        if(s.evolution&&WeaponFormSystem.hasWave(s.evolution))for(const spread of AttackMutationSystem.waveSpreads(s.evolution))this.evolutionWave(s.swing.angle+spread);
+        if(!s.swing.followup){
+          s.attackCount++;
+          // A whole normal-attack cycle charges once; extra blades, hits and DoTs do not.
+          this.chargeSeasoning();
+          if(s.evolution)s.evolution.queuedSlashes=AttackMutationSystem.slashCount(s.evolution)-1;
+        }
         if (stats.waveEvery && s.attackCount % stats.waveEvery === 0) this.createWave(s.swing.angle, Math.round(stats.damage * .6), stats.waveRange, stats.pierce);
       }
       if (s.swing.age > s.swing.windup + s.swing.strike + s.swing.recovery) s.swing = null;
     }
+    if(!s.swing&&s.evolution&&s.evolution.queuedSlashes>0){
+      const hand=(AttackMutationSystem.slashCount(s.evolution)-s.evolution.queuedSlashes)%2;
+      s.evolution.queuedSlashes--;
+      s.swing={id:s.nextId++,angle:s.aim,age:0,resolved:false,tier:this.tier,windup:stats.windup,strike:stats.strike,recovery:stats.recovery,followup:true,hand};
+    }
     if (s.attackTimer <= 0 && !s.swing) {
-      const targets = this.grid.query(s.player.x, s.player.y, stats.range + 45).filter(e => e.hp > 0 && e.spawn <= 0 && this.targetOnScreen(e) && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= stats.range + e.radius);
+      const targets = this.grid.query(s.player.x, s.player.y, this.targetRange + 45).filter(e => e.hp > 0 && e.spawn <= 0 && this.targetOnScreen(e) && Math.hypot(e.x - s.player.x, e.y - s.player.y) <= this.targetRange + e.radius);
       targets.sort((a, b) => Math.hypot(a.x - s.player.x, a.y - s.player.y) - Math.hypot(b.x - s.player.x, b.y - s.player.y) || a.id - b.id);
       let target = targets[0]; const existing = targets.find(e => e.id === s.targetId);
       if (existing && target && Math.hypot(existing.x - s.player.x, existing.y - s.player.y) < Math.hypot(target.x - s.player.x, target.y - s.player.y) * 1.25) target = existing;
@@ -916,11 +981,15 @@ export class BladeRun {
         s.swing = { id: s.nextId++, angle: s.aim, age: 0, resolved: false, tier: this.tier, windup: stats.windup, strike: stats.strike, recovery: stats.recovery };
       }
     }
+    if(s.evolution?.ultimate==='myriad'&&s.time+s.bossTime>=s.evolution.orbitReady&&s.enemies.some(e=>e.hp>0&&e.spawn<=0)){
+      s.evolution.orbitReady=s.time+s.bossTime+ULTIMATE_RULES.myriad[s.evolution.ultimateRank===2?1:0].orbitCooldown;
+      for(let i=0;i<4;i++)this.evolutionWave(s.aim+i*Math.PI/2);
+    }
     if(this.isRanged)stepArchery(this.bowHost(),dt);
     if(s.mode!=='playing')return;
     for (const wave of s.waves) {
       if(wave.returning)wave.angle=Math.atan2(s.player.y-wave.y,s.player.x-wave.x);
-      const ox = wave.x, oy = wave.y, length = Math.min(420 * dt, wave.returning?Math.hypot(s.player.x-wave.x,s.player.y-wave.y):wave.maxRange - wave.distance);
+      const ox = wave.x, oy = wave.y, length = Math.min((s.evolution?SWORD_WAVE.speed:420) * dt, wave.returning?Math.hypot(s.player.x-wave.x,s.player.y-wave.y):wave.maxRange - wave.distance);
       wave.x += Math.cos(wave.angle) * length; wave.y += Math.sin(wave.angle) * length; wave.distance += length;
       const hitRadius = waveDimensions(wave, this.mastery).hitRadius;
       const candidates = this.grid.query(wave.x, wave.y, length + 45 + hitRadius).filter(e => e.hp > 0 && e.spawn <= 0 && !wave.hit.includes(e.id));
@@ -996,8 +1065,8 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (!value || typeof value !== 'object') return false;
   const s = value as RunState;
   const finite = (v: unknown) => typeof v === 'number' && Number.isFinite(v);
-  if (s.version !== (legacy || (s.economy ? SAVE_VERSION : 8)) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','boss-intro']).includes(s.mode)) return false;
-  if (s.economy && (s.version!==SAVE_VERSION || !isBasicWeapon(s.blade) || !validEconomy(s.economy) || !validGearCombat(s.build) || s.classicTiming || Object.values(s.perks ?? {}).some(v => v !== 0) || Object.values(s.relics ?? {}).some(v => v !== 0) || s.relicDrops?.length || s.waves?.length || s.active?.casts || s.active?.buff || s.active?.fields?.length || s.active?.pending?.length)) return false;
+  if (s.version !== (legacy || (s.economy ? SAVE_VERSION : 8)) || !Number.isInteger(s.blade) || s.blade < 0 || s.blade >= (legacy?12:TIERS.length) || typeof s.forgeAwakening !== 'boolean' || typeof s.id !== 'string' || !(legacy?['playing','evolving',legacy===5?'forge':'relic','boss-intro',...(legacy===7?['relic-trim']:[])]:['playing','upgrade','boss-intro']).includes(s.mode)) return false;
+  if (s.economy && (s.version!==SAVE_VERSION || s.blade!==DEFAULT_WEAPON || !validEvolution(s.evolution) || !validEconomy(s.economy) || !validGearCombat(s.build) || s.classicTiming || Object.values(s.perks ?? {}).some(v => v !== 0) || Object.values(s.relics ?? {}).some(v => v !== 0) || s.relicDrops?.length || s.active?.casts || s.active?.buff || s.active?.fields?.length || s.active?.pending?.length)) return false;
   if (!s.player || !finite(s.player.x) || !finite(s.player.y) || !s.direction || !finite(s.direction.x) || !finite(s.direction.y)) return false;
   if (!s.velocity || !finite(s.velocity.x) || !finite(s.velocity.y) || Math.hypot(s.velocity.x, s.velocity.y) > 1000) return false;
   for (const key of ['time', 'bossTime', 'hp', 'maxHp', 'level', 'xp', 'totalXp', 'formStartedAt', 'rng', 'seed', 'nextId', 'targetId', 'attackTimer', 'attackCount', 'dashTime', 'dashCooldown', 'invincible', 'aim', 'eliteIndex', 'spawnBudget', 'evolutionTime', 'transition', 'kills', 'eliteKills', 'bestCleave', 'bossHits', 'maxCombo'] as const) if (!finite(s[key])) return false;
@@ -1042,11 +1111,17 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   const enemyNumbers = ['hp', 'maxHp', 'radius', 'damage', 'speed', 'xp', 'hit', 'spawn', 'age', 'cooldown', 'timer', 'angle', 'move', 'targetX', 'targetY', 'knockX', 'knockY'] as const;
   if (s.enemies.some(e => !Object.hasOwn(ENEMIES, e.kind) || enemyNumbers.some(k => !finite(e[k])) || !['idle', 'windup', 'charge', 'recover'].includes(e.action))) return false;
   const effectKeys = (Object.keys(freshEnemyEffects()) as (keyof EnemyEffects)[]).filter(k=>!legacy||!k.startsWith('poison'));
-  if (s.enemies.some(e => effectKeys.some(k => !finite(e[k]) || e[k] < 0) || !Number.isInteger(e.chillStacks) || e.chillStacks > 3 || !Number.isInteger(e.dragonHits) || e.dragonHits > 2 || e.slow > 1 || e.burnTime > 4.001 || e.burnTick > .501 || e.hunt > 6.001 || e.chill > 3.001 || e.freeze > 1.401 || e.freezeCooldown > 4.001 || e.stun > 1.201 || e.slowTime > (s.blade===13?2.301:1.201))) return false;
+  if (s.enemies.some(e => effectKeys.some(k => !finite(e[k]) || e[k] < 0) || !Number.isInteger(e.chillStacks) || e.chillStacks > 3 || !Number.isInteger(e.dragonHits) || e.dragonHits > 2 || e.slow > 1 || e.burnTime > 4.001 || e.burnTick > .501 || e.hunt > 6.001 || e.chill > 3.001 || e.freeze > 1.401 || e.freezeCooldown > 4.001 || e.stun > 1.201 || e.slowTime > (s.evolution?2.001:s.blade===13?2.301:1.201))) return false;
   if(!legacy && s.enemies.some(e=>e.poisonTime>(s.economy?5.001:2.501)||e.poisonTick>.501))return false;
   if(s.economy){
-    const profile=lightningProfile(s.economy.gear,s.level);
-    if(s.build!.lightning>(profile.enabled?profile.attacks:0))return false;
+    const context={state:s.evolution!,gear:s.economy.gear},ranks=effectiveElements(context);
+    if(elementCount(ranks)>3)return false;
+    if(s.level>AUTO_GROWTH.levels)return false;
+    if(s.evolution!.offers.length&&s.evolution!.stage>=6)return false;
+    if(s.evolution!.offers.some(id=>!optionAllowed(context,OPTION_BY_ID[id]!))||(s.mode==='upgrade')!==Boolean(s.evolution!.offers.length))return false;
+    if(s.evolution!.ultimate&&!meetsRequirements(context,OPTION_BY_ID['ultimate:'+s.evolution!.ultimate]!.requires))return false;
+    const profile=lightningStats(ranks,s.level);
+    if(s.build!.lightning>(profile.enabled?profile.attacks-1:0))return false;
     if(s.maxHp!==100+2*(s.level-1))return false;
     if(s.enemies.some(e=>e.poisonStacks!==undefined&&(!Number.isInteger(e.poisonStacks)||e.poisonStacks<0||e.poisonStacks>5)
       ||e.fireBurstDamage!==undefined&&(!finite(e.fireBurstDamage)||e.fireBurstDamage<0||e.fireBurstDamage>1e6)
@@ -1059,6 +1134,7 @@ function validateRun(value: unknown, legacy: 0|5|6|7 = 0): boolean {
   if (s.waves.some(w => w.source!==undefined&&w.source!=='active' || w.boomerang!==undefined&&typeof w.boomerang!=='boolean' || w.returning!==undefined&&(typeof w.returning!=='boolean'||!w.boomerang) || !finite(w.angle) || !finite(w.distance) || !finite(w.maxRange) || !finite(w.damage) || !Number.isInteger(w.pierce) || w.pierce < 1 || w.pierce > 24 || !Number.isInteger(w.tier) || w.tier < 0 || w.tier >= TIERS.length || !['basic', 'moon', 'getsuga'].includes(w.kind) || !Array.isArray(w.hit) || w.hit.length > w.pierce || w.hit.some(id => !finite(id)))) return false;
   if (s.waves.some(w => w.radius !== undefined && (!finite(w.radius) || w.radius <= 0 || w.radius > 252) || w.hitRadius !== undefined && (!finite(w.hitRadius) || w.hitRadius <= 0 || w.hitRadius > 60))) return false;
   if (s.shocks.some(shock => !finite(shock.radius) || !finite(shock.gap))) return false;
+  if(s.swing&&(s.swing.followup!==undefined&&typeof s.swing.followup!=='boolean'||s.swing.hand!==undefined&&(!Number.isInteger(s.swing.hand)||s.swing.hand<0||s.swing.hand>1)))return false;
   if (s.swing && (!finite(s.swing.id) || !finite(s.swing.age) || !finite(s.swing.angle) || !Number.isInteger(s.swing.tier) || s.swing.tier < 0 || s.swing.tier >= TIERS.length || typeof s.swing.resolved !== 'boolean' || ['windup', 'strike', 'recovery'].some(k => !finite(s.swing![k as keyof Swing]) || Number(s.swing![k as keyof Swing]) <= 0 || Number(s.swing![k as keyof Swing]) > 1))) return false;
   if (!Array.isArray(s.recentKills) || s.recentKills.some(t => !finite(t))) return false;
   return true;

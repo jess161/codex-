@@ -4,7 +4,7 @@
   "reference": "art/carrot-sword/reference.png",
   "reference_source": "User uploaded carrot-sword design sheet, used for the requested redesign.",
   "reference_sha256": "b0f9dafd514362aafd4cc0cb83db2006416dcf6a73103d497074e50452f95c18",
-  "actual_imagegen_calls": 3,
+  "actual_imagegen_calls": 4,
   "normalization": "scripts/prepare-carrot-sword-assets.py",
   "native_preview": "art/carrot-sword/native-preview.png",
   "assets": [
@@ -300,6 +300,56 @@
         "raw_sha256": "01dd261564f49b509332a86ca780a8ade2ffb9f6854528c111af25b8bc381044",
         "reference": "art/carrot-sword/source/base.png"
       }
+    },
+    {
+      "id": "frost-grip",
+      "path": "src/blade/assets/carrot-sword/materials/frost-grip.webp",
+      "source": "frost-grip.png",
+      "size": [
+        2172,
+        724
+      ],
+      "grip": [
+        500,
+        365
+      ],
+      "physical_tip": [
+        2112,
+        365
+      ],
+      "alpha_bounds": [
+        38,
+        23,
+        665,
+        674
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "bytes": 257694,
+      "sha256": "b15f44e6ea1b67695aded07089772939d7903fb141fecc9139b31b6ae545d616",
+      "windows": [
+        [
+          -100,
+          665,
+          35
+        ]
+      ],
+      "frames": 1,
+      "anchor": "registered hand grip",
+      "filtering": "linear",
+      "color_space": "sRGB",
+      "collision": "visual only; form system controls the melee sector",
+      "status": "integrated; static artwork reviewed; runtime not reviewed",
+      "source_record": {
+        "tool": "image_gen.imagegen",
+        "model_version": "not disclosed",
+        "raw": "art/carrot-sword/source/frost-grip.png",
+        "prompt": "art/carrot-sword/source/frost-grip-prompt.txt",
+        "raw_sha256": "a07ff67888eec99c0c1a20019fda5a4d56d33783133a7221317ca1b5c232e539",
+        "reference": "art/carrot-sword/source/base.png"
+      }
     }
   ],
   "review": {
@@ -312,11 +362,12 @@
     "gameplay": false
   },
   "retained": {
-    "level_one_grip_to_tip": 48.8,
-    "level_one_player_to_tip": 64.8,
+    "level_one_grip_to_tip": 39.04,
+    "level_one_player_to_tip": 55.04,
     "sweep_degrees": 45,
-    "banana_art": "approved A group",
-    "frost_gameplay": false
+    "banana_art": "approved A group, retained but inactive in new runs",
+    "frost_gameplay": true
   },
-  "terms": "User-provided reference for requested editing; no additional permission or open license asserted. OpenAI image generation service terms apply. Raw generated PNGs preserved."
+  "terms": "User-provided reference for requested editing; no additional permission or open license asserted. OpenAI image generation service terms apply. Raw generated PNGs preserved.",
+  "frost_preview": "art/carrot-sword/frost-native-preview.png"
 }

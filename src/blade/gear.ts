@@ -18,9 +18,9 @@ export type GearId='seasoningTin'|'pepperPowder'|'chiliSauce'|'mushroomSauce'|'t
 interface GearDefinition {name:string;category:GearCategory;rarity:GearRarity;price:number;upgradeCost:number;from:GearId|null;effect:string;note:string}
 // price is the total investment; upgradeCost is the gold paid at this step.
 export const GEAR:Record<GearId,GearDefinition>={
- seasoningTin:{name:'小调味罐',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条调味路线共用的起点，胡萝卜剑与香蕉弓均生效。可购买多罐，分别升级为电、火、毒；升级原位替换，不额外占位置。'},
- pepperPowder:{name:'麻椒粉',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'seasoningTin',effect:'攻击力 +10；每 5 次普攻释放连锁闪电',note:'每次挥刀或射箭充能一次，挥空也计数，一刀命中多怪只计一次。每个目标受到 55% 攻击力的电伤；初始连接 4 个不同目标，Lv.8／15／22／29 各增加 1 个，最多 8 个。补 80 金币升级。'},
- chiliSauce:{name:'辣椒酱',category:'attack',rarity:'rare',price:95,upgradeCost:60,from:'seasoningTin',effect:'攻击力 +10；命中燃烧 3 秒；死亡爆燃',note:'胡萝卜横扫与瓜子箭命中施加燃烧，每 0.5 秒造成 8% 攻击力火伤，重复命中刷新 3 秒。燃烧目标被普攻或燃烧击败时，在 55 范围爆燃，造成 45% 攻击力伤害。爆燃不传火、不连爆。补 85 金币升级。'},
+ seasoningTin:{name:'小调味罐',category:'attack',rarity:'common',price:35,upgradeCost:35,from:null,effect:'攻击力 +6',note:'三条调味路线共用的起点，胡萝卜剑全部形态生效。可购买多罐，分别升级为电、火、毒；升级原位替换，不额外占位置。'},
+ pepperPowder:{name:'麻椒粉',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'seasoningTin',effect:'攻击力 +10；每 5 次普攻释放连锁闪电',note:'每轮普攻击发充能一次，连续斩击仍只充一次，挥空也计数，一刀命中多怪只计一次。每个目标受到 55% 攻击力的电伤；初始连接 4 个不同目标，Lv.6／11／16／21 各增加 1 个，最多 8 个。补 80 金币升级。'},
+ chiliSauce:{name:'辣椒酱',category:'attack',rarity:'rare',price:95,upgradeCost:60,from:'seasoningTin',effect:'攻击力 +10；命中燃烧 3 秒；死亡爆燃',note:'斩击与远程剑气命中施加燃烧，每 0.5 秒造成 8% 攻击力火伤，重复命中刷新 3 秒。燃烧目标被普攻或燃烧击败时，在 55 范围爆燃，造成 45% 攻击力伤害。爆燃不传火、不连爆。补 85 金币升级。'},
  mushroomSauce:{name:'幽绿菇酱',category:'attack',rarity:'rare',price:90,upgradeCost:55,from:'seasoningTin',effect:'攻击力 +10；命中叠毒，最多 5 层',note:'每次普攻命中叠 1 层毒并刷新 4 秒。每层每 0.5 秒造成 3.5% 攻击力毒伤，对精英与首领提高 25%；最多 5 层。重复命中不重置跳伤计时，适合持续消耗。补 85 金币升级。'},
  thunderSalt:{name:'雷鸣椒盐罐',category:'attack',rarity:'epic',price:170,upgradeCost:80,from:'pepperPowder',effect:'攻击力 +20；每 4 次普攻释放强化闪电',note:'每个不同目标受到 85% 攻击力电伤，弹射距离从 125 提升至 155。目标数随角色等级从 4 提升至 8。按攻击次数充能，横扫、多箭、元素伤害不会重复充能；升级保留充能，若已充满则下次攻击释放。'},
  volcanicSauce:{name:'火山辣酱罐',category:'attack',rarity:'epic',price:180,upgradeCost:85,from:'chiliSauce',effect:'攻击力 +20；强化燃烧与死亡爆燃',note:'普攻命中燃烧 3 秒，每 0.5 秒造成 14% 攻击力火伤；重复命中刷新。被普攻或燃烧击败的燃烧目标，在 75 范围爆燃，造成 80% 攻击力伤害。爆燃不叠毒、不充能、不引发后续爆燃。'},

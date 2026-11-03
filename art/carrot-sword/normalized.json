@@ -207,5 +207,41 @@
         35
       ]
     ]
+  },
+  {
+    "id": "frost-grip",
+    "path": "src/blade/assets/carrot-sword/materials/frost-grip.webp",
+    "source": "frost-grip.png",
+    "size": [
+      2172,
+      724
+    ],
+    "grip": [
+      500,
+      365
+    ],
+    "physical_tip": [
+      2112,
+      365
+    ],
+    "alpha_bounds": [
+      38,
+      23,
+      665,
+      674
+    ],
+    "alpha_extrema": [
+      0,
+      255
+    ],
+    "bytes": 257694,
+    "sha256": "b15f44e6ea1b67695aded07089772939d7903fb141fecc9139b31b6ae545d616",
+    "windows": [
+      [
+        -100,
+        665,
+        35
+      ]
+    ]
   }
 ]

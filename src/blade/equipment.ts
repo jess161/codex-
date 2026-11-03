@@ -67,6 +67,6 @@ export function shopEquipmentStats(level:number,blade:number,gear:import('./gear
   damage:Math.round((13+level-1)*t.multiplier*(1+.10*mastery)*(1+.02*(level-1))+gearAttack(gear)),
   interval:carrot?carrotInterval:Math.max(windup+strike+recovery+.015,base.interval*pace),windup,strike,recovery,range,lengthScale:(range-10)/(t.range-10),
   widthScale,arc:t.id==='knife'?t.arc:Math.min(250,t.arc+9*mastery),thrustWidth:6*Math.sqrt(widthScale),mass:base.mass,burden:0,
-  moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:0,critMultiplier:1.75,dashCooldown:5,waveEvery:0,
+  moveSpeed:210,acceleration:2800,magnet:84,damageReduction:0,critChance:Math.min(.2,.01*growth),critMultiplier:1.75,dashCooldown:5,waveEvery:0,
  };
 }
