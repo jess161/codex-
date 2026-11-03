@@ -1,10 +1,10 @@
 {
-  "title": "刃之进化 · 参考图胡萝卜剑版",
-  "source_commit": "6441ad190963d08949cc07f934f0ac05b3264500",
+  "title": "刃之进化 · 怪物必掉金币版",
+  "source_commit": "e69114f996a33fe12b8dcb6d1eedab1b5c900d59",
   "source_branch": "reconstruct/latest-from-conversation",
-  "created_utc": "2026-11-03T04:11:10.571077+00:00",
-  "artifact_sha256": "7e62f329b7810d3b87cf04e0b6e159dd41637bf3c92a490ec59974c98284da53",
-  "bytes": 13073700,
+  "created_utc": "2026-11-03T11:51:30.512988+00:00",
+  "artifact_sha256": "455396deb311f2938313eb70ddd997e26cfcdd33fa02ced8644a0062b8d4fd71",
+  "bytes": 13073604,
   "save_version": 15,
   "features": [
     "叶冠与交叉缠带握柄",
@@ -22,5 +22,7 @@
   "browser_run": false,
   "gameplay_run": false,
   "independent_typecheck_run": false,
-  "artifact_packaging": "node scripts/standalone.mjs --blade-only"
+  "artifact_packaging": "node scripts/standalone.mjs --blade-only",
+  "normal_coin_drop_chance": 1,
+  "bomber_detonation_drops_coins": true
 }
