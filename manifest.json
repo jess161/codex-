@@ -1,0 +1,23 @@
+{
+  "source_commit": "7628c1b1cede4e70ae4e3e1f90a4e3af109f9ef7",
+  "files": [
+    {
+      "name": "source-7628c1b.zip",
+      "sha256": "23e965cf5793b0292a71bef483536acbdb5fd0d2541be850dba80ee8b904da63",
+      "bytes": 43732819
+    },
+    {
+      "name": "blade-growth-7628c1b.html",
+      "sha256": "5b5ad8db05730874400d965363429420d709e8649fbef446d1c6a756539776e7",
+      "bytes": 13073759
+    },
+    {
+      "name": "history-7628c1b.bundle",
+      "sha256": "df10f7bd0d1682b4103c8b056bdb0a285f53345843a262050dcafcab1ada16fe",
+      "bytes": 43983107
+    }
+  ],
+  "tests_run": false,
+  "browser_run": false,
+  "independent_typecheck_run": false
+}
