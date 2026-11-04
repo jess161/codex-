@@ -54,7 +54,13 @@ async function createApprovedFruitModel(index:number){
     const map=await new THREE.TextureLoader().loadAsync(index===15?A_GROUP_ART.carrot:A_GROUP_ART.bananaLimbs);
     map.colorSpace=THREE.SRGBColorSpace;map.anisotropy=4;
     const painted=new THREE.MeshBasicMaterial({map,transparent:true,alphaTest:.03,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
-    for(const sign of [-1,1]){const plane=new THREE.Mesh(new THREE.PlaneGeometry(layout.width*scale,layout.height*scale),painted);plane.position.z=sign*(depth/2+1.5);group.add(plane);}
+    let reverse=painted;
+    if(index===15){
+      const back=await new THREE.TextureLoader().loadAsync(A_GROUP_ART.carrotBack);back.colorSpace=THREE.SRGBColorSpace;back.anisotropy=4;
+      reverse=new THREE.MeshBasicMaterial({map:back,transparent:true,alphaTest:.001,depthWrite:false,side:THREE.DoubleSide,toneMapped:false});
+      painted.alphaTest=.001;
+    }
+    for(const sign of [-1,1]){const plane=new THREE.Mesh(new THREE.PlaneGeometry(layout.width*scale,layout.height*scale),sign<0?reverse:painted);plane.position.z=sign*(depth/2+1.5);group.add(plane);}
     return group;
   }catch(error){disposeBladeModel(group);throw error;}
 }

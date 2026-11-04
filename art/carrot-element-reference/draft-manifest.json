@@ -1,0 +1,38 @@
+{
+  "active_approach": "faithful redraw using original design, not direct extraction",
+  "input_crop_background": "preserved, only input to image generation",
+  "drafts": [
+    {
+      "file": "source/fire-first.png",
+      "origin": "image_gen.imagegen",
+      "status": "superseded first iteration; retained for provenance",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "sha256": "d704d77c2ffd7c463c412fdc74adf0e32882a0ef08c76f336d2c7280854c4c75"
+    },
+    {
+      "file": "source/fire-glow-refined.png",
+      "origin": "image_gen.imagegen",
+      "status": "user-approved visual target; integrated",
+      "size": [
+        1024,
+        1536
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "sha256": "f03a16c6b4cd893efdb5ead5e8b961c499c19f061b469ffdb5c739a2230c2c9e"
+    }
+  ],
+  "integrated_in_game": true,
+  "tests_run": false,
+  "browser_run": false,
+  "production_manifest": "manifest.json"
+}

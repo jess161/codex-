@@ -1,7 +1,8 @@
-import carrotImage from './assets/carrot-sword/base.webp?inline';
+import carrotImage from './assets/carrot-sword/renditions/base.webp?inline';
+import carrotBack from './assets/carrot-sword/renditions/base-back.webp?inline';
 import bananaPng from './assets/produce/a-banana-limbs.png?inline';
 import { A_GROUP_LAYOUT as ORIGINAL_A_GROUP_LAYOUT } from './assets/produce/a-group-layout';
-import {CARROT_SWORD_LAYOUT} from './assets/carrot-sword/layout';
+import {RENDITION_LAYOUT as CARROT_SWORD_LAYOUT} from './assets/carrot-sword/rendition-layout';
 
 // Keep the shared API: the carrot now follows the user's sword reference;
 // the banana keeps its approved A-group image, frame and string anchors.
@@ -21,6 +22,7 @@ function framed(source:string,layout:Layout,includeString=false){
 }
 export const A_GROUP_ART={
   carrot:framed(carrotImage,A_GROUP_LAYOUT.carrot),
+  carrotBack:framed(carrotBack,A_GROUP_LAYOUT.carrot),
   banana:framed(bananaPng,A_GROUP_LAYOUT.banana,true),
   bananaLimbs:framed(bananaPng,A_GROUP_LAYOUT.banana),
 };

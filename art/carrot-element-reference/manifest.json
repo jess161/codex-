@@ -1,0 +1,2157 @@
+{
+  "schema_version": 2,
+  "approved_visual_target": "source/fire-glow-refined.png",
+  "user_approval": "按这个标准继续重制整套",
+  "original_design": "reference.jpg",
+  "active_original_sheet_cutouts": false,
+  "alpha_policy": "native generated alpha retained; no RGB keying, no threshold matting, full canvas bounds retained",
+  "actual_production_imagegen_calls": 16,
+  "assets": [
+    {
+      "id": "fire",
+      "path": "src/blade/assets/carrot-sword/renditions/fire.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 25328,
+      "bytes": 59510,
+      "sha256": "8ad810d56934e6114fa01aad1749b05fafb0df51ed3a9ec53a726378be8f3b14",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/fire-glow-refined.png",
+      "prompt": "source/fire-glow-refined-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "f03a16c6b4cd893efdb5ead5e8b961c499c19f061b469ffdb5c739a2230c2c9e",
+      "glow_clipped": false
+    },
+    {
+      "id": "base",
+      "path": "src/blade/assets/carrot-sword/renditions/base.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 19726,
+      "bytes": 44724,
+      "sha256": "b0ee50ab2150e7f6cc9339666b442a16a25de6494d3521e8f0d6b8335b430339",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/base.png",
+      "prompt": "source/base-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "152b68578fa2650a25d7eb8eec1ce329f86cd47067c59471932fab88698e0384",
+      "glow_clipped": false
+    },
+    {
+      "id": "ice",
+      "path": "src/blade/assets/carrot-sword/renditions/ice.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 41189,
+      "bytes": 78356,
+      "sha256": "10375e79a14035f4bf834b12f983e6f125cd07d0431fa89d4f4f8b355756e7a3",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/ice.png",
+      "prompt": "source/ice-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "a14d08583ad62cc61df1dcb50ab59f9063d5e7962f060cb214808aa34e2e3296",
+      "glow_clipped": false
+    },
+    {
+      "id": "poison",
+      "path": "src/blade/assets/carrot-sword/renditions/poison.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 23091,
+      "bytes": 60172,
+      "sha256": "58cf49f6a090a401d6ebcfe4c66be689cd3f0b25aaf1d5088474d03ff884b65a",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/poison.png",
+      "prompt": "source/poison-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "b8d13275fc01715d85494412f4af9ee8969a6f4d698be5f79faeb11316ccabb0",
+      "glow_clipped": false
+    },
+    {
+      "id": "lightning",
+      "path": "src/blade/assets/carrot-sword/renditions/lightning.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 48851,
+      "bytes": 77908,
+      "sha256": "b275094e27fcabfd499dc9910b98af477354674e0fa2537f0dc0e47304b7b630",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/lightning.png",
+      "prompt": "source/lightning-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "7615ea499bddcecb0c913a7578fe470f3051b23c2267faed23de6f88a7011135",
+      "glow_clipped": false
+    },
+    {
+      "id": "calamity",
+      "path": "src/blade/assets/carrot-sword/renditions/calamity.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 35908,
+      "bytes": 88870,
+      "sha256": "1657a6bd34bb44cdb75f2856bb2c30854def302705134446d9e20927ff2917c8",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/calamity.png",
+      "prompt": "source/calamity-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "6a72af3603ce55ff3cf190a5bf2eca22b96546e9d01fbe75c51ea9152bef8b79",
+      "glow_clipped": false
+    },
+    {
+      "id": "greatsword",
+      "path": "src/blade/assets/carrot-sword/renditions/greatsword.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 20994,
+      "bytes": 48544,
+      "sha256": "c65d3b50a0b30e446ca9283d0408de94510443d921444bf83ff3cf8554ab794e",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/greatsword.png",
+      "prompt": "source/greatsword-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "71769d36a872d7777f749eb77fd59fc0ec2a63caf39092d369eff0ea4c9e3fac",
+      "glow_clipped": false
+    },
+    {
+      "id": "dual",
+      "path": "src/blade/assets/carrot-sword/renditions/dual.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 29384,
+      "bytes": 67992,
+      "sha256": "bb642d9f8550aaca4c2523ad0f338a0313bd6d5ac807e8deed61dd06dd71dc25",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/dual.png",
+      "prompt": "source/dual-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1425
+      ],
+      "raw_sha256": "343bc6e249b1df70f389d8ae1b740359cbe451fba25003586b7f7ccb065f6c20",
+      "glow_clipped": false
+    },
+    {
+      "id": "wave",
+      "path": "src/blade/assets/carrot-sword/renditions/wave.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33131,
+      "bytes": 77190,
+      "sha256": "9dca4809e3fb34366e0648d1a8ca9a1e5357bdba0d8e78154abb68fb7c11e901",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/wave.png",
+      "prompt": "source/wave-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "36547b7b16636ebe340d7cc3f0583a09948470541f13023a85b72f4d732de1c5",
+      "glow_clipped": false
+    },
+    {
+      "id": "wave-fx",
+      "path": "src/blade/assets/carrot-sword/renditions/wave-fx.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        254
+      ],
+      "soft_alpha_pixels": 31042,
+      "bytes": 50504,
+      "sha256": "ad49b106e59ba113bed4382658bf060335f30ec6c5ba693e26a9df65b00f0f42",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/wave-fx.png",
+      "prompt": "source/wave-fx-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "4bab47a04211cdcd400072af276d5e36e9acd2f35a3cefb23f5cfd2c366bbc40",
+      "glow_clipped": false
+    },
+    {
+      "id": "lightning-fx",
+      "path": "src/blade/assets/carrot-sword/renditions/lightning-fx.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 18438,
+      "bytes": 31046,
+      "sha256": "e865f365ca9009e70dc2b4e4c80954178db178cb4156c2dc9c33af6aae7db01e",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/lightning-fx.png",
+      "prompt": "source/lightning-fx-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "12a19efd9c51179646a02b1d422b1e386a940a5cee36d60900c5d8fdb7ef9910",
+      "glow_clipped": false
+    },
+    {
+      "id": "calamity-fx",
+      "path": "src/blade/assets/carrot-sword/renditions/calamity-fx.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 29579,
+      "bytes": 60480,
+      "sha256": "5d09a9a7c19f039f2e05f7ace718383314bda70908e7a6f5da42231d5a3eedd2",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/calamity-fx.png",
+      "prompt": "source/calamity-fx-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "9bb97b791dd8dfdeb83260b7ee3886bb0eddfaed66130ae154b93b08cdee7589",
+      "glow_clipped": false
+    },
+    {
+      "id": "armor",
+      "path": "src/blade/assets/carrot-sword/renditions/armor.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 2081,
+      "bytes": 6054,
+      "sha256": "9f4730644b4f0eac68f9bd68dd7babb3830523b14299400fc12aa6e238732df3",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/armor.png",
+      "prompt": "source/armor-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "ee34dbad3425465bf18b0244b8d3af21f6f1efdfa3d24d4faf07e3ebce9e95df",
+      "glow_clipped": false
+    },
+    {
+      "id": "base-back",
+      "path": "src/blade/assets/carrot-sword/renditions/base-back.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 19589,
+      "bytes": 43194,
+      "sha256": "82e62f459c389a37c41a52bd0f63fef41fe9517b578d522aa615cd7b0b830043",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/base-back.png",
+      "prompt": "source/base-back-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        460
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "7e702923820d86d224912b96ba2e0561f086878a5661c548a22a47f61e0c5e27",
+      "glow_clipped": false
+    },
+    {
+      "id": "base-side",
+      "path": "src/blade/assets/carrot-sword/renditions/base-side.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 4344,
+      "bytes": 11314,
+      "sha256": "938adb0c0e4ef00dd082d9abd521955a81ec972cb2b63421ceadce30d90dbe5d",
+      "origin": "image_gen.imagegen; full native RGBA preserved",
+      "source": "source/base-side.png",
+      "prompt": "source/base-side-prompt.txt",
+      "source_size": [
+        1024,
+        1536
+      ],
+      "source_grip": [
+        512,
+        420
+      ],
+      "source_tip": [
+        512,
+        1430
+      ],
+      "raw_sha256": "13e567208c12c3efaa09e4fadbd58b2352bb2bd941b9a973ce32812be9d24cf7",
+      "glow_clipped": false
+    },
+    {
+      "id": "skin-greatsword-1",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-1.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 24714,
+      "bytes": 61326,
+      "sha256": "736fd6a19bed939a4cb609787aafa7c3c4e74a8a4df7f258fea8e8b174867062",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 1
+    },
+    {
+      "id": "skin-dual-1",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-1.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 34109,
+      "bytes": 77536,
+      "sha256": "4beaaa90ca930219233522f8938c363c685a910f425e87bbab545ca097b2eb00",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 1
+    },
+    {
+      "id": "skin-wave-1",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-1.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 45021,
+      "bytes": 97954,
+      "sha256": "3968f654e8a7e0341e8c28c4541d6f3b8495c7d3be46a38da09297ef970bca43",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 1
+    },
+    {
+      "id": "skin-greatsword-2",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-2.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 39516,
+      "bytes": 78094,
+      "sha256": "2b73c38e4238ee2fffeccb8ac048b01da2589aade3ffbf73cd0872d171be1d30",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 2
+    },
+    {
+      "id": "skin-dual-2",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-2.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 40967,
+      "bytes": 88858,
+      "sha256": "2b426888b3e3a4b74503a6882db4f45bcaf2fabb3bb6e9fb483726974b850d3e",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 2
+    },
+    {
+      "id": "skin-wave-2",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-2.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 52988,
+      "bytes": 109110,
+      "sha256": "a1db5c67ce4e87f9dd1f62c5fd77dc56de559515dfe74f0355a0e0792e8bd803",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 2
+    },
+    {
+      "id": "mix-3",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-3.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 35234,
+      "bytes": 82850,
+      "sha256": "0f1b09667d200ad5772e91646f3c918d1562e19b5cdaebc6ca65f719cea59f3d",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 3
+    },
+    {
+      "id": "skin-greatsword-3",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-3.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 39665,
+      "bytes": 81876,
+      "sha256": "87c3974e6b037da8c49a19a6e1c6d75eceff1e32c727c8bc021f56d58a4c1c10",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 3
+    },
+    {
+      "id": "skin-dual-3",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-3.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 40380,
+      "bytes": 87446,
+      "sha256": "99c59d62d4fb0b90cdee551f4bcb063d080f0f892b43f195ca66adcddae86b7b",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 3
+    },
+    {
+      "id": "skin-wave-3",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-3.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 46849,
+      "bytes": 113296,
+      "sha256": "7f13c3a92637b97e752bd12d4e4bd393bfac95ac839d7b600d5ebb889f1905ea",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 3
+    },
+    {
+      "id": "skin-greatsword-4",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-4.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 22627,
+      "bytes": 60796,
+      "sha256": "2c2e87df76f1b003f8af571c17dbe861bcad494ad19bffe777451bd9f2b09f2c",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 4
+    },
+    {
+      "id": "skin-dual-4",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-4.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33945,
+      "bytes": 85790,
+      "sha256": "c88e00df52e0deca2e8192494faa4933079eac56c97badd3a1e19e6b3607ac5c",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 4
+    },
+    {
+      "id": "skin-wave-4",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-4.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 44639,
+      "bytes": 100150,
+      "sha256": "fffe7212a8f58f486b401db400d7fc35d072d56232446d5f4c80c560b5b7b32c",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 4
+    },
+    {
+      "id": "mix-5",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-5.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 19105,
+      "bytes": 70794,
+      "sha256": "700b844aafc48684ad41a9b9e264bf52e89dd3c6d1547a52d2ad1625a69363ac",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 5
+    },
+    {
+      "id": "skin-greatsword-5",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-5.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 25915,
+      "bytes": 69596,
+      "sha256": "b24ff9757137733291c759f8bb6685f167edbb5787bc88341beda1c8b53fefe4",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 5
+    },
+    {
+      "id": "skin-dual-5",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-5.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33861,
+      "bytes": 88402,
+      "sha256": "215b35be7679b14e0a3458027754782600e523138cde0f24caeb9043d01c06ed",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 5
+    },
+    {
+      "id": "skin-wave-5",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-5.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 38194,
+      "bytes": 105500,
+      "sha256": "808df6e3e0e97431026d5aa71bf3e323cbbeac9a57fd13f767c4ca58ace2546f",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 5
+    },
+    {
+      "id": "mix-6",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-6.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 28639,
+      "bytes": 85860,
+      "sha256": "cfa1ab97c56f2c51ad57415d1459820a08e3e02ccd11a51b1a05119cf14a911e",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 6
+    },
+    {
+      "id": "skin-greatsword-6",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-6.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 39504,
+      "bytes": 83992,
+      "sha256": "68c209c6fb76d1fa98e5e914972c980afe0ce0cacca33ab8f6b57bff1cfea385",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 6
+    },
+    {
+      "id": "skin-dual-6",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-6.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 40372,
+      "bytes": 96166,
+      "sha256": "ccd20519954774b07c63831e7391b9970e4abefcf5d3fc8cc729e6bd7a20156a",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 6
+    },
+    {
+      "id": "skin-wave-6",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-6.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 40635,
+      "bytes": 115476,
+      "sha256": "4e9e32efcbfeab2c687c5a6e71f2b17073654ce6a1d47ea76cb404b5c75cb187",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 6
+    },
+    {
+      "id": "skin-greatsword-7",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-7.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 37351,
+      "bytes": 96730,
+      "sha256": "0ca562b381bb643eaeba35b236d404d7f20be01769e77a1716d0a4eaa03fa8b0",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 7
+    },
+    {
+      "id": "skin-dual-7",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-7.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 34964,
+      "bytes": 97238,
+      "sha256": "7e91a387b2281b98a23e80076c9268e258a4dfccd3865993efefdc7fd5288b85",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 7
+    },
+    {
+      "id": "skin-wave-7",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-7.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 35908,
+      "bytes": 88870,
+      "sha256": "1657a6bd34bb44cdb75f2856bb2c30854def302705134446d9e20927ff2917c8",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 7
+    },
+    {
+      "id": "skin-greatsword-8",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-8.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 65476,
+      "sha256": "1eb11ea53ffa26fe8c838fb1bc0a702f4dbe8a74dd503df756b156837580b60d",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 8
+    },
+    {
+      "id": "skin-dual-8",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-8.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 76590,
+      "sha256": "bdbc40ea301129431e7bb3156142a188e31617cca634006856986ac2b9691507",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 8
+    },
+    {
+      "id": "skin-wave-8",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-8.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 54142,
+      "bytes": 108130,
+      "sha256": "a0587fd36f5ab113bf70e77719a6e129165fce4ff8b6d799b920599ae7239c67",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 8
+    },
+    {
+      "id": "mix-9",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-9.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 24643,
+      "bytes": 71790,
+      "sha256": "cc5f6bd45ea91db1767decf29749b1cd4cc1e6d45861bb1e0a221b0effd1b931",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 9
+    },
+    {
+      "id": "skin-greatsword-9",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-9.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 65324,
+      "sha256": "e9051fbe8b4ab144d4ab12d9ea0bc7b540e5a213b5173ea2306ef8df922c058e",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 9
+    },
+    {
+      "id": "skin-dual-9",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-9.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 76872,
+      "sha256": "64701bc804923bcf24c8f7304c41e38a87ca0f4436ee747a271e8d672f586d32",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 9
+    },
+    {
+      "id": "skin-wave-9",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-9.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 41067,
+      "bytes": 105306,
+      "sha256": "db79e429992c9a29b516d482a138e58a6ea8d299f5e18f5e555320930afce3cb",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 9
+    },
+    {
+      "id": "mix-10",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-10.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 31858,
+      "bytes": 87156,
+      "sha256": "09e4292d8b40533c8d9c66022695f852873e75f7424cce802d99e8920f6c1644",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 10
+    },
+    {
+      "id": "skin-greatsword-10",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-10.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 66298,
+      "sha256": "a464f7dc3ab2865813c83fad96a0885b9f0c21a370994f9433e9c213173cd3f1",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 10
+    },
+    {
+      "id": "skin-dual-10",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-10.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 78262,
+      "sha256": "4918288dacc09f720b01d46690fe76b27c35da042b66c9b0e5d0c94d0308d639",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 10
+    },
+    {
+      "id": "skin-wave-10",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-10.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 42581,
+      "bytes": 115976,
+      "sha256": "0da666a48073e9471237ae4c4b13e2e3d2c2e8f7771719ea4dfb0bfae7e13fbf",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 10
+    },
+    {
+      "id": "mix-11",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-11.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 31247,
+      "bytes": 89104,
+      "sha256": "51a47a2aec2efa29b61541fac7bd113a964e84c9777e63760e089c8d9a12609e",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 11
+    },
+    {
+      "id": "skin-greatsword-11",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-11.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 66470,
+      "sha256": "72024d3cfef4b1d4792d8678f8a6cfdd98a2ab957bdac7f4255d612a9f0ec736",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 11
+    },
+    {
+      "id": "skin-dual-11",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-11.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 78254,
+      "sha256": "68ceaf78fefc2c768e84ba34486e9d1655621945e3dd60b1a3d752b55206928b",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 11
+    },
+    {
+      "id": "skin-wave-11",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-11.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 41874,
+      "bytes": 117236,
+      "sha256": "021d1c90cb6d0214a9b4bf81f0849d5aab055613bd70507343cb99701ab4352f",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 11
+    },
+    {
+      "id": "mix-12",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-12.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 19771,
+      "bytes": 72966,
+      "sha256": "ae8d5a270b6c465924eb54d2eff81500b05035363c859d18e8bf6f7b46fbca1a",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 12
+    },
+    {
+      "id": "skin-greatsword-12",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-12.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 67406,
+      "sha256": "55fc9c94c699c7e9967deed95b4f8df03c47d6fd15ecf9417c435743cd73bb3c",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 12
+    },
+    {
+      "id": "skin-dual-12",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-12.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 81642,
+      "sha256": "3e5b3fff98c28eda01c685f5973ffa41571fedb8e9a43b65d80cabf6834e420d",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 12
+    },
+    {
+      "id": "skin-wave-12",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-12.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 37099,
+      "bytes": 106296,
+      "sha256": "b4d797ffc3d0ff14a40667d70232a993a881efd0a125f88218a734abe3cacde5",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 12
+    },
+    {
+      "id": "mix-13",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-13.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 20181,
+      "bytes": 77268,
+      "sha256": "7e54b3fc6b498ffa24463db777529988fe92f5ac8e921ffdf1a2f83e47e625ca",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 13
+    },
+    {
+      "id": "skin-greatsword-13",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-13.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 67476,
+      "sha256": "353d9c03988ce3cb7175cfc8124462d1f9be2f88aa6653ee7277595c0bcc68e0",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 13
+    },
+    {
+      "id": "skin-dual-13",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-13.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 81874,
+      "sha256": "3a6441e2d0bccdc7c61bb9c1e3fe4c3e60d72087b478cf2445844e49fd628fba",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 13
+    },
+    {
+      "id": "skin-wave-13",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-13.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 36639,
+      "bytes": 108620,
+      "sha256": "2e27128c7333958be70045eedfad992256d3e70178cc4394c91303b08dfe0d10",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 13
+    },
+    {
+      "id": "mix-14",
+      "path": "src/blade/assets/carrot-sword/renditions/mix-14.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26946,
+      "bytes": 91460,
+      "sha256": "9c5995b387de8dc589d65ca7ef239b51115990f7b67443d78af2857e06b6acd0",
+      "origin": "registered generated-material zones; full exterior halos retained",
+      "elements": 14
+    },
+    {
+      "id": "skin-greatsword-14",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-greatsword-14.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 26823,
+      "bytes": 68966,
+      "sha256": "86aaef612bae4f8ee8664e97a7ce395b58ff7e084e5fee6fd86755431896c736",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 14
+    },
+    {
+      "id": "skin-dual-14",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-dual-14.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 33165,
+      "bytes": 82962,
+      "sha256": "75a6a1cd374377cb9a4b9dca7d73074a797cfea5daccc177789679793356762c",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 14
+    },
+    {
+      "id": "skin-wave-14",
+      "path": "src/blade/assets/carrot-sword/renditions/skin-wave-14.webp",
+      "logical_frame": [
+        1696,
+        1152
+      ],
+      "raster_size": [
+        424,
+        288
+      ],
+      "grip": [
+        521,
+        575
+      ],
+      "physical_tip": [
+        1545,
+        575
+      ],
+      "alpha_extrema": [
+        0,
+        255
+      ],
+      "soft_alpha_pixels": 37947,
+      "bytes": 118932,
+      "sha256": "aa5bcfaf47c02f0e9eb14fa6417dff00669c6681fddc84c140d2e54e2bb1778a",
+      "origin": "generated form and generated material registration; no original-sheet pixels",
+      "elements": 14
+    }
+  ],
+  "review": {
+    "static_native_scale": true,
+    "tests": false,
+    "gameplay": false,
+    "browser": false,
+    "typecheck": false
+  }
+}

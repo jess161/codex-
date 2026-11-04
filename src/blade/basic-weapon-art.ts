@@ -4,9 +4,11 @@ import { swingPhase, type EquipmentStats, type SwingTiming } from './equipment';
 import type { BladeRun } from './simulation';
 import { A_GROUP_ART, A_GROUP_LAYOUT } from './approved-fruit-art';
 import type { DragContact } from './blade-drag';
-import {drawCarrotMaterials,carrotPoint} from './carrot-element-art';
-import {hasCarrotElements} from './carrot-elements';
-import {CARROT_SWORD_FX} from './assets/carrot-sword/layout';
+import {carrotPoint} from './carrot-element-art';
+import {hasCarrotElements,carrotElements} from './carrot-elements';
+import {RENDITION_FX as CARROT_SWORD_FX} from './assets/carrot-sword/rendition-layout';
+import {carrotAppearance} from './carrot-appearance';
+import {FORMS} from './evolution/config';
 
 export const CARROT_GROUND_COLOR=0xf49a43;
 export const CARROT_MARK_LIFETIME=1.1;
@@ -41,23 +43,19 @@ export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|
 }
 export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image,clock=0,reduced=false,materialFx=g):DragContact|undefined{
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
- const dual=s.evolution?.form==='dual',activeHand=s.swing?.hand??0;
- const a=dual&&activeHand===1?s.aim+.9:pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
+ const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
- const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale));
- sprite('basic-weapon','blade-16',x,y,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
+ const form=s.evolution?.form,formWidth=form?FORMS[form].width:1;
+ const width=art.width*scale,height=art.height*scale*Math.min(2.5,Math.sqrt(stats.widthScale/formWidth));
+ const elements=carrotElements(s.economy?.gear,s.evolution),texture=carrotAppearance(form,elements);
+ // The generated dual form is the original connected two-blade design.
+ // Swing timing and the two independent attack releases remain in the simulation.
+ sprite('basic-weapon',texture,x,y,width,27.15).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  const frame={x,y,angle:a,scaleX:width/art.width,scaleY:height/art.height};
- const elements=drawCarrotMaterials(materialFx,run,sprite,frame,clock,reduced);
- if(dual){
-  const angle=activeHand===1?pose.angle:s.aim-.9,c=Math.cos(angle),n=Math.sin(angle);
-  const x2=s.player.x+c*pose.hand,y2=s.player.y+n*pose.hand;
-  sprite('basic-weapon-offhand','blade-16',x2,y2,width,26).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(angle).setDisplaySize(width,height);
-  drawCarrotMaterials(materialFx,run,sprite,{x:x2,y:y2,angle,scaleX:width/art.width,scaleY:height/art.height},clock,reduced,'offhand-');
- }
  if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
   const trailEnd=swingPhase(s.swing).phase==='strike'?pose.angle:s.swing.angle+arc/2;
-  const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0x6fd1fa:elements.poison?0x87db3d:0xf2a04f;
+  const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0xffd84f:elements.poison?0xa65bc2:form==='wave'?0x86d9cd:0xf2a04f;
   const arcLight=elements.fire?0xffd477:elements.frost?0xf0fcff:elements.electric?0xffef9c:elements.poison?0xe0ffad:0xffe2a4;
   g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
   g.lineStyle(elements.fire===2?3.5:2.5,arcLight,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
@@ -81,7 +79,7 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
    if(elements.poison)contact.elementalTrails.poison={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.poisonTrail),color:0x7cda35,markWidth:carrotMarkWidth(height)*(elements.poison===2?1.35:1),markLife:1.1};
    if(elements.fire)contact.elementalTrails.fire={...sample,color:0xf47b34,markWidth:carrotMarkWidth(height)*(elements.fire===2?1.4:1),markLife:.38};
    if(elements.frost)contact.elementalTrails.frost={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.frostTrail),color:0xc3efff,markWidth:carrotMarkWidth(height)*(elements.frost===2?1.3:1),markLife:.9};
-   if(elements.electric)contact.elementalTrails.electric={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.electricTrail),color:0x8bdfff,markWidth:1.5,markLife:.35};
+   if(elements.electric)contact.elementalTrails.electric={...sample,...carrotPoint(frame,...CARROT_SWORD_FX.electricTrail),color:0xffdb6b,markWidth:1.5,markLife:.35};
   }
   return contact;
  }

@@ -238,3 +238,13 @@ body[data-battle-theme="night"] .current-passive>b{color:color-mix(in srgb,var(-
 .evolution-panel>small{display:block;color:#657f87;line-height:1.5}
 @media(max-width:600px){.evolution-panel{max-height:92dvh;border-radius:18px}.evolution-cards{grid-template-columns:1fr;gap:10px}.evolution-cards button{min-height:110px;padding:14px;gap:6px;position:relative;padding-left:56px}.evolution-choice-symbol{position:absolute;left:16px;top:18px}.evolution-cards button b{font-size:18px}.evolution-cards button>span:last-child{font-size:13px}.evolution-slots{gap:5px;margin-bottom:12px}.evolution-slots span{padding:5px 7px;font-size:11px}}
 @media(max-height:500px) and (min-width:601px){.evolution-panel{padding:14px 20px}.evolution-panel h2{font-size:24px}.evolution-panel>p{margin:4px 0 10px}.evolution-slots{margin-bottom:10px}.evolution-cards{gap:10px;margin-bottom:12px}.evolution-cards button{min-height:155px;padding:12px;gap:6px}.evolution-choice-symbol{font-size:23px}.evolution-cards button b{font-size:18px}.evolution-cards button>span:last-child{font-size:12px}}
+.evolution-choice-art{display:block;width:140px;height:85px;object-fit:contain;align-self:center;margin:-8px 0 -10px}
+.carrot-appearance-gallery{margin:28px 0;padding:20px;border:1px solid #d1dce1;border-radius:18px;background:#eef3ef}
+.carrot-appearance-gallery h3{font-size:23px;margin:0 0 8px}.carrot-appearance-gallery p{font-size:13px;line-height:1.7;color:#627887}
+.carrot-appearance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.carrot-appearance-grid article{min-width:0;display:flex;align-items:center;flex-direction:column;justify-content:center;background:#fffcf4;border:1px solid #d6ded9;border-radius:13px;padding:12px 8px;gap:5px}
+.carrot-appearance-grid img{display:block;width:100%;height:100px;object-fit:contain}.carrot-appearance-grid b{font-size:13px;color:#3e5c70}
+@media(max-width:650px){.carrot-appearance-gallery{padding:14px}.carrot-appearance-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.carrot-appearance-grid img{height:78px}.evolution-cards .evolution-choice-art{position:absolute;left:8px;top:13px;width:45px;height:48px;margin:0}}
+@media(max-height:500px) and (min-width:651px){.evolution-choice-art{width:100px;height:50px;margin:-5px 0}}
+
+.carrot-basic-views{grid-template-columns:repeat(3,minmax(0,1fr))}.carrot-appearance-gallery summary{padding:12px 0;min-height:44px;cursor:pointer;color:#3e5c70;font-weight:700;font-size:13px}

@@ -98,7 +98,7 @@ export class BattleScene extends Phaser.Scene {
     this.bladeBack = this.add.graphics().setDepth(20.5);
     this.shadows = this.add.graphics().setDepth(2);
     this.fx = this.add.graphics().setDepth(24);
-    this.carrotFx=this.add.graphics().setDepth(26.3);
+    this.carrotFx=this.add.graphics().setDepth(27.35);
     this.danger = this.add.graphics().setDepth(32);
     this.hero = this.add.image(0, 0, 'hero').setDepth(27);
     this.expression = this.add.graphics().setDepth(28);
@@ -402,7 +402,7 @@ export class BattleScene extends Phaser.Scene {
     }
     for (const wave of s.waves) {
       const elements=carrotElements(s.economy?.gear,s.evolution);
-      const color = s.evolution?(elements.fire?0xf48b4f:elements.frost?0x9ddffc:elements.electric?0xb0b4ff:elements.poison?0x93d44e:0xffb251):TIERS[wave.tier].hex;
+      const color = s.evolution?(elements.fire?0xf48b4f:elements.frost?0x9ddffc:elements.electric?0xffd84f:elements.poison?0xa65bc2:0x86d9cd):TIERS[wave.tier].hex;
       const shape = waveDimensions(wave, run.mastery), radius = shape.radius, stroke = Math.sqrt(shape.scale);
       g.beginPath().lineStyle((wave.kind === 'getsuga' ? 12 : 7) * stroke, color, .16).arc(wave.x, wave.y, radius, wave.angle - 1.1, wave.angle + 1.1).strokePath();
       if (wave.kind === 'getsuga') g.beginPath().lineStyle(7 * stroke, 0x3b2c48, .9).arc(wave.x, wave.y, radius - 2 * stroke, wave.angle - 1.05, wave.angle + 1.05).strokePath();

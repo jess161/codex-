@@ -369,5 +369,7 @@
     "frost_gameplay": true
   },
   "terms": "User-provided reference for requested editing; no additional permission or open license asserted. OpenAI image generation service terms apply. Raw generated PNGs preserved.",
-  "frost_preview": "art/carrot-sword/frost-native-preview.png"
+  "frost_preview": "art/carrot-sword/frost-native-preview.png",
+  "runtime_status": "historical art retained; current runtime uses the approved new rendition family",
+  "current_runtime_manifest": "art/carrot-element-reference/manifest.json"
 }
