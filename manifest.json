@@ -1,0 +1,35 @@
+{
+  "source_commit": "881b58003154ffc27525bfe1102118a4b2d0b470",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "backup_branch": "backup/weapon-vfx-881b580",
+  "files": {
+    "carrot-vfx-881b580.html": {
+      "bytes": 17879186,
+      "sha256": "823626fa24b1d1e63be4ac6189702508d0e6ae5102d74705777609c666ee4194"
+    },
+    "carrot-source-881b580.zip": {
+      "bytes": 76212328,
+      "sha256": "80dae4773fbe43bfa6eb65cab8486fcf48b0cd52829564bc066071cf8a0e8a17"
+    },
+    "carrot-history-881b580.bundle": {
+      "bytes": 76321100,
+      "sha256": "fd01e8ff0e65a88f76f36b361697738d208fefb6770ad0a52fedbd92abecb57b"
+    },
+    "build.log": {
+      "bytes": 1044,
+      "sha256": "566bd5e1b485fa706c5571d7857ecb3af8fca3a5b6dd312ab2e3944eba19cc79"
+    }
+  },
+  "checks": {
+    "blade_typecheck": "passed",
+    "blade_production_build": "passed",
+    "offline_package": "generated",
+    "tests_run": false,
+    "browser_run": false,
+    "playthrough_run": false
+  },
+  "scope": "Neutral carrot sword VFX rendering and independent preview; combat damage unchanged. Element presets in preview are generic colors only.",
+  "legacy_root_typecheck": "Historical tests still refer to removed equipment; scoped blade source configuration is used.",
+  "github_pages_published": false,
+  "untracked_agents_included": false
+}

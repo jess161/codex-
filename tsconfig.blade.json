@@ -1,5 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "include": ["src/blade/**/*.ts"],
-  "exclude": ["node_modules", "dist", "tests", "src/castaway"]
-}
