@@ -9,6 +9,7 @@ import {hasCarrotElements,carrotElements} from './carrot-elements';
 import {RENDITION_FX as CARROT_SWORD_FX} from './assets/carrot-sword/rendition-layout';
 import {carrotAppearance} from './carrot-appearance';
 import {FORMS} from './evolution/config';
+import type {WeaponVFXPose} from './vfx/WeaponVFX';
 
 export const CARROT_GROUND_COLOR=0xf49a43;
 export const CARROT_MARK_LIFETIME=1.1;
@@ -41,7 +42,7 @@ export function basicMeleePose(_index:number,swing:(SwingTiming&{angle:number})|
  const pose=swing?bladePresentation(swing,aim,stats.arc*Math.PI/180,stats.mass,rest):{angle:rest,opacity:0};
  return {...pose,hand:16,reach:stats.range};
 }
-export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image,clock=0,reduced=false,materialFx=g):DragContact|undefined{
+export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite:(id:string,texture:string,x:number,y:number,size:number,depth:number)=>Phaser.GameObjects.Image,clock=0,reduced=false,materialFx=g,renderWeapon?:(pose:WeaponVFXPose)=>void):DragContact|undefined{
  const s=run.state,stats=run.stats,pose=basicMeleePose(run.tier,s.swing,s.aim,stats);
  const a=pose.angle,dx=Math.cos(a),dy=Math.sin(a),x=s.player.x+dx*pose.hand,y=s.player.y+dy*pose.hand;
  const art=A_GROUP_LAYOUT.carrot,scale=(stats.range-pose.hand)/(art.tip[0]-art.grip[0]);
@@ -50,9 +51,10 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
  const elements=carrotElements(s.economy?.gear,s.evolution),texture=carrotAppearance(form,elements);
  // The generated dual form is the original connected two-blade design.
  // Swing timing and the two independent attack releases remain in the simulation.
- sprite('basic-weapon',texture,x,y,width,27.15).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
  const frame={x,y,angle:a,scaleX:width/art.width,scaleY:height/art.height};
- if(s.swing&&pose.opacity>0){
+ if(renderWeapon)renderWeapon({...frame,texture,attackId:s.swing?.id,striking:!!s.swing&&swingPhase(s.swing).phase==='strike'});
+ else sprite('basic-weapon',texture,x,y,width,27.15).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
+ if(!renderWeapon&&s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
   const trailEnd=swingPhase(s.swing).phase==='strike'?pose.angle:s.swing.angle+arc/2;
   const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0xffd84f:elements.poison?0xa65bc2:form==='wave'?0x86d9cd:0xf2a04f;

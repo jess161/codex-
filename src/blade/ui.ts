@@ -153,7 +153,7 @@ export class BladeUI {
   private handledTouchUntil = 0;
   constructor(readonly app: BladeApp) {
     document.querySelector('#app')!.innerHTML = `
-      <header class="brandbar" id="brandbar"><a class="brand" href="#" aria-label="刃之进化首页"><span class="brand-mark">${icon('carrot')}</span><span>刃之进化<small>BLADE EVOLUTION</small></span></a><nav><button class="nav-button" data-action="codex">${icon('book')}<span>武器图鉴</span></button><button class="icon-button" data-action="sound" aria-label="切换声音" id="title-sound">${icon('sound')}</button><button class="icon-button" data-action="settings" aria-label="设置">${icon('settings')}</button><button class="icon-button fullscreen-control" data-action="fullscreen" aria-label="全屏">${icon('full')}</button></nav></header>
+      <header class="brandbar" id="brandbar"><a class="brand" href="#" aria-label="刃之进化首页"><span class="brand-mark">${icon('carrot')}</span><span>刃之进化<small>BLADE EVOLUTION</small></span></a><nav><button class="nav-button" data-action="vfx-preview">${icon('star')}<span>特效预览</span></button><button class="nav-button" data-action="codex">${icon('book')}<span>武器图鉴</span></button><button class="icon-button" data-action="sound" aria-label="切换声音" id="title-sound">${icon('sound')}</button><button class="icon-button" data-action="settings" aria-label="设置">${icon('settings')}</button><button class="icon-button fullscreen-control" data-action="fullscreen" aria-label="全屏">${icon('full')}</button></nav></header>
       <div id="battle-hud" hidden>
         <div class="hud-top"><div class="health-cluster"><span class="health-icon">${icon('heart')}</span><div class="health-track"><i id="health-fill"></i></div><b id="health-value">100 / 100</b></div><div class="battle-clock"><span id="stage-label">生存试炼</span><b id="clock">00:00</b><small id="clock-goal">/ ${formatTime(RUN_DURATION)}</small></div><div class="hud-buttons"><button class="icon-button" data-action="power" aria-label="战斗力（C）">${icon('star')}</button><button class="icon-button" data-action="sound" aria-label="切换声音" id="battle-sound">${icon('sound')}</button><button class="icon-button" data-action="pause" aria-label="暂停">${icon('pause')}</button></div></div>
         <div class="xp-row"><b id="level-label">Lv.1</b><div class="xp-track"><i id="xp-fill"></i></div><span id="next-form">磨合 Lv.6</span></div>
@@ -180,7 +180,7 @@ export class BladeUI {
       else if(!key.shiftKey&&document.activeElement===last){key.preventDefault();first?.focus();}
     });
     root.addEventListener('keydown',event=>{
-      if(event.key!=='Tab'||this.app.panel!=='none'||this.app.run?.state.mode!=='upgrade')return;
+      if(!(event instanceof KeyboardEvent)||event.key!=='Tab'||this.app.panel!=='none'||this.app.run?.state.mode!=='upgrade')return;
       const buttons=Array.from(this.overlay.querySelectorAll<HTMLButtonElement>('[data-action="evolution-pick"]'));
       const first=buttons[0],last=buttons.at(-1);
       if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}

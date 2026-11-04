@@ -43,7 +43,7 @@ export const toBasicWeapon = (index: number): number => {
   if (index >= 12 && index <= 14) return 17;
   return DEFAULT_WEAPON;
 };
-export const BLADE_CATALOGUE = [DEFAULT_WEAPON].map(index => ({ blade: TIERS[index], index }));
+export const BLADE_CATALOGUE: {blade: typeof TIERS[number];index: number}[] = [DEFAULT_WEAPON].map(index => ({ blade: TIERS[index], index }));
 export type PerkId = 'sharp' | 'quick' | 'range' | 'magnet' | 'force' | 'vital' | 'long' | 'broad' | 'giant' | 'hollow' | 'grip' | 'stride' | 'heal';
 export const PERKS: Record<PerkId, { name: string; label: string; description: string; cap: number; icon: string; color: string }> = {
   sharp: { name: '锋利', label: '伤害 +12%', description: '让每一次挥刀更有分量', cap: 8, icon: 'sword', color: '#ec966c' },

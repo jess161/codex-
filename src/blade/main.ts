@@ -12,6 +12,7 @@ import { isRelicId } from './relics';
 import { displayProfile } from './display';
 import { swingPhase } from './equipment';
 import { impactFeedback } from './feedback';
+import {WeaponVFXPreviewScene,WEAPON_VFX_PREVIEW_KEY} from './vfx/WeaponVFXPreviewScene';
 
 export class BladeApp {
   readonly storage = new BladeStorage();
@@ -20,7 +21,8 @@ export class BladeApp {
   readonly ui: BladeUI;
   readonly game: Phaser.Game;
   panel: Panel = 'title';
-  selectedBlade = DEFAULT_WEAPON;
+  selectedBlade: number = DEFAULT_WEAPON;
+  vfxPreviewOpen = false;
   private backPanel: Panel = 'title';
   run?: BladeRun;
   isNewBest = false;
@@ -38,10 +40,10 @@ export class BladeApp {
   private activeTouch: number | null = null;
   private touchOrigin: { x: number; y: number } | null = null;
   private touchRadius = 35;
-  get battlePaused() { return this.panel !== 'none' || this.ui.shopOpen || this.run?.state.mode==='upgrade'; }
+  get battlePaused() { return this.vfxPreviewOpen || this.panel !== 'none' || this.ui.shopOpen || this.run?.state.mode==='upgrade'; }
   constructor() {
     this.ui = new BladeUI(this);
-    this.scene.onReady = () => { this.ready = true; this.ui.ready(); this.applySettings(); if (this.storage.warning) this.ui.toast(this.storage.warning); };
+    this.scene.onReady = () => { this.ready = true; this.ui.ready(); this.applySettings(); if (this.storage.warning) this.ui.toast(this.storage.warning); if(new URLSearchParams(location.search).has('vfx-preview'))this.scene.time.delayedCall(0,()=>this.openVFXPreview()); };
     this.scene.onFrame = dt => this.frame(dt);
     const display = displayProfile(innerWidth, innerHeight, devicePixelRatio, this.storage.data.settings.simplified);
     this.scene.pixelRatio = display.ratio;
@@ -49,12 +51,26 @@ export class BladeApp {
       type: new URLSearchParams(location.search).get('renderer') === 'webgl' ? Phaser.AUTO : Phaser.CANVAS,
       parent: 'game', backgroundColor: '#f3f6f9', antialias: true, transparent: false,
       scale: { mode: Phaser.Scale.NONE, width: display.width, height: display.height },
-      scene: [this.scene], banner: false, fps: { target: 60, smoothStep: true },
+      scene: [this.scene,new WeaponVFXPreviewScene()], banner: false, fps: { target: 60, smoothStep: true },
       render: { pixelArt: false, roundPixels: false, maxTextures: 16 },
       input: { activePointers: 3 }, audio: { noAudio: true },
     });
     this.bindInputs(); this.watchDisplay();
     this.applySettings();
+  }
+  openVFXPreview() {
+    if(!this.ready||this.vfxPreviewOpen)return;
+    this.clearInputs(); this.save(); this.vfxPreviewOpen=true; this.scene.pausedRun=true;
+    document.body.dataset.vfxPreview='';
+    this.scene.scene.pause('battle');
+    const settings=this.storage.data.settings;
+    this.scene.scene.run(WEAPON_VFX_PREVIEW_KEY,{reducedMotion:!settings.motion,simplified:settings.simplified,onExit:()=>{
+      this.scene.scene.stop(WEAPON_VFX_PREVIEW_KEY); this.vfxPreviewOpen=false;
+      delete document.body.dataset.vfxPreview;
+      this.clearInputs(); this.scene.pausedRun=this.battlePaused;
+      this.scene.scene.resume('battle'); this.ui.render(true);
+      document.querySelector<HTMLButtonElement>('[data-action="vfx-preview"]')?.focus({preventScroll:true});
+    }});
   }
   private dprMedia?: MediaQueryList;
   private dprListener = () => { this.syncDisplay(); this.watchDisplay(); };
@@ -104,6 +120,7 @@ export class BladeApp {
   private bindInputs() {
     const movement = ['w', 'a', 's', 'd', 'arrowup', 'arrowleft', 'arrowdown', 'arrowright', ' '];
     window.addEventListener('keydown', event => {
+      if(this.vfxPreviewOpen)return;
       const key = event.key.toLowerCase();
       if (key !== 'escape' && event.target instanceof HTMLElement && (event.target.closest('select,input,textarea') || this.ui.shopOpen && (key === ' ' || key === 'enter') && event.target.closest('button'))) return;
       if (movement.includes(key) || key === 'escape') event.preventDefault();
@@ -180,6 +197,8 @@ export class BladeApp {
     this.panel = 'pause'; this.scene.pausedRun = true; this.clearInputs(); this.save(); this.ui.render(true);
   }
   action(action: string, value?: string) {
+    if(action==='vfx-preview'){this.openVFXPreview();return;}
+    if(this.vfxPreviewOpen)return;
     if(action==='evolution-pick'&&value&&this.panel==='none'&&this.run){
       if(this.run.chooseUpgrade(value)){this.clearInputs();this.accumulator=0;this.audio.choose();this.save();this.ui.render(true);}
       return;

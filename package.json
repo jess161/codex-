@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "tsc --noEmit && vite build && node scripts/standalone.mjs",
+    "typecheck:blade": "tsc --noEmit -p tsconfig.blade.json",
+    "build:blade": "npm run typecheck:blade && vite build --mode blade && node scripts/standalone.mjs --blade-only",
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:atelier": "node tests/blade-atelier.mjs",
