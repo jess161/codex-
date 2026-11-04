@@ -1,0 +1,43 @@
+{
+  "source_commit": "5fe9ccc2765c6f1c9a2e27ce8bc81b6af9c5023d",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "backup_branch": "backup/renditions-5fe9ccc",
+  "created_utc": "2026-11-04T16:32:04.065865+00:00",
+  "engine": "Phaser 3.90 / TypeScript",
+  "save_version": 16,
+  "build_command": "node scripts/standalone.mjs --blade-only",
+  "gameplay_values_changed": false,
+  "game_tests_run": false,
+  "browser_run": false,
+  "gameplay_run": false,
+  "standalone_typecheck_run": false,
+  "pages_published": false,
+  "bundle_integrity_verified": true,
+  "files": [
+    {
+      "file": "carrot-renditions-5fe9ccc.html",
+      "bytes": 17861693,
+      "sha256": "e4fe73dc7e9ba6484dd721be7bdcd47e9c75c9509e0ae57bf71ebf997178517b"
+    },
+    {
+      "file": "combinations-preview.png",
+      "bytes": 736567,
+      "sha256": "db5d2f343b52609f59ccea2934696fe9e5f7a52e146c7f4bbbb188dc5d37acc9"
+    },
+    {
+      "file": "history-5fe9ccc.bundle",
+      "bytes": 76310969,
+      "sha256": "ac2cd5978b0525564ff0f040e25bd74bc41d3e5c0fe5d13b7bd85525caa80b36"
+    },
+    {
+      "file": "native-preview.png",
+      "bytes": 219619,
+      "sha256": "a59b35b177e7c94956ae5c80baef7410664268f6872d3b3af6def49bbff9d733"
+    },
+    {
+      "file": "source-5fe9ccc.zip",
+      "bytes": 76199687,
+      "sha256": "071baaeb8d61bdbcae0863fa3956ff52c85dd79abfd1bddd4b1ec8a84fd4e68c"
+    }
+  ]
+}
