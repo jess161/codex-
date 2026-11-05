@@ -1,0 +1,52 @@
+{
+  "source_commit": "c0a45f6537fefb73cf3850d79b14311bb2487290",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "backup_branch": "backup/aura-remake-c0a45f6",
+  "content_version": "b444058bd283d68c",
+  "files": {
+    "carrot-aura-c0a45f6.html": {
+      "bytes": 17891990,
+      "sha256": "dcdd90e932806c77e454ce794c347f64fb0375334925d166b1236d640c34b909"
+    },
+    "carrot-source-c0a45f6.zip": {
+      "bytes": 76220340,
+      "sha256": "27ef4b5ab4b9f9181f9a02120d09a0f63a9ba20dfd89613bb797778d32870d75"
+    },
+    "carrot-history-c0a45f6.bundle": {
+      "bytes": 76339962,
+      "sha256": "787fbdeef1c07aceb3ae5ab21029062187d87a022ade2e053b90b28893bbf98e"
+    },
+    "carrot-preview-c0a45f6.zip": {
+      "bytes": 1043103,
+      "sha256": "1ba3e9fc97bafed07a622f69d8c008973144e1f506e50b3c62031d33a0758cf3"
+    },
+    "build.log": {
+      "bytes": 1044,
+      "sha256": "91c9d52578be38fafbca0935cfd669190c24f793e745d1aa07c9ce7aede987c9"
+    },
+    "weapon-vfx.md": {
+      "bytes": 3483,
+      "sha256": "16873888bb5798ef0aea294c38b43bd301d42f0418b8d3ab6f2e36ae3bb36a92"
+    },
+    "preview-verification.json": {
+      "bytes": 3558,
+      "sha256": "5ad1f73bfe3b4569b566bc7a7d4acdbca445e5c1c53b276aa99dba5d5a0dbae4"
+    },
+    "preview-comparison.png": {
+      "bytes": 103975,
+      "sha256": "4cf07f39f2f0a06663b0ee8c699add05f6ff8db9a5805806983e5cc8dae40422"
+    }
+  },
+  "validation": {
+    "blade_typecheck": "passed",
+    "blade_production_build": "passed",
+    "offline_package": "generated and source content version matched",
+    "preview_browser_checks": 49,
+    "browser_errors": [],
+    "battle_playthrough_run": false,
+    "historical_test_suite_run": false
+  },
+  "scope": "Four configurable elemental auras, idle/attack/hit, rendered in existing VFX framework. Preview verification only; combat damage unchanged.",
+  "github_pages_published": false,
+  "untracked_agents_included": false
+}
