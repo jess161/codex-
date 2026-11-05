@@ -211,8 +211,10 @@ export class BattleScene extends Phaser.Scene {
       .setTilePosition((px - worldWidth / 2 - 8 / zoom) * density, (py - worldHeight / 2 - 8 / zoom) * density);
     this.shadows.clear(); this.fx.clear(); this.danger.clear(); this.grooves.clear(); this.groundHazards.clear(); this.friction.clear(); this.bladeBack.clear(); this.used.clear();
     this.carrotFx.clear().setVisible(active);
-    const neutralSword=active&&this.run!.bladeId==='knife'&&!hasCarrotElements(carrotElements(s!.economy?.gear,s!.evolution));
-    this.weaponVfx.setVisible(neutralSword);
+    const carrotSword=active&&this.run!.bladeId==='knife';
+    this.weaponVfx.setVisible(carrotSword);
+    const weaponElements=carrotElements(s?.economy?.gear,s?.evolution);
+    this.weaponVfx.setElements(weaponElements);
     this.weaponVfx.reducedMotion=this.reducedMotion; this.weaponVfx.simplified=this.simplified;
     this.hero.setVisible(active); this.blade.setVisible(active); this.hilt.setVisible(active); this.slash.setVisible(false);
     this.expression.clear().setVisible(active); this.hands.clear().setVisible(active); this.effortLevel = 0;
@@ -348,8 +350,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if(run.isRanged){this.blade.setVisible(false);this.hilt.setVisible(false);drawArchery(g,run,(...args)=>this.sprite(...args),this.reducedMotion);}else if (isBasicWeapon(run.tier)) {
       this.blade.setVisible(false); this.hilt.setVisible(false);
-      const useVfx=!hasCarrotElements(carrotElements(s.economy?.gear,s.evolution));
-      const contact=drawBasicMelee(g, run, (...args) => this.sprite(...args),this.clock,this.reducedMotion,this.carrotFx,useVfx?pose=>this.weaponVfx.setPose(pose):undefined);
+      const contact=drawBasicMelee(g, run, (...args) => this.sprite(...args),this.clock,this.reducedMotion,this.carrotFx,pose=>this.weaponVfx.setPose(pose));
       // Carrot pigment scratches use the real ground tip; organic contact has no metal sparks.
       this.drag.update(fxDt,contact?.elementalTrails?undefined:contact,this.simplified,true);
       for(const kind of CARROT_TRAILS){

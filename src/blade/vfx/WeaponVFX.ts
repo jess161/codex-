@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { RENDITION_LAYOUT } from '../assets/carrot-sword/rendition-layout';
-import { WEAPON_VFX_PROFILES, type VFXElement } from './profiles';
+import { RENDITION_LAYOUT, RENDITION_FX } from '../assets/carrot-sword/rendition-layout';
+import type { CarrotElements } from '../carrot-elements';
+import { WEAPON_VFX_PROFILES, carrotVFXElement, type VFXElement } from './profiles';
 
 interface Point { x: number; y: number }
 export interface WeaponVFXPose {
@@ -28,7 +29,8 @@ export class WeaponVFX {
   readonly AttackTrail: Phaser.GameObjects.Graphics;
   readonly HitVFX: Phaser.GameObjects.Graphics;
   readonly ReactionVFX: Phaser.GameObjects.Graphics;
-  element: VFXElement = 'none';
+  private element: VFXElement = 'none';
+  private elements: CarrotElements = { fire: 0, frost: 0, poison: 0, electric: 0 };
   reducedMotion = false;
   simplified = false;
   private pose?: WeaponVFXPose;
@@ -44,6 +46,8 @@ export class WeaponVFX {
   private emission = 0;
   private serial = 0;
   private visible = true;
+  private electricArcs = 0;
+  private elementalCounts = { fire: 0, ice: 0, poison: 0 };
 
   constructor(private readonly scene: Phaser.Scene, depth = 27.15) {
     const graphics = (name: string) => scene.add.graphics().setName(name);
@@ -85,6 +89,11 @@ export class WeaponVFX {
     }
   }
 
+  setElements(elements: CarrotElements) {
+    this.elements = { ...elements };
+    this.element = carrotVFXElement(elements);
+  }
+
   setVisible(visible: boolean) {
     this.visible = visible;
     for (const object of [this.root, this.AttackTrail, this.HitVFX, this.ReactionVFX]) object.setVisible(visible);
@@ -103,6 +112,11 @@ export class WeaponVFX {
   }
 
   private get limits() { return this.simplified ? LIMITS.low : LIMITS.full; }
+  private localPixels(pixels: number) {
+    const dpr = this.scene.game.canvas.width / Math.max(1, this.scene.game.canvas.clientWidth);
+    const scale = Math.min(Math.abs(this.root.scaleX), Math.abs(this.root.scaleY));
+    return pixels / Math.max(1, scale * this.scene.cameras.main.zoom / dpr);
+  }
   private point(pose: WeaponVFXPose, distance: number): Point {
     return { x: pose.x + Math.cos(pose.angle) * pose.scaleX * SPAN * distance,
       y: pose.y + Math.sin(pose.angle) * pose.scaleX * SPAN * distance };
@@ -129,6 +143,129 @@ export class WeaponVFX {
       if (this.trail.length > this.limits.trail) this.trail.splice(0, this.trail.length - this.limits.trail);
     }
     this.previous = { ...pose };
+  }
+
+  private drawLightning() {
+    const rank = this.elements.electric;
+    this.electricArcs = 0;
+    if (!rank) return;
+    const g = this.ElementParticles;
+    // Local coordinates share the sprite transform. Time advances only in update(dt),
+    // so a paused battle freezes the arcs too. No combat RNG or chain-lightning calls.
+    const tick = this.reducedMotion ? 0 : Math.floor(this.time * 9);
+    const count = this.simplified || this.reducedMotion ? 1 : 2 + (rank === 2 ? 1 : 0);
+    const alpha = this.reducedMotion ? .22 : .48 + .12 * Math.sin(this.time * 4) + this.boost * .25;
+    const lineWidth = Math.max(.014, this.localPixels(.9));
+    for (let i = 0; i < count; i++) {
+      const points: Point[] = [];
+      for (let j = 0; j <= 7; j++) {
+        const t = j / 7;
+        const ripple = Math.sin(t * Math.PI);
+        points.push({ x: .13 + t * .87,
+          y: Math.sin(t * Math.PI * 2 + i * 2.4 + tick * .65) * .11 * ripple
+            + Math.sin(j * 2.7 + tick * 1.4 + i) * .045 * ripple });
+      }
+      g.lineStyle(lineWidth * (2.5 + this.boost), 0xffbe39, alpha * .3).strokePoints(points, false);
+      g.lineStyle(lineWidth, 0xffdf6b, alpha).strokePoints(points, false);
+      g.lineStyle(lineWidth * .4, 0xfffde6, alpha).strokePoints(points, false);
+      this.electricArcs++;
+    }
+    const sx = (RENDITION_FX.electricSpark[0] - ART.grip[0]) / SPAN;
+    const sy = (RENDITION_FX.electricSpark[1] - ART.grip[1]) / SPAN;
+    const radius = .024 + this.boost * .018;
+    g.lineStyle(.01, 0xffefb0, alpha).lineBetween(sx - radius, sy, sx + radius, sy)
+      .lineBetween(sx, sy - radius, sx, sy + radius);
+    if (!this.reducedMotion && this.boost > .15) {
+      for (let i = 0; i < (this.simplified ? 2 : 4); i++) {
+        const angle = i * Math.PI / 2 + this.time * 3, r = .035 + (1 - this.boost) * .09;
+        g.lineStyle(.008, 0xfff4bd, this.boost * .8)
+          .lineBetween(1 + Math.cos(angle) * r * .4, Math.sin(angle) * r * .4,
+            1 + Math.cos(angle) * r, Math.sin(angle) * r);
+      }
+    }
+  }
+
+  private drawFire() {
+    const rank = this.elements.fire;
+    if (!rank) return;
+    const g = this.ElementParticles, t = this.reducedMotion ? 0 : this.time;
+    const x = (RENDITION_FX.fireTip[0] - ART.grip[0]) / SPAN;
+    const y = (RENDITION_FX.fireTip[1] - ART.grip[1]) / SPAN;
+    const flames = this.simplified || this.reducedMotion ? 1 : rank === 2 ? 3 : 2;
+    for (let i = 0; i < flames; i++) {
+      const sway = Math.sin(t * 6 + i * 2.4) * .025;
+      const length = Math.max(.09 + rank * .035, this.localPixels(6)) + Math.sin(t * 4.8 + i) * .025 + this.boost * .05;
+      const baseY = y + (i - (flames - 1) / 2) * .04;
+      const points = [{ x: x - .035, y: baseY }, { x: x + .025, y: baseY - .035 },
+        { x: x + length * .56, y: baseY - .016 + sway }, { x: x + length, y: baseY + sway },
+        { x: x + length * .5, y: baseY + .026 + sway }, { x: x + .012, y: baseY + .035 }];
+      g.fillStyle(0xff632d, .52 + this.boost * .18).fillPoints(points, true);
+      g.fillStyle(0xffd26e, .7).fillTriangle(x - .015, baseY - .018, x + length * .72, baseY + sway * .7, x + .01, baseY + .017);
+      this.elementalCounts.fire++;
+    }
+    const embers = this.reducedMotion ? 0 : this.simplified ? 1 : rank === 2 ? 5 : 3;
+    for (let i = 0; i < embers; i++) {
+      const p = (t * .9 + i / embers) % 1, r = (.012 + rank * .003) * (1 - p * .6);
+      g.fillStyle(i % 2 ? 0xffce70 : 0xff7d39, (1 - p) * .65)
+        .fillCircle(x + p * .3, y + Math.sin(i * 2.3) * .055 - p * .1, r);
+      this.elementalCounts.fire++;
+    }
+  }
+
+  private drawPoison() {
+    const rank = this.elements.poison;
+    if (!rank) return;
+    const g = this.ElementParticles, t = this.reducedMotion ? 0 : this.time;
+    const stream: Point[] = [];
+    for (let j = 0; j <= 9; j++) stream.push({ x: .24 + j * .075,
+      y: .04 + Math.sin(j * .65 - t * 2.8) * .023 });
+    g.lineStyle(Math.max(.014 + rank * .004, this.localPixels(.8)), 0x70df3d, .45).strokePoints(stream, false);
+    g.lineStyle(Math.max(.006, this.localPixels(.3)), 0xd7ff8f, .55).strokePoints(stream, false);
+    this.elementalCounts.poison++;
+    const drops = this.simplified || this.reducedMotion ? 1 : rank === 2 ? 3 : 2;
+    const anchorX = (RENDITION_FX.poisonDrop[0] - ART.grip[0]) / SPAN;
+    const anchorY = (RENDITION_FX.poisonDrop[1] - ART.grip[1]) / SPAN;
+    for (let i = 0; i < drops; i++) {
+      const p = (t * .72 + i / drops) % 1;
+      const x = anchorX + (i - (drops - 1) / 2) * .15, y = anchorY + p * p * .17;
+      const r = Math.max(.014 + rank * .004, this.localPixels(1.2)) * (1 - p * .35), alpha = (1 - p) * .8;
+      g.fillStyle(0x78e83b, alpha).fillEllipse(x, y, r * 2, r * 2.6)
+        .fillTriangle(x - r * .7, y, x, y - r * 2.5, x + r * .7, y);
+      g.fillStyle(0xe4ffb7, alpha * .8).fillCircle(x - r * .3, y - r * .3, r * .28);
+      this.elementalCounts.poison++;
+    }
+    if (!this.reducedMotion) for (let i = 0; i < (this.simplified ? 1 : 3); i++) {
+      const p = (t * .28 + i * .31) % 1, x = .3 + p * .58;
+      g.lineStyle(.006, 0xc0ff87, Math.sin(p * Math.PI) * .65)
+        .strokeCircle(x, .02 + Math.sin(i * 2 + p * 5) * .035, .009 + rank * .003);
+      this.elementalCounts.poison++;
+    }
+  }
+
+  private drawFrost() {
+    const rank = this.elements.frost;
+    if (!rank) return;
+    const g = this.ElementParticles, t = this.reducedMotion ? 0 : this.time;
+    const crystals = this.simplified ? 2 : rank === 2 ? 4 : 3;
+    for (let i = 0; i < crystals; i++) {
+      const x = -.25 + i * .08, y = Math.sin(i * 2) * .065;
+      const r = Math.max(.024 + rank * .008, this.localPixels(1.8)) * (1 + Math.sin(t * 2.5 + i) * .14);
+      const points = [{ x: x - r * .55, y }, { x, y: y - r * 1.55 }, { x: x + r * .55, y }, { x, y: y + r }];
+      const alpha = .48 + Math.sin(t * 2.1 + i) * .17;
+      g.fillStyle(0x9bdfff, alpha).fillPoints(points, true);
+      g.lineStyle(Math.max(.006, this.localPixels(.45)), 0xf0fcff, alpha + .2).strokePoints(points, true)
+        .lineBetween(x, y - r * 1.55, x, y + r);
+      this.elementalCounts.ice++;
+    }
+    const chips = this.reducedMotion ? 0 : this.simplified ? 1 : rank === 2 ? 5 : 3;
+    for (let i = 0; i < chips; i++) {
+      const p = (t * .65 + i / chips) % 1;
+      const x = -.27 + (i % 3) * .09 + Math.sin(i * 1.8) * p * .04, y = -.04 - p * .2;
+      const r = .011 * (1 - p * .5);
+      g.fillStyle(0xe7faff, Math.sin(p * Math.PI) * .7)
+        .fillTriangle(x - r, y, x + r, y + r, x, y - r);
+      this.elementalCounts.ice++;
+    }
   }
 
   update(delta: number) {
@@ -164,6 +301,9 @@ export class WeaponVFX {
       p.x += p.vx * dt; p.y += p.vy * dt;
       particles.fillStyle(profile.light, Math.sin(p.age / p.life * Math.PI) * .55).fillCircle(p.x, p.y, p.size);
     }
+    this.elementalCounts = { fire: 0, ice: 0, poison: 0 };
+    this.drawFire(); this.drawPoison(); this.drawFrost();
+    this.drawLightning();
     this.trail = this.trail.filter(p => (p.age += dt) < (this.reducedMotion ? .09 : .18));
     this.sampleTrail(dt);
     const trail = this.AttackTrail.clear();
@@ -200,8 +340,9 @@ export class WeaponVFX {
   get counts() {
     const particles = this.motes.length, auras = this.visible && this.pose ? 2 : 0;
     const trail = this.trail.reduce((n, p, i, samples) => n + (i > 0 && samples[i - 1].attack === p.attack ? 1 : 0), 0);
-    return { auras, particles, trail, hits: this.hits.length, reactions: this.reactions.length,
-      total: auras + particles + trail + this.hits.length + this.reactions.length,
+    const elemental = this.elementalCounts.fire + this.elementalCounts.ice + this.elementalCounts.poison;
+    return { auras, particles, trail, elemental: { ...this.elementalCounts }, electricArcs: this.electricArcs, hits: this.hits.length, reactions: this.reactions.length,
+      total: auras + particles + trail + elemental + this.electricArcs + this.hits.length + this.reactions.length,
       auraAlpha: this.auraAlpha };
   }
 
@@ -209,6 +350,8 @@ export class WeaponVFX {
     this.trail = []; this.motes = []; this.hits = []; this.reactions = [];
     this.previous = undefined; this.pose = undefined; this.attackId = undefined;
     this.boost = 0; this.auraAlpha = .24; this.emission = 0; this.time = 0; this.serial = 0;
+    this.electricArcs = 0;
+    this.elementalCounts = { fire: 0, ice: 0, poison: 0 };
     for (const g of [this.InnerAura, this.OuterAura, this.ElementParticles, this.AttackTrail, this.HitVFX, this.ReactionVFX]) g.clear();
   }
 

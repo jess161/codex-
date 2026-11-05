@@ -6,7 +6,7 @@ import { swingPhase } from '../equipment';
 import type { FormId } from '../evolution/types';
 import { RENDITION_LAYOUT } from '../assets/carrot-sword/rendition-layout';
 import { WeaponVFX, type WeaponVFXPose } from './WeaponVFX';
-import { WEAPON_VFX_PROFILES, type VFXElement } from './profiles';
+import { WEAPON_VFX_PROFILES, previewElements, type VFXPreviewPreset } from './profiles';
 import './preview.css';
 
 export const WEAPON_VFX_PREVIEW_KEY = 'weapon-vfx-preview';
@@ -22,7 +22,7 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
   private listeners?: AbortController;
   private exit?: () => void;
   private form: PreviewForm = 'base';
-  private element: VFXElement = 'none';
+  private element: VFXPreviewPreset = 'none';
   private angle = -.35;
   private size = 1;
   private attackAge = -1;
@@ -56,11 +56,11 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
     const panel = this.panel = document.createElement('div');
     panel.className = 'weapon-vfx-preview'; panel.setAttribute('aria-label', '武器特效预览');
     panel.innerHTML = `<header><div><small>WEAPON VFX PREVIEW</small><h1>胡萝卜剑 · 动态光晕</h1></div><button data-vfx="exit">返回游戏</button></header>
-      <div class="vfx-hint">已有武器原图 + 动态光晕。元素切换仅预览通用配色；命中和融合按钮只播放特效。</div>
+      <div class="vfx-hint">火焰、冰晶、毒液、电弧与战斗共用；可预览三元素同时显示。命中和融合按钮只播放特效。</div>
       <output class="vfx-metrics" aria-live="off"></output>
       <section class="vfx-controls" aria-label="预览控制">
         <div class="vfx-selects"><label>武器形态<select data-vfx="form"><option value="base">基础剑</option><option value="greatsword">巨剑</option><option value="dual">双刃</option><option value="wave">剑气</option></select></label>
-        <label>元素配色<select data-vfx="element">${Object.entries(WEAPON_VFX_PROFILES).map(([key, p]) => `<option value="${key}">${p.name}</option>`).join('')}</select></label></div>
+        <label>元素效果<select data-vfx="element">${Object.entries(WEAPON_VFX_PROFILES).map(([key, p]) => `<option value="${key}">${p.name}</option>`).join('')}<option value="calamity">火＋冰＋毒</option><option value="stormFirePoison">雷＋火＋毒</option></select></label></div>
         <div class="vfx-sliders"><label>尺寸 <input data-vfx="size" aria-label="武器尺寸" type="range" min="0.5" max="1.65" step="0.05" value="1"></label><label>旋转 <input data-vfx="angle" aria-label="武器旋转" type="range" min="-180" max="180" step="1" value="-20"></label></div>
         <div class="vfx-buttons"><button data-vfx="attack">挥砍</button><button data-vfx="hit">测试命中</button><button data-vfx="reaction">融合特效</button><button data-vfx="clear">清空特效</button></div>
         <div class="vfx-checks"><label><input type="checkbox" data-vfx="motion" ${this.motion ? 'checked' : ''}>动态效果</label><label><input type="checkbox" data-vfx="quality" ${this.simplified ? 'checked' : ''}>简化特效</label></div>
@@ -76,7 +76,7 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
       const input = e.target as HTMLInputElement;
       switch (input.dataset.vfx) {
         case 'form': this.form = input.value as PreviewForm; this.clear(); break;
-        case 'element': this.element = input.value as VFXElement; this.clear(); break;
+        case 'element': this.element = input.value as VFXPreviewPreset; this.clear(); break;
         case 'size': this.size = Number(input.value); this.vfx?.reset(); break;
         case 'angle': this.angle = Number(input.value) * Math.PI / 180; this.vfx?.reset(); break;
         case 'motion': this.motion = input.checked; this.vfx!.reducedMotion = !input.checked; break;
@@ -135,18 +135,19 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
     const timing = { age: this.attackAge, windup: .12, strike: .22, recovery: .24, angle: this.angle };
     const swing = this.attackAge >= 0 ? timing : null;
     const angle = swing ? bladePresentation(swing, this.angle, Math.PI / 2, 1, this.angle).angle : this.angle;
+    const elements=previewElements(this.element);
     this.pose = { x, y, angle, scaleX: length / (RENDITION_LAYOUT.tip[0] - RENDITION_LAYOUT.grip[0]),
       scaleY: length / (RENDITION_LAYOUT.tip[0] - RENDITION_LAYOUT.grip[0]),
-      texture: carrotAppearance(this.form === 'base' ? null : this.form, { fire: 0, frost: 0, poison: 0, electric: 0 }),
+      texture: carrotAppearance(this.form === 'base' ? null : this.form, elements),
       attackId: swing ? this.attackSerial : undefined, striking: !!swing && swingPhase(swing).phase === 'strike' };
-    this.vfx.element = this.element; this.vfx.setPose(this.pose); this.vfx.update(dt);
+    this.vfx.setElements(elements); this.vfx.setPose(this.pose); this.vfx.update(dt);
     const marker = this.marker!.clear();
     marker.lineStyle(1, 0x90adc4, .4).strokeCircle(x, y, 5).lineBetween(x - 10, y, x + 10, y).lineBetween(x, y - 10, x, y + 10);
     if (this.attackAge >= 0 && (this.attackAge += dt) > .58) this.attackAge = -1;
     this.metricAge += dt;
     if (this.metricAge > .1 && this.metrics) {
       this.metricAge = 0; const count = this.vfx.counts;
-      this.metrics.textContent = `FPS ${Math.round(this.game.loop.actualFps)} · 活跃特效 ${count.total}\n光晕 ${count.auras} / 粒子 ${count.particles} / 拖尾段 ${count.trail} / 命中 ${count.hits} / 融合 ${count.reactions}\n光晕透明度 ${count.auraAlpha.toFixed(2)}`;
+      this.metrics.textContent = `FPS ${Math.round(this.game.loop.actualFps)} · 活跃特效 ${count.total}\n光晕 ${count.auras} / 电弧 ${count.electricArcs} / 粒子 ${count.particles} / 拖尾段 ${count.trail}\n火 ${count.elemental.fire} / 冰 ${count.elemental.ice} / 毒 ${count.elemental.poison} / 命中 ${count.hits} / 融合 ${count.reactions}\n光晕透明度 ${count.auraAlpha.toFixed(2)}`;
     }
   }
 }

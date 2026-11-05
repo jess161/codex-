@@ -54,18 +54,20 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
  const frame={x,y,angle:a,scaleX:width/art.width,scaleY:height/art.height};
  if(renderWeapon)renderWeapon({...frame,texture,attackId:s.swing?.id,striking:!!s.swing&&swingPhase(s.swing).phase==='strike'});
  else sprite('basic-weapon',texture,x,y,width,27.15).setOrigin(art.grip[0]/art.width,art.grip[1]/art.height).setRotation(a).setDisplaySize(width,height);
- if(!renderWeapon&&s.swing&&pose.opacity>0){
+ if(s.swing&&pose.opacity>0){
   const arc=stats.arc*Math.PI/180,start=s.swing.angle-arc/2;
   const trailEnd=swingPhase(s.swing).phase==='strike'?pose.angle:s.swing.angle+arc/2;
   const arcColor=elements.fire?0xf65f2c:elements.frost?0x9cddf6:elements.electric?0xffd84f:elements.poison?0xa65bc2:form==='wave'?0x86d9cd:0xf2a04f;
   const arcLight=elements.fire?0xffd477:elements.frost?0xf0fcff:elements.electric?0xffef9c:elements.poison?0xe0ffad:0xffe2a4;
-  g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
-  g.lineStyle(elements.fire===2?3.5:2.5,arcLight,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
+  if(!renderWeapon){
+   g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
+   g.lineStyle(elements.fire===2?3.5:2.5,arcLight,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
+  }
   if(elements.poison)for(let i=0;i<(elements.poison===2?4:2);i++){
    const angle=a-.15-i*.13,r=stats.range*(.76+i*.055),px=s.player.x+Math.cos(angle)*r,py=s.player.y+Math.sin(angle)*r;
    materialFx.fillStyle(0x83df38,pose.opacity).fillEllipse(px,py,3+elements.poison,2+elements.poison);
   }
-  if(!hasCarrotElements(elements))for(let i=0;i<3;i++){
+  if(!renderWeapon&&!hasCarrotElements(elements))for(let i=0;i<3;i++){
    const leaf=a-.12-i*.1,r=stats.range*(.72+i*.07);
    g.fillStyle(i===1?0xffc16b:0x79b65c,pose.opacity*.7).fillEllipse(s.player.x+Math.cos(leaf)*r,s.player.y+Math.sin(leaf)*r,4.5,2.5);
   }
