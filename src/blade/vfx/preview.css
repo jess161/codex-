@@ -19,7 +19,7 @@ body[data-vfx-preview] #app { visibility: hidden; pointer-events: none; }
 .vfx-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .vfx-buttons button { padding: 6px 2px; font-size: 13px; }
 .vfx-buttons button:first-child { background: #83572e; border-color: #dca66b; }
-.vfx-checks { display: flex; gap: 22px; margin-top: 8px; }
+.vfx-checks { display: flex; flex-wrap: wrap; gap: 4px 16px; margin-top: 8px; }
 .vfx-checks label { display: flex; align-items: center; min-height: 30px; gap: 6px; }
 .vfx-controls p { margin: 3px 0 0; color: #8faec5; font-size: 11px; }
 @media (max-height: 520px) and (min-width: 620px) {

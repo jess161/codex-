@@ -63,7 +63,7 @@ export function drawBasicMelee(g:Phaser.GameObjects.Graphics,run:BladeRun,sprite
    g.lineStyle((elements.fire?19:15)*Math.sqrt(stats.widthScale),arcColor,pose.opacity*.22).beginPath().arc(s.player.x,s.player.y,stats.range*.97,start,trailEnd).strokePath();
    g.lineStyle(elements.fire===2?3.5:2.5,arcLight,pose.opacity*.9).beginPath().arc(s.player.x,s.player.y,stats.range,start,trailEnd).strokePath();
   }
-  if(elements.poison)for(let i=0;i<(elements.poison===2?4:2);i++){
+  if(!renderWeapon&&elements.poison)for(let i=0;i<(elements.poison===2?4:2);i++){
    const angle=a-.15-i*.13,r=stats.range*(.76+i*.055),px=s.player.x+Math.cos(angle)*r,py=s.player.y+Math.sin(angle)*r;
    materialFx.fillStyle(0x83df38,pose.opacity).fillEllipse(px,py,3+elements.poison,2+elements.poison);
   }

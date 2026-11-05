@@ -7,6 +7,7 @@ import type { FormId } from '../evolution/types';
 import { RENDITION_LAYOUT } from '../assets/carrot-sword/rendition-layout';
 import { WeaponVFX, type WeaponVFXPose } from './WeaponVFX';
 import { WEAPON_VFX_PROFILES, previewElements, type VFXPreviewPreset } from './profiles';
+import { WEAPON_VFX_CONFIG as C } from './config';
 import './preview.css';
 
 export const WEAPON_VFX_PREVIEW_KEY = 'weapon-vfx-preview';
@@ -23,20 +24,22 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
   private exit?: () => void;
   private form: PreviewForm = 'base';
   private element: VFXPreviewPreset = 'none';
-  private angle = -.35;
+  private angle = C.preview.defaultAngle;
   private size = 1;
   private attackAge = -1;
   private attackSerial = 0;
   private metricAge = 0;
   private motion = true;
   private simplified = false;
+  private baseArt = false;
   private pose?: WeaponVFXPose;
   constructor() { super(WEAPON_VFX_PREVIEW_KEY); }
 
   init(data: { onExit?: () => void; reducedMotion?: boolean; simplified?: boolean }) {
     this.exit = data.onExit; this.motion = !data.reducedMotion; this.simplified = !!data.simplified;
-    this.form = 'base'; this.element = 'none'; this.angle = -.35; this.size = 1;
+    this.form = 'base'; this.element = 'none'; this.angle = C.preview.defaultAngle; this.size = 1;
     this.attackAge = -1; this.attackSerial = 0; this.metricAge = 0; this.pose = undefined;
+    this.baseArt = false;
   }
 
   preload() {
@@ -56,14 +59,14 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
     const panel = this.panel = document.createElement('div');
     panel.className = 'weapon-vfx-preview'; panel.setAttribute('aria-label', '武器特效预览');
     panel.innerHTML = `<header><div><small>WEAPON VFX PREVIEW</small><h1>胡萝卜剑 · 动态光晕</h1></div><button data-vfx="exit">返回游戏</button></header>
-      <div class="vfx-hint">火焰、冰晶、毒液、电弧与战斗共用；可预览三元素同时显示。命中和融合按钮只播放特效。</div>
+      <div class="vfx-hint">待机、拖尾、命中与战斗共用。火 ${WEAPON_VFX_PROFILES.fire.timing.breath} 秒 · 冰 ${WEAPON_VFX_PROFILES.ice.timing.breath} 秒 · 毒 ${WEAPON_VFX_PROFILES.poison.timing.breath} 秒，电弧 ${C.lightning.duration[0]}～${C.lightning.duration[1]} 秒。</div>
       <output class="vfx-metrics" aria-live="off"></output>
       <section class="vfx-controls" aria-label="预览控制">
         <div class="vfx-selects"><label>武器形态<select data-vfx="form"><option value="base">基础剑</option><option value="greatsword">巨剑</option><option value="dual">双刃</option><option value="wave">剑气</option></select></label>
         <label>元素效果<select data-vfx="element">${Object.entries(WEAPON_VFX_PROFILES).map(([key, p]) => `<option value="${key}">${p.name}</option>`).join('')}<option value="calamity">火＋冰＋毒</option><option value="stormFirePoison">雷＋火＋毒</option></select></label></div>
         <div class="vfx-sliders"><label>尺寸 <input data-vfx="size" aria-label="武器尺寸" type="range" min="0.5" max="1.65" step="0.05" value="1"></label><label>旋转 <input data-vfx="angle" aria-label="武器旋转" type="range" min="-180" max="180" step="1" value="-20"></label></div>
         <div class="vfx-buttons"><button data-vfx="attack">挥砍</button><button data-vfx="hit">测试命中</button><button data-vfx="reaction">融合特效</button><button data-vfx="clear">清空特效</button></div>
-        <div class="vfx-checks"><label><input type="checkbox" data-vfx="motion" ${this.motion ? 'checked' : ''}>动态效果</label><label><input type="checkbox" data-vfx="quality" ${this.simplified ? 'checked' : ''}>简化特效</label></div>
+        <div class="vfx-checks"><label><input type="checkbox" data-vfx="motion" ${this.motion ? 'checked' : ''}>动态效果</label><label><input type="checkbox" data-vfx="quality" ${this.simplified ? 'checked' : ''}>简化特效</label><label><input type="checkbox" data-vfx="base-art">基础剑对照</label></div>
         <p>空格：挥砍 · H：命中 · R：融合 · Esc：返回</p>
       </section>`;
     document.body.append(panel);
@@ -81,6 +84,7 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
         case 'angle': this.angle = Number(input.value) * Math.PI / 180; this.vfx?.reset(); break;
         case 'motion': this.motion = input.checked; this.vfx!.reducedMotion = !input.checked; break;
         case 'quality': this.vfx!.simplified = input.checked; this.vfx!.reset(); break;
+        case 'base-art': this.baseArt=input.checked; break;
       }
     }, { signal });
     window.addEventListener('keydown', event => {
@@ -132,22 +136,23 @@ export class WeaponVFXPreviewScene extends Phaser.Scene {
     const cy = (areaTop + areaBottom) / 2;
     const length = Math.min(areaWidth * .4, Math.max(60, areaBottom - areaTop) * .55, 210) * this.size * (this.form === 'greatsword' ? 1.25 : this.form === 'dual' ? .82 : 1);
     const x = areaWidth * .32, y = cy;
-    const timing = { age: this.attackAge, windup: .12, strike: .22, recovery: .24, angle: this.angle };
+    const timing = { age: this.attackAge, windup: C.preview.windup, strike: C.preview.strike, recovery: C.preview.recovery, angle: this.angle };
     const swing = this.attackAge >= 0 ? timing : null;
     const angle = swing ? bladePresentation(swing, this.angle, Math.PI / 2, 1, this.angle).angle : this.angle;
     const elements=previewElements(this.element);
     this.pose = { x, y, angle, scaleX: length / (RENDITION_LAYOUT.tip[0] - RENDITION_LAYOUT.grip[0]),
       scaleY: length / (RENDITION_LAYOUT.tip[0] - RENDITION_LAYOUT.grip[0]),
-      texture: carrotAppearance(this.form === 'base' ? null : this.form, elements),
+      texture: carrotAppearance(this.form === 'base' ? null : this.form, this.baseArt?previewElements('none'):elements),
       attackId: swing ? this.attackSerial : undefined, striking: !!swing && swingPhase(swing).phase === 'strike' };
     this.vfx.setElements(elements); this.vfx.setPose(this.pose); this.vfx.update(dt);
     const marker = this.marker!.clear();
     marker.lineStyle(1, 0x90adc4, .4).strokeCircle(x, y, 5).lineBetween(x - 10, y, x + 10, y).lineBetween(x, y - 10, x, y + 10);
-    if (this.attackAge >= 0 && (this.attackAge += dt) > .58) this.attackAge = -1;
+    if (this.attackAge >= 0 && (this.attackAge += dt) > timing.windup+timing.strike+timing.recovery) this.attackAge = -1;
     this.metricAge += dt;
-    if (this.metricAge > .1 && this.metrics) {
+    if (this.metricAge > C.preview.metricInterval && this.metrics) {
       this.metricAge = 0; const count = this.vfx.counts;
-      this.metrics.textContent = `FPS ${Math.round(this.game.loop.actualFps)} · 活跃特效 ${count.total}\n光晕 ${count.auras} / 电弧 ${count.electricArcs} / 粒子 ${count.particles} / 拖尾段 ${count.trail}\n火 ${count.elemental.fire} / 冰 ${count.elemental.ice} / 毒 ${count.elemental.poison} / 命中 ${count.hits} / 融合 ${count.reactions}\n光晕透明度 ${count.auraAlpha.toFixed(2)}`;
+      const state={idle:'待机',attack:'攻击',hit:'命中'}[this.vfx.diagnostics.state];
+      this.metrics.textContent = `${state} · FPS ${Math.round(this.game.loop.actualFps)} · 活跃特效 ${count.total}\n光晕 ${count.auras} / 电弧 ${count.electricArcs} / 粒子 ${count.particles} / 拖尾段 ${count.trail}\n火 ${count.elemental.fire} / 冰 ${count.elemental.ice} / 毒 ${count.elemental.poison} / 命中 ${count.hits}\n光晕透明度 ${count.auraAlpha.toFixed(2)}`;
     }
   }
 }

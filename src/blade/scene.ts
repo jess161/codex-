@@ -1,8 +1,8 @@
 import {drawBuildBody,drawBuildProc} from './build-art';
 import { drawBasicMelee } from './basic-weapon-art';
-import {carrotElements,hasCarrotElements,CARROT_TRAILS,type CarrotElements} from './carrot-elements';
+import {carrotElements,CARROT_TRAILS} from './carrot-elements';
 import {WeaponVFX} from './vfx/WeaponVFX';
-import {drawCarrotTrails,drawCarrotHit} from './carrot-element-art';
+import {drawCarrotTrails} from './carrot-element-art';
 import { drawArchery } from './bow-art';
 import Phaser from 'phaser';
 import { drawActiveFields, drawActiveBurst } from './active-art';
@@ -56,7 +56,6 @@ export class BattleScene extends Phaser.Scene {
   private carrotFx!:Phaser.GameObjects.Graphics;
   private weaponVfx!:WeaponVFX;
   private readonly carrotDrags={poison:new BladeDrag(),fire:new BladeDrag(),frost:new BladeDrag(),electric:new BladeDrag()};
-  private carrotHits:{x:number;y:number;age:number;elements:CarrotElements}[]=[];
   private groundHazards!: Phaser.GameObjects.Graphics;
   private recoilAge = 1;
   private recoilStrength = 0;
@@ -124,7 +123,7 @@ export class BattleScene extends Phaser.Scene {
   }
   reset(run: BladeRun) {
     this.weaponVfx.reset();
-    for(const drag of Object.values(this.carrotDrags))drag.reset();this.carrotHits=[];
+    for(const drag of Object.values(this.carrotDrags))drag.reset();
     this.run = run; this.activeRun = true; this.particles = []; this.passiveFx = []; this.relicFx = []; this.activeFx=[]; this.buildFx=[]; this.drag.reset(); this.clearImpact(); this.hitResponses.clear(); this.contacts=[]; this.pausedRun=false;
     for (const label of this.labels) { label.object.setVisible(false); this.spareLabels.push(label.object); }
     this.labels = [];
@@ -141,13 +140,13 @@ export class BattleScene extends Phaser.Scene {
     for (const event of events) {
       const x = event.x ?? 0, y = event.y ?? 0, color = TIERS[event.tier ?? this.run?.tier ?? 0].hex;
       const direct = event.type==='hit' && (event.source==='melee' || event.source==='wave' || event.source==='active' || event.source==='gear');
+      const weaponContact=event.type==='hit'&&(event.source==='melee'||event.source==='wave')&&this.run?.bladeId==='knife';
       if(direct && event.enemyId!==undefined) this.hitResponses.set(event.enemyId,0);
-      if(event.type==='hit'&&(event.source==='melee'||event.source==='wave')&&this.run?.bladeId==='knife'&&this.carrotHits.length<(this.simplified?12:24)){
+      if(weaponContact&&this.run){
         const elements=carrotElements(this.run.state.economy?.gear,this.run.state.evolution);
-        if(!hasCarrotElements(elements))this.weaponVfx.hit(x,y);
-        else this.carrotHits.push({x,y,age:0,elements});
+        this.weaponVfx.hit(x,y,1,elements);
       }
-      if((direct || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
+      if((direct&&!weaponContact || event.type==='kill') && this.contacts.length<(this.simplified?24:60)) this.contacts.push({x,y,age:0,death:event.type==='kill',color});
       if(event.type==='gear-proc'){
         const limit=this.simplified?8:16;
         if(event.procKind==='fire-burst'){this.buildFx.unshift({event,age:0});this.buildFx.length=Math.min(this.buildFx.length,limit);}
@@ -157,7 +156,7 @@ export class BattleScene extends Phaser.Scene {
       if((event.type==='active'&&event.activePhase!=='heal'||event.type==='bow-blast')&&this.activeFx.length<(this.simplified?8:14))this.activeFx.push({event,age:0});
       if (event.type === 'relic' && event.item && this.relicFx.length < (this.simplified ? 9 : 18)) this.relicFx.push({ item: event.item, x, y, toX: event.toX ?? x, toY: event.toY ?? y, radius:event.radius, age: 0 });
       if (event.type === 'passive' && event.skill && this.passiveFx.length < (this.simplified ? 12 : 24)) this.passiveFx.push({ skill: event.skill, x, y, age: 0, radius: event.radius ?? 32, scale: event.size ?? 1, detail: event.detail });
-      if (direct || event.type === 'kill' || event.type === 'dash') {
+      if (direct&&!weaponContact || event.type === 'kill' || event.type === 'dash') {
         const count = event.type === 'kill' ? (this.simplified ? 3 : 8) : event.type === 'dash' ? 10 : 3;
         const cap = this.simplified ? 100 : 280;
         for (let i = 0; i < count && this.particles.length < cap; i++) {
@@ -493,8 +492,6 @@ export class BattleScene extends Phaser.Scene {
       else { g.lineStyle(2,0xfff5c7,alpha).lineBetween(c.x-r,c.y,c.x+r,c.y).lineBetween(c.x,c.y-r,c.x,c.y+r); }
     }
     this.contacts=this.contacts.filter(c=>c.age<(c.death?.28:.16));
-    for(const hit of this.carrotHits){hit.age+=fxDt;drawCarrotHit(this.carrotFx,hit.elements,hit.x,hit.y,hit.age,this.reducedMotion);}
-    this.carrotHits=this.carrotHits.filter(hit=>hit.age<.32);
     for (const p of this.particles) {
       p.age += fxDt; p.x += p.vx * fxDt; p.y += p.vy * fxDt;
       g.fillStyle(p.color, Math.max(0, 1 - p.age / p.life)).fillTriangle(p.x - p.size, p.y, p.x + p.size, p.y, p.x, p.y - p.size * 1.5);
