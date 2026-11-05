@@ -1,0 +1,38 @@
+{
+  "source_commit": "578433bed31c7a0ce9e39c6ffa914a2f7d9faf8b",
+  "source_branch": "reconstruct/latest-from-conversation",
+  "backup_branch": "backup/element-vfx-578433b",
+  "files": {
+    "carrot-elements-578433b.html": {
+      "bytes": 17884522,
+      "sha256": "b61ad88cb053293b51fe251cdaddef88fe7ba94322f5765929274f4031889647"
+    },
+    "carrot-source-578433b.zip": {
+      "bytes": 76215105,
+      "sha256": "5619563d2a940b4f9a1875f99a8e58add08703a7a9edda73c583f07d0da12707"
+    },
+    "carrot-history-578433b.bundle": {
+      "bytes": 76325412,
+      "sha256": "609ed10e6ba75010d202346d7641e4e42ba780f9f8845a0f41fe326a1c763628"
+    },
+    "build.log": {
+      "bytes": 1044,
+      "sha256": "9280a909b4fc04eb01fbc20185a06f25b6f67720759ea1350513077856f13513"
+    },
+    "weapon-vfx.md": {
+      "bytes": 4419,
+      "sha256": "ef9572c2da96f0c39981f6b8e9bfd0eba8d5bcbe5f9983acc5ca1593611d6fcf"
+    }
+  },
+  "checks": {
+    "blade_typecheck": "passed",
+    "blade_production_build": "passed",
+    "offline_package": "generated",
+    "tests_run": false,
+    "browser_run": false,
+    "playthrough_run": false
+  },
+  "scope": "Fix static rendering after obtaining elements. Animate fire, ice, poison and lightning independently, including multi-element combinations. Battle and preview share renderer. Damage logic and original weapon images unchanged.",
+  "github_pages_published": false,
+  "untracked_agents_included": false
+}
